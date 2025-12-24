@@ -40,7 +40,8 @@ namespace CometServer.Modules
 
     using CDP4Common.DTO;
 
-    using CDP4DalCommon.Tasks;
+    using CDP4DalCommon.Protocol.Operations;
+    using CDP4DalCommon.Protocol.Tasks;
 
     using CDP4JsonSerializer;
 
@@ -58,7 +59,6 @@ namespace CometServer.Modules
     using CometServer.Extensions;
     using CometServer.Health;
     using CometServer.Helpers;
-    using CometServer.Services.Operations;
     using CometServer.Tasks;
 
     using Microsoft.AspNetCore.Http;
@@ -690,7 +690,7 @@ namespace CometServer.Modules
             headerInfoProvider.RegisterResponseHeaders(httpResponse, ContentTypeKind.MULTIPARTMIXED, HttpConstants.BoundaryString);
             httpResponse.StatusCode = (int)statusCode;
 
-            return this.PrepareArchivedResponse(metaInfoProvider,jsonSerializer, fileArchiveService, permissionInstanceFilterService, httpResponse.Body, resourceResponse, version, partition, routeSegments);
+            return this.PrepareArchivedResponseAsync(metaInfoProvider,jsonSerializer, fileArchiveService, permissionInstanceFilterService, httpResponse.Body, resourceResponse, version, partition, routeSegments);
         }
 
         /// <summary>
@@ -941,7 +941,7 @@ namespace CometServer.Modules
         ///  <param name="routeSegments">
         /// The route segments.
         /// </param>
-        private async Task PrepareArchivedResponse(IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IFileArchiveService fileArchiveService, IPermissionInstanceFilterService permissionInstanceFilterService, Stream targetStream, List<Thing> resourceResponse, Version requestDataModelVersion, string partition, string[] routeSegments)
+        private async Task PrepareArchivedResponseAsync(IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IFileArchiveService fileArchiveService, IPermissionInstanceFilterService permissionInstanceFilterService, Stream targetStream, List<Thing> resourceResponse, Version requestDataModelVersion, string partition, string[] routeSegments)
         {
             var temporaryTopFolder = await fileArchiveService.CreateFolderAndFileStructureOnDiskAsync(resourceResponse, partition, routeSegments);
 
@@ -1089,7 +1089,7 @@ namespace CometServer.Modules
         /// <param name="actorId">The actor id.</param>
         /// <param name="serializer">The <see cref="ICdp4JsonSerializer"/></param>
         /// <returns>An asynchronous task representing the operation.</returns>
-        protected async Task PrepareAndQueueThingsMessageAsync(CdpPostOperation originalPostOperation, IEnumerable<Thing> changedThings, Guid actorId, ICdp4JsonSerializer serializer)
+        protected async Task PrepareAndQueueThingsMessageAsync(PostOperation originalPostOperation, IEnumerable<Thing> changedThings, Guid actorId, ICdp4JsonSerializer serializer)
         {
             if (!this.AppConfigService.AppConfig.ServiceMessagingConfig.IsEnabled || this.thingsMessageProducer is null)
             {

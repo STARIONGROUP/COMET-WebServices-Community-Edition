@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="CometTaskService.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 // 
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 // 
@@ -31,7 +31,7 @@ namespace CometServer.Tasks
     
     using CDP4Common.DTO;
 
-    using CDP4DalCommon.Tasks;
+    using CDP4DalCommon.Protocol.Tasks;
 
     using CometServer.Configuration;
 

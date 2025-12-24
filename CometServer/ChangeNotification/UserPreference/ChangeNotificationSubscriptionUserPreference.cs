@@ -25,14 +25,12 @@
 namespace CometServer.ChangeNotification.UserPreference
 {
     using System.Collections.Generic;
+    using System.Text.Json.Serialization;
 
     using CDP4Common.EngineeringModelData;
     using CDP4Common.SiteDirectoryData;
 
     using CometServer.ChangeNotification.Subscription;
-
-    using Newtonsoft.Json;
-    using Newtonsoft.Json.Converters;
 
     /// <summary>
     /// Class that holds information about the user's (=<see cref="Person"/>'s) ChangeLog <see cref="UserPreference"/>s.
@@ -47,7 +45,6 @@ namespace CometServer.ChangeNotification.UserPreference
         /// <summary>
         /// Gets the <see cref="ChangeNotificationReportType"/> for email/reporting purposes.
         /// </summary>
-        [JsonConverter(typeof(StringEnumConverter))] 
         public ChangeNotificationReportType ChangeNotificationReportType { get; set; }
 
         /// <summary>

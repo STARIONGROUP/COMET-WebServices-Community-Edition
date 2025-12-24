@@ -27,14 +27,13 @@ namespace CDP4Orm.Dao
     using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
+    using System.Text.Json;
 
     using CDP4Common.DTO;
 
     using CDP4JsonSerializer;
 
     using CDP4Orm.Helper;
-
-    using Newtonsoft.Json.Linq;
 
     using Npgsql;
 
@@ -314,7 +313,7 @@ namespace CDP4Orm.Dao
         /// <returns>An awaitable <see cref="Task"/> having a <see cref="Thing"/> as result</returns>
         protected Thing MapJsonbToDto(NpgsqlDataReader reader)
         {
-            var jsonObject = JObject.Parse(reader.GetValue(0).ToString());
+            var jsonObject = JsonSerializer.Deserialize<JsonElement>(reader.GetValue(0).ToString());
 
             Thing thing;
 

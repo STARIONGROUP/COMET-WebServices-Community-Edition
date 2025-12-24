@@ -36,6 +36,8 @@ namespace CometServer.Tests.Services
     using CDP4Common.MetaInfo;
     using CDP4Common.Types;
 
+    using CDP4DalCommon.Protocol.Operations;
+
     using CDP4Orm.Dao;
 
     using CometServer.Helpers;
@@ -549,7 +551,7 @@ namespace CometServer.Tests.Services
         [Test]
         public async Task VerifyAppendModelChangeLogDataOnlyWorksOnEngineeringModelChanges()
         {
-            var postOperation = new CdpPostOperation();
+            var postOperation = new PostOperation();
 
             var iterationClasslessDto = new ClasslessDTO()
             {
@@ -568,7 +570,7 @@ namespace CometServer.Tests.Services
             Assert.That(result, Is.False);
             
             this.operationProcessor.Verify(
-                x => x.ProcessAsync(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Never);
+                x => x.ProcessAsync(It.IsAny<PostOperation>(), null, It.IsAny<string>(), null), Times.Never);
 
             var engineeringModelClasslessDto = new ClasslessDTO()
             {
@@ -587,13 +589,13 @@ namespace CometServer.Tests.Services
             Assert.That(result, Is.True);
             
             this.operationProcessor.Verify(
-                x => x.ProcessAsync(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Once);
+                x => x.ProcessAsync(It.IsAny<PostOperation>(), null, It.IsAny<string>(), null), Times.Once);
         }
 
         [Test]
         public async Task VerifyAppendModelChangeLogDataAddsModelLogEntryWhenNeeded()
         {
-            var postOperation = new CdpPostOperation();
+            var postOperation = new PostOperation();
 
             var iterationClasslessDto = new ClasslessDTO()
             {
@@ -612,13 +614,13 @@ namespace CometServer.Tests.Services
             Assert.That(result, Is.True);
 
             this.operationProcessor.Verify(
-                x => x.ProcessAsync(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
+                x => x.ProcessAsync(It.IsAny<PostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
         }
 
         [Test]
         public async Task VerifyThatUnsupportedThingsAreNotAddedToTheModelLogEntry()
         {
-            var postOperation = new CdpPostOperation();
+            var postOperation = new PostOperation();
 
             var iterationClasslessDto = new ClasslessDTO()
             {
@@ -637,7 +639,7 @@ namespace CometServer.Tests.Services
             Assert.That(result, Is.False);
 
             this.operationProcessor.Verify(
-                x => x.ProcessAsync(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(0));
+                x => x.ProcessAsync(It.IsAny<PostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(0));
 
             things = [this.iteration, this.requirementsSpecification, this.elementDefinition_1, this.engineeringModel];
             postOperation.Create.Add(this.elementDefinition_1);
@@ -657,7 +659,7 @@ namespace CometServer.Tests.Services
             Assert.That(result, Is.True);
 
             this.operationProcessor.Verify(
-                x => x.ProcessAsync(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
+                x => x.ProcessAsync(It.IsAny<PostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
 
             Assert.That(this.existingModelLogEntry.LogEntryChangelogItem.Count, Is.EqualTo(1));
         }
@@ -665,7 +667,7 @@ namespace CometServer.Tests.Services
         [Test]
         public async Task VerifyThatResultsAreAsExpectedForNewParameter()
         {
-            var postOperation = new CdpPostOperation();
+            var postOperation = new PostOperation();
 
             var elementDefinitionClasslessDto = new ClasslessDTO()
             {
@@ -693,8 +695,8 @@ namespace CometServer.Tests.Services
 
             this.operationProcessor.Setup(
                     x =>
-                        x.ProcessAsync(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null))
-                .Callback<CdpPostOperation, NpgsqlTransaction, string, Dictionary<string, Stream>>(
+                        x.ProcessAsync(It.IsAny<PostOperation>(), null, It.IsAny<string>(), null))
+                .Callback<PostOperation, NpgsqlTransaction, string, Dictionary<string, Stream>>(
                     (operation, transaction, partition, files)
                         =>
                     {
@@ -706,7 +708,7 @@ namespace CometServer.Tests.Services
             Assert.That(result, Is.True);
 
             this.operationProcessor.Verify(
-                x => x.ProcessAsync(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
+                x => x.ProcessAsync(It.IsAny<PostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
 
             Assert.That(this.existingModelLogEntry.LogEntryChangelogItem.Count, Is.EqualTo(2));
 
@@ -757,7 +759,7 @@ namespace CometServer.Tests.Services
         [Test]
         public async Task VerifyThatResultsAreAsExpectedForDeletedParameter()
         {
-            var postOperation = new CdpPostOperation();
+            var postOperation = new PostOperation();
 
             var parameterClasslessDto = new ClasslessDTO()
             {
@@ -788,8 +790,8 @@ namespace CometServer.Tests.Services
 
             this.operationProcessor.Setup(
                     x =>
-                        x.ProcessAsync(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null))
-                .Callback<CdpPostOperation, NpgsqlTransaction, string, Dictionary<string, Stream>>(
+                        x.ProcessAsync(It.IsAny<PostOperation>(), null, It.IsAny<string>(), null))
+                .Callback<PostOperation, NpgsqlTransaction, string, Dictionary<string, Stream>>(
                     (operation, transaction, partition, files)
                         =>
                     {
@@ -801,7 +803,7 @@ namespace CometServer.Tests.Services
             Assert.That(result, Is.True);
 
             this.operationProcessor.Verify(
-                x => x.ProcessAsync(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
+                x => x.ProcessAsync(It.IsAny<PostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
 
             Assert.That(this.existingModelLogEntry.LogEntryChangelogItem.Count, Is.EqualTo(1));
 
@@ -842,7 +844,7 @@ namespace CometServer.Tests.Services
         [Test]
         public async Task VerifyThatResultsAreAsExpectedForUpdatedParameter()
         {
-            var postOperation = new CdpPostOperation();
+            var postOperation = new PostOperation();
 
             var parameterClasslessDto = new ClasslessDTO()
             {
@@ -871,8 +873,8 @@ namespace CometServer.Tests.Services
 
             this.operationProcessor.Setup(
                     x =>
-                        x.ProcessAsync(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null))
-                .Callback<CdpPostOperation, NpgsqlTransaction, string, Dictionary<string, Stream>>(
+                        x.ProcessAsync(It.IsAny<PostOperation>(), null, It.IsAny<string>(), null))
+                .Callback<PostOperation, NpgsqlTransaction, string, Dictionary<string, Stream>>(
                     (operation, transaction, partition, files)
                         =>
                     {
@@ -886,7 +888,7 @@ namespace CometServer.Tests.Services
             Assert.That(result, Is.True);
 
             this.operationProcessor.Verify(
-                x => x.ProcessAsync(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
+                x => x.ProcessAsync(It.IsAny<PostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
 
             Assert.That(this.existingModelLogEntry.LogEntryChangelogItem.Count, Is.EqualTo(1));
 
@@ -925,7 +927,7 @@ namespace CometServer.Tests.Services
         [Test]
         public async Task VerifyThatResultsAreAsExpectedForUpdatedParameterValueSet()
         {
-            var postOperation = new CdpPostOperation();
+            var postOperation = new PostOperation();
 
             var parameterValueSetClasslessDto = new ClasslessDTO()
             {
@@ -952,8 +954,8 @@ namespace CometServer.Tests.Services
 
             this.operationProcessor.Setup(
                     x =>
-                        x.ProcessAsync(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null))
-                .Callback<CdpPostOperation, NpgsqlTransaction, string, Dictionary<string, Stream>>(
+                        x.ProcessAsync(It.IsAny<PostOperation>(), null, It.IsAny<string>(), null))
+                .Callback<PostOperation, NpgsqlTransaction, string, Dictionary<string, Stream>>(
                     (operation, transaction, partition, files)
                         =>
                     {
@@ -965,7 +967,7 @@ namespace CometServer.Tests.Services
             Assert.That(result, Is.True);
 
             this.operationProcessor.Verify(
-                x => x.ProcessAsync(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
+                x => x.ProcessAsync(It.IsAny<PostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
 
             Assert.That(this.existingModelLogEntry.LogEntryChangelogItem.Count, Is.EqualTo(1));
 
@@ -1006,7 +1008,7 @@ namespace CometServer.Tests.Services
         [Test]
         public async Task VerifyThatResultsAreAsExpectedForNewElementUsage()
         {
-            var postOperation = new CdpPostOperation();
+            var postOperation = new PostOperation();
 
             var elementDefinitionClasslessDto = new ClasslessDTO()
             {
@@ -1034,8 +1036,8 @@ namespace CometServer.Tests.Services
 
             this.operationProcessor.Setup(
                     x =>
-                        x.ProcessAsync(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null))
-                .Callback<CdpPostOperation, NpgsqlTransaction, string, Dictionary<string, Stream>>(
+                        x.ProcessAsync(It.IsAny<PostOperation>(), null, It.IsAny<string>(), null))
+                .Callback<PostOperation, NpgsqlTransaction, string, Dictionary<string, Stream>>(
                     (operation, transaction, partition, files)
                         =>
                     {
@@ -1047,7 +1049,7 @@ namespace CometServer.Tests.Services
             Assert.That(result, Is.True);
 
             this.operationProcessor.Verify(
-                x => x.ProcessAsync(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Once);
+                x => x.ProcessAsync(It.IsAny<PostOperation>(), null, It.IsAny<string>(), null), Times.Once);
             
             Assert.That(this.existingModelLogEntry.LogEntryChangelogItem.Count, Is.EqualTo(2));
 
@@ -1095,7 +1097,7 @@ namespace CometServer.Tests.Services
         [Test]
         public async Task VerifyThatResultsAreAsExpectedForDeletedElementUsage()
         {
-            var postOperation = new CdpPostOperation();
+            var postOperation = new PostOperation();
 
             var elementUsageClasslessDto = new ClasslessDTO()
             {
@@ -1127,8 +1129,8 @@ namespace CometServer.Tests.Services
 
             this.operationProcessor.Setup(
                     x =>
-                        x.ProcessAsync(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null))
-                .Callback<CdpPostOperation, NpgsqlTransaction, string, Dictionary<string, Stream>>(
+                        x.ProcessAsync(It.IsAny<PostOperation>(), null, It.IsAny<string>(), null))
+                .Callback<PostOperation, NpgsqlTransaction, string, Dictionary<string, Stream>>(
                     (operation, transaction, partition, files)
                         =>
                     {
@@ -1140,7 +1142,7 @@ namespace CometServer.Tests.Services
             Assert.That(result, Is.True);
 
             this.operationProcessor.Verify(
-                x => x.ProcessAsync(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Once);
+                x => x.ProcessAsync(It.IsAny<PostOperation>(), null, It.IsAny<string>(), null), Times.Once);
 
             Assert.That(this.existingModelLogEntry.LogEntryChangelogItem.Count, Is.EqualTo(1));
 
@@ -1177,7 +1179,7 @@ namespace CometServer.Tests.Services
         [Test]
         public async Task VerifyThatResultsAreAsExpectedForUpdatedElementUsage()
         {
-            var postOperation = new CdpPostOperation();
+            var postOperation = new PostOperation();
 
             var elementUsageClasslessDto = new ClasslessDTO()
             {
@@ -1204,8 +1206,8 @@ namespace CometServer.Tests.Services
 
             this.operationProcessor.Setup(
                     x =>
-                        x.ProcessAsync(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null))
-                .Callback<CdpPostOperation, NpgsqlTransaction, string, Dictionary<string, Stream>>(
+                        x.ProcessAsync(It.IsAny<PostOperation>(), null, It.IsAny<string>(), null))
+                .Callback<PostOperation, NpgsqlTransaction, string, Dictionary<string, Stream>>(
                     (operation, transaction, partition, files)
                         =>
                     {
@@ -1217,7 +1219,7 @@ namespace CometServer.Tests.Services
             Assert.That(result, Is.True);
 
             this.operationProcessor.Verify(
-                x => x.ProcessAsync(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
+                x => x.ProcessAsync(It.IsAny<PostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
 
             Assert.That(this.existingModelLogEntry.LogEntryChangelogItem.Count, Is.EqualTo(1));
 
@@ -1252,7 +1254,7 @@ namespace CometServer.Tests.Services
         [Test]
         public async Task VerifyThatResultsAreAsExpectedForNewParameterOverride()
         {
-            var postOperation = new CdpPostOperation();
+            var postOperation = new PostOperation();
 
             var elementUsageClasslessDto = new ClasslessDTO()
             {
@@ -1280,8 +1282,8 @@ namespace CometServer.Tests.Services
 
             this.operationProcessor.Setup(
                     x =>
-                        x.ProcessAsync(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null))
-                .Callback<CdpPostOperation, NpgsqlTransaction, string, Dictionary<string, Stream>>(
+                        x.ProcessAsync(It.IsAny<PostOperation>(), null, It.IsAny<string>(), null))
+                .Callback<PostOperation, NpgsqlTransaction, string, Dictionary<string, Stream>>(
                     (operation, transaction, partition, files)
                         =>
                     {
@@ -1293,7 +1295,7 @@ namespace CometServer.Tests.Services
             Assert.That(result, Is.True);
 
             this.operationProcessor.Verify(
-                x => x.ProcessAsync(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
+                x => x.ProcessAsync(It.IsAny<PostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
 
             Assert.That(this.existingModelLogEntry.LogEntryChangelogItem.Count,Is.EqualTo(2));
 
@@ -1354,7 +1356,7 @@ namespace CometServer.Tests.Services
         [Test]
         public async Task VerifyThatResultsAreAsExpectedForDeletedParameterOverride()
         {
-            var postOperation = new CdpPostOperation();
+            var postOperation = new PostOperation();
 
             var parameterOverrideClasslessDto = new ClasslessDTO()
             {
@@ -1387,8 +1389,8 @@ namespace CometServer.Tests.Services
 
             this.operationProcessor.Setup(
                     x =>
-                        x.ProcessAsync(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null))
-                .Callback<CdpPostOperation, NpgsqlTransaction, string, Dictionary<string, Stream>>(
+                        x.ProcessAsync(It.IsAny<PostOperation>(), null, It.IsAny<string>(), null))
+                .Callback<PostOperation, NpgsqlTransaction, string, Dictionary<string, Stream>>(
                     (operation, transaction, partition, files)
                         =>
                     {
@@ -1400,7 +1402,7 @@ namespace CometServer.Tests.Services
             Assert.That(result, Is.True);
 
             this.operationProcessor.Verify(
-                x => x.ProcessAsync(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
+                x => x.ProcessAsync(It.IsAny<PostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
 
             Assert.That(this.existingModelLogEntry.LogEntryChangelogItem.Count, Is.EqualTo(1));
 
@@ -1451,7 +1453,7 @@ namespace CometServer.Tests.Services
         [Test]
         public async Task VerifyThatResultsAreAsExpectedForUpdatedParameterOverride()
         {
-            var postOperation = new CdpPostOperation();
+            var postOperation = new PostOperation();
 
             var parameterOverrideClasslessDto = new ClasslessDTO()
             {
@@ -1478,8 +1480,8 @@ namespace CometServer.Tests.Services
 
             this.operationProcessor.Setup(
                     x =>
-                        x.ProcessAsync(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null))
-                .Callback<CdpPostOperation, NpgsqlTransaction, string, Dictionary<string, Stream>>(
+                        x.ProcessAsync(It.IsAny<PostOperation>(), null, It.IsAny<string>(), null))
+                .Callback<PostOperation, NpgsqlTransaction, string, Dictionary<string, Stream>>(
                     (operation, transaction, partition, files)
                         =>
                     {
@@ -1491,7 +1493,7 @@ namespace CometServer.Tests.Services
             Assert.That(result, Is.True);
 
             this.operationProcessor.Verify(
-                x => x.ProcessAsync(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
+                x => x.ProcessAsync(It.IsAny<PostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
 
             Assert.That(this.existingModelLogEntry.LogEntryChangelogItem.Count, Is.EqualTo(1));
 
@@ -1540,7 +1542,7 @@ namespace CometServer.Tests.Services
         [Test]
         public async Task VerifyThatResultsAreAsExpectedForUpdatedParameterOverrideValueSet()
         {
-            var postOperation = new CdpPostOperation();
+            var postOperation = new PostOperation();
 
             var parameterOverrideValueSetClasslessDto = new ClasslessDTO()
             {
@@ -1566,8 +1568,8 @@ namespace CometServer.Tests.Services
 
             this.operationProcessor.Setup(
                     x =>
-                        x.ProcessAsync(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null))
-                .Callback<CdpPostOperation, NpgsqlTransaction, string, Dictionary<string, Stream>>(
+                        x.ProcessAsync(It.IsAny<PostOperation>(), null, It.IsAny<string>(), null))
+                .Callback<PostOperation, NpgsqlTransaction, string, Dictionary<string, Stream>>(
                     (operation, transaction, partition, files)
                         =>
                     {
@@ -1579,7 +1581,7 @@ namespace CometServer.Tests.Services
             Assert.That(result, Is.True);
 
             this.operationProcessor.Verify(
-                x => x.ProcessAsync(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
+                x => x.ProcessAsync(It.IsAny<PostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
 
             Assert.That(this.existingModelLogEntry.LogEntryChangelogItem.Count, Is.EqualTo(1));
 
@@ -1630,7 +1632,7 @@ namespace CometServer.Tests.Services
         [Test]
         public async Task VerifyThatResultsAreAsExpectedForNewParameterSubscription_SubscriptionIsOnParameter()
         {
-            var postOperation = new CdpPostOperation();
+            var postOperation = new PostOperation();
 
             this.parameter.ParameterSubscription.Add(this.parameterSubscription.Iid);
 
@@ -1660,8 +1662,8 @@ namespace CometServer.Tests.Services
 
             this.operationProcessor.Setup(
                     x =>
-                        x.ProcessAsync(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null))
-                .Callback<CdpPostOperation, NpgsqlTransaction, string, Dictionary<string, Stream>>(
+                        x.ProcessAsync(It.IsAny<PostOperation>(), null, It.IsAny<string>(), null))
+                .Callback<PostOperation, NpgsqlTransaction, string, Dictionary<string, Stream>>(
                     (operation, transaction, partition, files)
                         =>
                     {
@@ -1673,7 +1675,7 @@ namespace CometServer.Tests.Services
             Assert.That(result, Is.True);
 
             this.operationProcessor.Verify(
-                x => x.ProcessAsync(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
+                x => x.ProcessAsync(It.IsAny<PostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
 
             Assert.That(this.existingModelLogEntry.LogEntryChangelogItem.Count, Is.EqualTo(2));
 
@@ -1729,7 +1731,7 @@ namespace CometServer.Tests.Services
         [Test]
         public async Task VerifyThatResultsAreAsExpectedForDeletedParameterSubscription()
         {
-            var postOperation = new CdpPostOperation();
+            var postOperation = new PostOperation();
 
             this.parameter.ParameterSubscription.Add(this.parameterSubscription.Iid);
 
@@ -1763,8 +1765,8 @@ namespace CometServer.Tests.Services
 
             this.operationProcessor.Setup(
                     x =>
-                        x.ProcessAsync(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null))
-                .Callback<CdpPostOperation, NpgsqlTransaction, string, Dictionary<string, Stream>>(
+                        x.ProcessAsync(It.IsAny<PostOperation>(), null, It.IsAny<string>(), null))
+                .Callback<PostOperation, NpgsqlTransaction, string, Dictionary<string, Stream>>(
                     (operation, transaction, partition, files)
                         =>
                     {
@@ -1776,7 +1778,7 @@ namespace CometServer.Tests.Services
             Assert.That(result, Is.True);
 
             this.operationProcessor.Verify(
-                x => x.ProcessAsync(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
+                x => x.ProcessAsync(It.IsAny<PostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
 
             Assert.That(this.existingModelLogEntry.LogEntryChangelogItem.Count, Is.EqualTo(1));
 
@@ -1819,7 +1821,7 @@ namespace CometServer.Tests.Services
         [Test]
         public async Task VerifyThatResultsAreAsExpectedForUpdatedParameterSubscriptionValueSet_SubscriptionIsOnParameter()
         {
-            var postOperation = new CdpPostOperation();
+            var postOperation = new PostOperation();
 
             this.parameter.ParameterSubscription.Add(this.parameterSubscription.Iid);
 
@@ -1848,8 +1850,8 @@ namespace CometServer.Tests.Services
 
             this.operationProcessor.Setup(
                     x =>
-                        x.ProcessAsync(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null))
-                .Callback<CdpPostOperation, NpgsqlTransaction, string, Dictionary<string, Stream>>(
+                        x.ProcessAsync(It.IsAny<PostOperation>(), null, It.IsAny<string>(), null))
+                .Callback<PostOperation, NpgsqlTransaction, string, Dictionary<string, Stream>>(
                     (operation, transaction, partition, files)
                         =>
                     {
@@ -1861,7 +1863,7 @@ namespace CometServer.Tests.Services
             Assert.That(result, Is.True);
 
             this.operationProcessor.Verify(
-                x => x.ProcessAsync(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
+                x => x.ProcessAsync(It.IsAny<PostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
 
             Assert.That(this.existingModelLogEntry.LogEntryChangelogItem.Count, Is.EqualTo(1));
 
@@ -1904,7 +1906,7 @@ namespace CometServer.Tests.Services
         [Test]
         public async Task VerifyThatResultsAreAsExpectedForNewParameterSubscription_SubscriptionIsOnParameterOverride()
         {
-            var postOperation = new CdpPostOperation();
+            var postOperation = new PostOperation();
 
             this.parameterOverride.ParameterSubscription.Add(this.parameterOverrideSubscription.Iid);
 
@@ -1934,8 +1936,8 @@ namespace CometServer.Tests.Services
 
             this.operationProcessor.Setup(
                     x =>
-                        x.ProcessAsync(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null))
-                .Callback<CdpPostOperation, NpgsqlTransaction, string, Dictionary<string, Stream>>(
+                        x.ProcessAsync(It.IsAny<PostOperation>(), null, It.IsAny<string>(), null))
+                .Callback<PostOperation, NpgsqlTransaction, string, Dictionary<string, Stream>>(
                     (operation, transaction, partition, files)
                         =>
                     {
@@ -1947,7 +1949,7 @@ namespace CometServer.Tests.Services
             Assert.That(result, Is.True);
 
             this.operationProcessor.Verify(
-                x => x.ProcessAsync(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
+                x => x.ProcessAsync(It.IsAny<PostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
 
             Assert.That(this.existingModelLogEntry.LogEntryChangelogItem.Count, Is.EqualTo(2));
 
@@ -2018,7 +2020,7 @@ namespace CometServer.Tests.Services
         [Test]
         public async Task VerifyThatResultsAreAsExpectedForUpdatedParameterSubscriptionValueSet_SubscriptionIsOnParameterOverride()
         {
-            var postOperation = new CdpPostOperation();
+            var postOperation = new PostOperation();
 
             this.parameterOverride.ParameterSubscription.Add(this.parameterOverrideSubscription.Iid);
 
@@ -2047,8 +2049,8 @@ namespace CometServer.Tests.Services
 
             this.operationProcessor.Setup(
                     x =>
-                        x.ProcessAsync(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null))
-                .Callback<CdpPostOperation, NpgsqlTransaction, string, Dictionary<string, Stream>>(
+                        x.ProcessAsync(It.IsAny<PostOperation>(), null, It.IsAny<string>(), null))
+                .Callback<PostOperation, NpgsqlTransaction, string, Dictionary<string, Stream>>(
                     (operation, transaction, partition, files)
                         =>
                     {
@@ -2060,7 +2062,7 @@ namespace CometServer.Tests.Services
             Assert.That(result, Is.True);
 
             this.operationProcessor.Verify(
-                x => x.ProcessAsync(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
+                x => x.ProcessAsync(It.IsAny<PostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
 
             Assert.That(this.existingModelLogEntry.LogEntryChangelogItem.Count, Is.EqualTo(1));
 

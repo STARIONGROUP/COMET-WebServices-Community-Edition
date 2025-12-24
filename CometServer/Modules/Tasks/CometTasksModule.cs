@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="CometTasksModule.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2025 Starion Group S.A.
+//    Copyright (c) 2015-2024 Starion Group S.A.
 // 
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 // 
@@ -32,10 +32,9 @@ namespace CometServer.Modules.Tasks
     using Carter;
     using Carter.Response;
 
-    using CDP4DalCommon.Tasks;
+    using CDP4DalCommon.Protocol.Tasks;
 
     using CometServer.Authorization;
-    using CometServer.Configuration;
     using CometServer.Exceptions;
     using CometServer.Health;
     using CometServer.Helpers;
@@ -70,9 +69,9 @@ namespace CometServer.Modules.Tasks
         protected readonly ICometTaskService cometTaskService;
 
         /// <summary>
-        /// The (injected) <see cref="IAppConfigService"/> 
+        /// Gets or sets the <see cref="IDataSource"/> that provides access to the data store
         /// </summary>
-        protected readonly IDataSource DataSource;
+        protected IDataSource DataSource { get; set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HealthModule"/>
@@ -137,13 +136,13 @@ namespace CometServer.Modules.Tasks
                 return;
             }
 
-            if (!req.HttpContext.User.Identity.IsAuthenticated)
+            if (!(req.HttpContext.User.Identity?.IsAuthenticated ?? false))
             {
                 res.UpdateWithNotAuthenticatedSettings();
                 await res.AsJson("not authenticated");
                 return;
             }
-            
+
             try
             {
                 await this.Authorize(credentialsService, req.HttpContext.User.Identity.Name);
@@ -184,7 +183,7 @@ namespace CometServer.Modules.Tasks
                 return;
             }
 
-            if (!req.HttpContext.User.Identity.IsAuthenticated)
+            if (!(req.HttpContext.User.Identity?.IsAuthenticated ?? false))
             {
                 res.UpdateWithNotAuthenticatedSettings();
                 await res.AsJson("not authenticated");
@@ -240,7 +239,7 @@ namespace CometServer.Modules.Tasks
                 return;
             }
 
-            if (!req.HttpContext.User.Identity.IsAuthenticated)
+            if (!(req.HttpContext.User.Identity?.IsAuthenticated ?? false))
             {
                 res.UpdateWithNotAuthenticatedSettings();
                 await res.AsJson("not authenticated");
@@ -295,7 +294,7 @@ namespace CometServer.Modules.Tasks
             }
             catch (Exception)
             {
-                this.logger.LogWarning("Authorization failed for {Username}", username);
+                this.logger.LogWarning("Authorization failed for {username}", username);
 
                 throw;
             }

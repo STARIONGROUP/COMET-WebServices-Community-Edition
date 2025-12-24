@@ -38,8 +38,9 @@ namespace CometServer.Modules
 
     using CDP4Common.DTO;
     using CDP4Common.Exceptions;
-    
-    using CDP4DalCommon.Tasks;
+
+    using CDP4DalCommon.Protocol.Operations;
+    using CDP4DalCommon.Protocol.Tasks;
 
     using CDP4JsonSerializer;
 
@@ -151,12 +152,11 @@ namespace CometServer.Modules
         /// </param>
         public override void AddRoutes(IEndpointRouteBuilder app)
         {
-            app.MapGet("EngineeringModel/{ids:EnumerableOfGuid}", this.GetEngineeringModelsShallow).RequireAuthorization(AuthenticationSchemes);
+            app.MapGet("EngineeringModel/{ids:EnumerableOfGuid}", this.GetEngineeringModelsShallowAsync).RequireAuthorization(AuthenticationSchemes);
 
-            app.MapGet("EngineeringModel/*", this.GetEngineeringModelsShallow).RequireAuthorization(AuthenticationSchemes);
+            app.MapGet("EngineeringModel/*", this.GetEngineeringModelsShallowAsync).RequireAuthorization(AuthenticationSchemes);
 
-            app.MapGet("EngineeringModel/{*path}", 
-                async (HttpRequest req, HttpResponse res, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, Services.IServiceProvider serviceProvider, IMetaInfoProvider metaInfoProvider, IFileBinaryService fileBinaryService, IFileArchiveService fileArchiveService, IRevisionService revisionService, IRevisionResolver revisionResolver, ICdp4JsonSerializer jsonSerializer, IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService, IObfuscationService obfuscationService, ICherryPickService cherryPickService, IContainmentService containmentService) =>
+            app.MapGet("EngineeringModel/{*path}", async (HttpRequest req, HttpResponse res, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, Services.IServiceProvider serviceProvider, IMetaInfoProvider metaInfoProvider, IFileBinaryService fileBinaryService, IFileArchiveService fileArchiveService, IRevisionService revisionService, IRevisionResolver revisionResolver, ICdp4JsonSerializer jsonSerializer, IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService, IObfuscationService obfuscationService, ICherryPickService cherryPickService, IContainmentService containmentService) =>
             {
                 if (!await this.IsServerReadyAsync(res))
                 {
@@ -178,7 +178,7 @@ namespace CometServer.Modules
                     return;
                 }
 
-                await this.GetResponseData(req, res, requestUtils, transactionManager, credentialsService, headerInfoProvider, serviceProvider, metaInfoProvider, fileBinaryService, fileArchiveService, revisionService, revisionResolver, jsonSerializer, messagePackSerializer, permissionInstanceFilterService, obfuscationService, cherryPickService, containmentService);
+                await this.GetResponseDataAsync(req, res, requestUtils, transactionManager, credentialsService, headerInfoProvider, serviceProvider, metaInfoProvider, fileBinaryService, fileArchiveService, revisionService, revisionResolver, jsonSerializer, messagePackSerializer, permissionInstanceFilterService, obfuscationService, cherryPickService, containmentService);
             }).RequireAuthorization(AuthenticationSchemes);
 
             app.MapPost("EngineeringModel/{engineeringModelIid:guid}/iteration/{iterationIid:guid}", 
@@ -211,7 +211,7 @@ namespace CometServer.Modules
 
                 try
                 {
-                    postRequestData = await this.ProcessPostRequest(req, requestUtils, metaInfoProvider, jsonSerializer, fileBinaryService);
+                    postRequestData = await this.ProcessPostRequestAsync(req, requestUtils, metaInfoProvider, jsonSerializer, fileBinaryService);
                 }
                 catch (BadRequestException ex)
                 {
@@ -247,11 +247,11 @@ namespace CometServer.Modules
 
                 if (requestUtils.QueryParameters.WaitTime > 0)
                 {
-                    await this.EnqueCometTaskForPostRequest(postRequestData, requestToken, res, cometTask, requestUtils, transactionManager, credentialsService, headerInfoProvider, serviceProvider, metaInfoProvider, operationProcessor, revisionService, jsonSerializer, messagePackSerializer, permissionInstanceFilterService, changeLogService);
+                    await this.EnqueueCometTaskForPostRequestAsync(postRequestData, requestToken, res, cometTask, requestUtils, transactionManager, credentialsService, headerInfoProvider, serviceProvider, metaInfoProvider, operationProcessor, revisionService, jsonSerializer, messagePackSerializer, permissionInstanceFilterService, changeLogService);
                 }
                 else
                 {
-                    await this.PostResponseData(postRequestData, requestToken, res, cometTask, requestUtils, transactionManager, credentialsService, headerInfoProvider, serviceProvider, metaInfoProvider, operationProcessor, revisionService, jsonSerializer, messagePackSerializer, permissionInstanceFilterService, changeLogService);
+                    await this.PostResponseDataAsync(postRequestData, requestToken, res, cometTask, requestUtils, transactionManager, credentialsService, headerInfoProvider, serviceProvider, metaInfoProvider, operationProcessor, revisionService, jsonSerializer, messagePackSerializer, permissionInstanceFilterService, changeLogService);
                 }
             }).RequireAuthorization(AuthenticationSchemes);
         }
@@ -276,7 +276,7 @@ namespace CometServer.Modules
         /// <param name="messagePackSerializer">The MessagePack serializer.</param>
         /// <param name="permissionInstanceFilterService">The service for filtering permission instances.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
-        private async Task GetEngineeringModelsShallow(HttpRequest request, HttpResponse response, string ids, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, 
+        private async Task GetEngineeringModelsShallowAsync(HttpRequest request, HttpResponse response, string ids, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, 
             ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, Services.IServiceProvider serviceProvider, 
             IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, 
             IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService)
@@ -487,7 +487,7 @@ namespace CometServer.Modules
         /// <returns>
         /// An awaitable <see cref="Task"/>
         /// </returns>
-        protected async Task GetResponseData(HttpRequest httpRequest, HttpResponse httpResponse, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, Services.IServiceProvider serviceProvider, IMetaInfoProvider metaInfoProvider, IFileBinaryService fileBinaryService, IFileArchiveService fileArchiveService, IRevisionService revisionService, IRevisionResolver revisionResolver, ICdp4JsonSerializer jsonSerializer, IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService, IObfuscationService obfuscationService, ICherryPickService cherryPickService, IContainmentService containmentService)
+        protected async Task GetResponseDataAsync(HttpRequest httpRequest, HttpResponse httpResponse, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, Services.IServiceProvider serviceProvider, IMetaInfoProvider metaInfoProvider, IFileBinaryService fileBinaryService, IFileArchiveService fileArchiveService, IRevisionService revisionService, IRevisionResolver revisionResolver, ICdp4JsonSerializer jsonSerializer, IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService, IObfuscationService obfuscationService, ICherryPickService cherryPickService, IContainmentService containmentService)
         {
             NpgsqlTransaction transaction = null;
 
@@ -574,7 +574,7 @@ namespace CometServer.Modules
                         string[] engineeringModelRouteSegments = [routeSegments[0], routeSegments[1]];
 
                         // gather all Things at engineeringmodel level as indicated by the request URI 
-                        resourceResponse.AddRange(await this.GetContainmentResponse(requestUtils, transactionManager, processor, partition, modelSetup, engineeringModelRouteSegments));
+                        resourceResponse.AddRange(await this.GetContainmentResponseAsync(requestUtils, transactionManager, processor, partition, modelSetup, engineeringModelRouteSegments));
 
                         // find and remove the engineeringModelInstance, that will be retrieved in the second go.
                         var engineeringModel = resourceResponse.SingleOrDefault(x => x.ClassKind == CDP4Common.CommonData.ClassKind.EngineeringModel);
@@ -582,7 +582,7 @@ namespace CometServer.Modules
                     }
 
                     // gather all Things as indicated by the request URI 
-                    resourceResponse.AddRange(await this.GetContainmentResponse(requestUtils, transactionManager, processor, partition, modelSetup, routeSegments));
+                    resourceResponse.AddRange(await this.GetContainmentResponseAsync(requestUtils, transactionManager, processor, partition, modelSetup, routeSegments));
 
                     if (resourceResponse.Count == 0)
                     {
@@ -775,7 +775,7 @@ namespace CometServer.Modules
         /// <returns>
         /// An instance of <see cref="PostRequestData"/>
         /// </returns>
-        protected async Task< PostRequestData> ProcessPostRequest(HttpRequest httpRequest, IRequestUtils requestUtils, IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IFileBinaryService fileBinaryService)
+        protected async Task< PostRequestData> ProcessPostRequestAsync(HttpRequest httpRequest, IRequestUtils requestUtils, IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IFileBinaryService fileBinaryService)
         {
             HttpRequestHelper.ValidateSupportedQueryParameter(httpRequest.Query, SupportedPostQueryParameter);
             var queryParameters = httpRequest.Query.ToDictionary(kvp => kvp.Key, kvp => (object)kvp.Value.FirstOrDefault());
@@ -792,13 +792,14 @@ namespace CometServer.Modules
             };
 
             Stream bodyStream;
+
             if (postRequestData.IsMultiPart)
             {
                 var requestStream = new MemoryStream();
                 await httpRequest.Body.CopyToAsync(requestStream);
 
-                bodyStream = await this.ExtractJsonBodyStreamFromMultiPartMessage(requestStream, postRequestData.MultiPartBoundary);
-                postRequestData.Files = await ExtractFilesFromMultipartMessage(fileBinaryService, requestStream, postRequestData.MultiPartBoundary);
+                bodyStream = await this.ExtractJsonBodyStreamFromMultiPartMessageAsync(requestStream, postRequestData.MultiPartBoundary);
+                postRequestData.Files = await ExtractFilesFromMultipartMessageAsync(fileBinaryService, requestStream, postRequestData.MultiPartBoundary);
 
                 // - New File: 
                 //      create -> File, FileRevision
@@ -823,7 +824,7 @@ namespace CometServer.Modules
             }
 
             jsonSerializer.Initialize(metaInfoProvider, postRequestData.Version);
-            postRequestData.OperationData = jsonSerializer.Deserialize<CdpPostOperation>(bodyStream);
+            postRequestData.OperationData = jsonSerializer.Deserialize<PostOperation>(bodyStream);
 
             return postRequestData;
         }
@@ -885,11 +886,11 @@ namespace CometServer.Modules
         /// <returns>
         /// an awaitable <see cref="Task"/>
         /// </returns>
-        protected async Task EnqueCometTaskForPostRequest(PostRequestData postRequestData, string requestToken, HttpResponse httpResponse, CometTask cometTask, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, Services.IServiceProvider serviceProvider, IMetaInfoProvider metaInfoProvider, IOperationProcessor operationProcessor, IRevisionService revisionService, ICdp4JsonSerializer jsonSerializer, IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService, IChangeLogService changeLogService)
+        protected async Task EnqueueCometTaskForPostRequestAsync(PostRequestData postRequestData, string requestToken, HttpResponse httpResponse, CometTask cometTask, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, Services.IServiceProvider serviceProvider, IMetaInfoProvider metaInfoProvider, IOperationProcessor operationProcessor, IRevisionService revisionService, ICdp4JsonSerializer jsonSerializer, IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService, IChangeLogService changeLogService)
         {
             var longRunningCometTask = Task.Run(() =>
             {
-                var task = this.PostResponseData(postRequestData, requestToken, httpResponse, cometTask, requestUtils, transactionManager, credentialsService, headerInfoProvider, serviceProvider, metaInfoProvider, operationProcessor, revisionService, jsonSerializer, messagePackSerializer, permissionInstanceFilterService, changeLogService);
+                var task = this.PostResponseDataAsync(postRequestData, requestToken, httpResponse, cometTask, requestUtils, transactionManager, credentialsService, headerInfoProvider, serviceProvider, metaInfoProvider, operationProcessor, revisionService, jsonSerializer, messagePackSerializer, permissionInstanceFilterService, changeLogService);
                 this.logger.LogTrace(task.IsCompletedSuccessfully.ToString());
             });
 
@@ -959,7 +960,7 @@ namespace CometServer.Modules
         /// <returns>
         /// An awaitable <see cref="Task"/>
         /// </returns>
-        protected async Task PostResponseData(PostRequestData postRequestData, string requestToken, HttpResponse httpResponse, CometTask cometTask, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, Services.IServiceProvider serviceProvider, IMetaInfoProvider metaInfoProvider, IOperationProcessor operationProcessor, IRevisionService revisionService, ICdp4JsonSerializer jsonSerializer, IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService, IChangeLogService changeLogService)
+        protected async Task PostResponseDataAsync(PostRequestData postRequestData, string requestToken, HttpResponse httpResponse, CometTask cometTask, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, Services.IServiceProvider serviceProvider, IMetaInfoProvider metaInfoProvider, IOperationProcessor operationProcessor, IRevisionService revisionService, ICdp4JsonSerializer jsonSerializer, IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService, IChangeLogService changeLogService)
         {
             NpgsqlTransaction transaction = null;
 
@@ -1206,7 +1207,7 @@ namespace CometServer.Modules
         /// <returns>
         /// A <see cref="MemoryStream"/> that contains the posted JSON
         /// </returns>
-        private async Task<Stream> ExtractJsonBodyStreamFromMultiPartMessage(MemoryStream stream, string boundary)
+        private async Task<Stream> ExtractJsonBodyStreamFromMultiPartMessageAsync(MemoryStream stream, string boundary)
         {
             stream.Seek(0, SeekOrigin.Begin);
             var multipartReader = new MultipartReader(boundary, stream);
@@ -1250,7 +1251,7 @@ namespace CometServer.Modules
         /// <returns>
         /// A <see cref="MemoryStream"/> that contains the posted multipart message
         /// </returns>
-        private static async Task<Dictionary<string, Stream>> ExtractFilesFromMultipartMessage(IFileBinaryService fileBinaryService, MemoryStream stream, string boundary)
+        private static async Task<Dictionary<string, Stream>> ExtractFilesFromMultipartMessageAsync(IFileBinaryService fileBinaryService, MemoryStream stream, string boundary)
         {
             var fileDictionary = new Dictionary<string, Stream>();
 
@@ -1298,7 +1299,7 @@ namespace CometServer.Modules
         /// <returns>
         /// The list of containment <see cref="Thing"/>.
         /// </returns>
-        private async Task<IEnumerable<Thing>> GetContainmentResponse(IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, IProcessor resourceProcessor, string partition, EngineeringModelSetup modelSetup, string[] routeSegments)
+        private async Task<IEnumerable<Thing>> GetContainmentResponseAsync(IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, IProcessor resourceProcessor, string partition, EngineeringModelSetup modelSetup, string[] routeSegments)
         {
             var result = new List<Thing>();
 

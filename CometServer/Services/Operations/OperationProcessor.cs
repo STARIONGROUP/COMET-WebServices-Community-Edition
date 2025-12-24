@@ -39,10 +39,11 @@ namespace CometServer.Services.Operations
     using CDP4Common.MetaInfo;
     using CDP4Common.Types;
 
+    using CDP4DalCommon.Protocol.Operations;
+
     using CDP4Orm.Dao;
     using CDP4Orm.Dao.Resolve;
 
-    using CometServer.Authorization;
     using CometServer.Exceptions;
     using CometServer.Services.Authorization;
     using CometServer.Services.Operations.SideEffects;
@@ -50,6 +51,8 @@ namespace CometServer.Services.Operations
     using Microsoft.Extensions.Logging;
 
     using Npgsql;
+
+    using CometServer.Authorization;
 
     using IServiceProvider = CometServer.Services.IServiceProvider;
     using Thing = CDP4Common.DTO.Thing;
@@ -82,17 +85,17 @@ namespace CometServer.Services.Operations
         /// <summary>
         /// The base properties of a DTO which can not be updated directly.
         /// </summary>
-        private readonly string[] baseProperties = [IidKey, RevisionNumberKey, ClasskindKey];
+        private readonly string[] baseProperties = { IidKey, RevisionNumberKey, ClasskindKey };
 
         /// <summary>
         /// The top container types.
         /// </summary>
-        private readonly string[] topContainerTypes = ["SiteDirectory", "EngineeringModel"];
+        private readonly string[] topContainerTypes = { "SiteDirectory", "EngineeringModel" };
 
         /// <summary>
         /// Gets the operation <see cref="Thing"/> instance cache.
         /// In this cache you can find <see cref="DtoInfo"/>s, or <see cref="ContainerInfo"/>s and their <see cref="DtoResolveHelper"/>s
-        /// from <see cref="Thing"/>s that were resolved during the execution of the <see cref="ProcessAsync"/> method.
+        /// from <see cref="Thing"/>s that were resolved during the execution of the <see cref="Process"/> method.
         /// </summary>
         private readonly Dictionary<DtoInfo, DtoResolveHelper> operationThingCache = new();
 
@@ -154,7 +157,7 @@ namespace CometServer.Services.Operations
         /// Process the posted operation message.
         /// </summary>
         /// <param name="operation">
-        /// The <see cref="CdpPostOperation"/> that is to be processed
+        /// The <see cref="PostOperation"/> that is to be processed
         /// </param>
         /// <param name="transaction">
         /// The current transaction to the database.
@@ -166,7 +169,7 @@ namespace CometServer.Services.Operations
         /// The optional file binaries that were included in the request.
         /// </param>
         public async Task ProcessAsync(
-            CdpPostOperation operation,
+            PostOperation operation,
             NpgsqlTransaction transaction,
             string partition,
             Dictionary<string, Stream> fileStore = null)
@@ -190,7 +193,7 @@ namespace CometServer.Services.Operations
         /// <exception cref="InvalidOperationException">
         /// If validation failed
         /// </exception>
-        internal async Task ValidateDeleteOperationsAsync(CdpPostOperation operation, NpgsqlTransaction transaction, string partition)
+        internal async Task ValidateDeleteOperationsAsync(PostOperation operation, NpgsqlTransaction transaction, string partition)
         {
             // verify presence of classkind and iid
             if (operation.Delete.Any(x => !x.ContainsKey(ClasskindKey) || !x.ContainsKey(IidKey)))
@@ -228,12 +231,10 @@ namespace CometServer.Services.Operations
                 {
                     var propertyName = kvp.Key;
                     var propInfo = metaInfo.GetPropertyMetaInfo(propertyName);
-
                     if (propInfo.Aggregation != AggregationKind.Composite)
                     {
                         // reference delete
                         var deletedDtoInfo = deleteInfo.GetInfoPlaceholder();
-
                         if (!this.operationThingCache.ContainsKey(deletedDtoInfo))
                         {
                             this.operationThingCache.Add(deletedDtoInfo, new DtoResolveHelper(deletedDtoInfo));
@@ -244,7 +245,6 @@ namespace CometServer.Services.Operations
 
                     // object delete via containing property
                     var containerInfo = new ContainerInfo(typeName, iid);
-
                     if (!this.operationThingCache.ContainsKey(containerInfo))
                     {
                         this.operationThingCache.Add(containerInfo, new DtoResolveHelper(containerInfo));
@@ -269,7 +269,6 @@ namespace CometServer.Services.Operations
                     else if (propInfo.PropertyKind == PropertyKind.OrderedList)
                     {
                         var deletedOrderedCollectionItems = (IEnumerable<OrderedItem>)kvp.Value;
-
                         foreach (var deletedOrderedItem in deletedOrderedCollectionItems)
                         {
                             var deletedValueIid = Guid.Parse(deletedOrderedItem.V.ToString());
@@ -298,7 +297,7 @@ namespace CometServer.Services.Operations
         /// <exception cref="InvalidOperationException">
         /// If validation failed
         /// </exception>
-        internal void ValidateCreateOperations(CdpPostOperation operation, Dictionary<string, Stream> fileStore)
+        internal void ValidateCreateOperations(PostOperation operation, Dictionary<string, Stream> fileStore)
         {
             // verify all mandatory properties of the thing supplied (throw), 
             // defer property validation as per the operationsideeffect
@@ -313,7 +312,6 @@ namespace CometServer.Services.Operations
             foreach (var thing in operation.Create)
             {
                 var thingInfo = thing.GetInfoPlaceholder();
-
                 if (!this.operationThingCache.ContainsKey(thingInfo))
                 {
                     this.operationThingCache.Add(thingInfo, new DtoResolveHelper(thing));
@@ -324,7 +322,6 @@ namespace CometServer.Services.Operations
             foreach (var thing in operation.Create)
             {
                 var thingType = thing.GetType().Name;
-
                 if (this.topContainerTypes.Contains(thingType))
                 {
                     throw new InvalidOperationException($"Topcontainer item:'{thingType}' creation is not supported");
@@ -354,11 +351,14 @@ namespace CometServer.Services.Operations
                         $"The 'ContentHash' property of 'FileRevision' with iid '{fileRevision.Iid}' is mandatory and cannot be an empty string or null.");
                 }
 
-                if (!fileStore.ContainsKey(fileRevision.ContentHash) && !this.FileBinaryService.IsFilePersisted(fileRevision.ContentHash))
+                if (!fileStore.ContainsKey(fileRevision.ContentHash))
                 {
                     // try if file content is already on disk
-                    throw new InvalidOperationException(
-                        $"Physical file that belongs to FileRevision with iid:'{fileRevision.Iid}' with content Hash [{fileRevision.ContentHash}] does not exist");
+                    if (!this.FileBinaryService.IsFilePersisted(fileRevision.ContentHash))
+                    {
+                        throw new InvalidOperationException(
+                            $"Physical file that belongs to FileRevision with iid:'{fileRevision.Iid}' with content Hash [{fileRevision.ContentHash}] does not exist");
+                    }
                 }
             }
         }
@@ -372,7 +372,7 @@ namespace CometServer.Services.Operations
         /// <exception cref="InvalidOperationException">
         /// If validation failed
         /// </exception>
-        internal static void ValidateCopyOperations(CdpPostOperation operation)
+        internal static void ValidateCopyOperations(PostOperation operation)
         {
             // verify presence of classkind and iid (throw)
             if (operation.Copy.Any(x => x.Source.Thing.Iid == Guid.Empty))
@@ -424,7 +424,7 @@ namespace CometServer.Services.Operations
         /// <exception cref="InvalidOperationException">
         /// If validation failed
         /// </exception>
-        internal static void ValidateUpdateOperations(CdpPostOperation operation)
+        internal static void ValidateUpdateOperations(PostOperation operation)
         {
             // verify presence of classkind and iid (throw)
             if (operation.Update.Any(x => !x.ContainsKey(ClasskindKey) || !x.ContainsKey(IidKey)))
@@ -445,7 +445,7 @@ namespace CometServer.Services.Operations
         /// <param name="operation">
         /// The operation.
         /// </param>
-        private void RegisterUpdateContainersForResolvement(CdpPostOperation operation)
+        private void RegisterUpdateContainersForResolvement(PostOperation operation)
         {
             // register items for resolvement
             foreach (var thingInfo in operation.Update.Select(x => x.GetInfoPlaceholder()))
@@ -491,13 +491,7 @@ namespace CometServer.Services.Operations
         /// <param name="fileStore">
         /// The file Store.
         /// </param>
-        /// <param name="transaction">
-        /// the <see cref="NpgsqlTransaction"/> used to write to the underlying database
-        /// </param>
-        /// <param name="partition">
-        /// The database partition
-        /// </param>
-        private async Task ValidatePostMessageAsync(CdpPostOperation operation, Dictionary<string, Stream> fileStore, NpgsqlTransaction transaction, string partition)
+        private async Task ValidatePostMessageAsync(PostOperation operation, Dictionary<string, Stream> fileStore, NpgsqlTransaction transaction, string partition)
         {
             await this.ValidateDeleteOperationsAsync(operation, transaction, partition);
             this.ValidateCreateOperations(operation, fileStore);
@@ -519,7 +513,7 @@ namespace CometServer.Services.Operations
         /// <returns>
         /// True if the thing type is contained.
         /// </returns>
-        private bool IsContainerUpdateIncluded(CdpPostOperation operation, Thing thing)
+        private bool IsContainerUpdateIncluded(PostOperation operation, Thing thing)
         {
             var thingType = thing.GetType().Name;
             var metaInfo = this.MetaInfoProvider.GetMetaInfo(thingType);
@@ -543,7 +537,7 @@ namespace CometServer.Services.Operations
         /// <returns>
         /// True if found, which also registers the container in the local operationContainmentCache
         /// </returns>
-        private bool TryFindContainerInUpdates(CdpPostOperation operation, Thing thing, IMetaInfo metaInfo)
+        private bool TryFindContainerInUpdates(PostOperation operation, Thing thing, IMetaInfo metaInfo)
         {
             // get the thing info as cachekey
             var thingInfo = thing.GetInfoPlaceholder();
@@ -562,7 +556,6 @@ namespace CometServer.Services.Operations
                 }
 
                 var containerPropertyKey = containerPropertyInfo.Name;
-
                 if (!updateInfo.ContainsKey(containerPropertyKey))
                 {
                     continue;
@@ -636,7 +629,7 @@ namespace CometServer.Services.Operations
         /// <returns>
         /// True if found, which also registers the container in the local operationContainmentCache
         /// </returns>
-        private bool TryFindContainerInCreateSection(CdpPostOperation operation, Thing thing, IMetaInfo metaInfo)
+        private bool TryFindContainerInCreateSection(PostOperation operation, Thing thing, IMetaInfo metaInfo)
         {
             // get the thing info as cachekey
             var thingInfo = thing.GetInfoPlaceholder();
@@ -664,9 +657,9 @@ namespace CometServer.Services.Operations
                     {
                         // container found
                         containerInfo = new ContainerInfo(
-                            createInfo.ClassKind.ToString(),
-                            createInfo.Iid,
-                            orderedItem.K);
+                                            createInfo.ClassKind.ToString(),
+                                            createInfo.Iid,
+                                            orderedItem.K);
 
                         if (this.operationThingCache.TryGetValue(thingInfo, out var orderedItemDtoResolveHelper))
                         {
@@ -765,11 +758,7 @@ namespace CometServer.Services.Operations
         /// <param name="fileStore">
         /// The file Store.
         /// </param>
-        private async Task ApplyOperationAsync(
-            CdpPostOperation operation,
-            NpgsqlTransaction transaction,
-            string partition,
-            Dictionary<string, Stream> fileStore)
+        private async Task ApplyOperationAsync(PostOperation operation, NpgsqlTransaction transaction, string partition, Dictionary<string, Stream> fileStore)
         {
             // resolve any meta data from the persitence store
             await this.ResolveService.ResolveItemsAsync(transaction, partition, this.operationThingCache);
@@ -807,7 +796,7 @@ namespace CometServer.Services.Operations
         {
             // get the persisted thing (full) so that permission can be checked against potential owner
             var securityContext = new RequestSecurityContext { ContainerReadAllowed = true };
-            var thing = (await service.GetShallowAsync(transaction, partition, [persistedThing.Iid], securityContext)).FirstOrDefault();
+            var thing = (await service.GetShallowAsync(transaction, partition, new[] { persistedThing.Iid }, securityContext)).FirstOrDefault();
 
             if (thing == null)
             {
@@ -838,10 +827,9 @@ namespace CometServer.Services.Operations
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        private static Task<IEnumerable<Thing>> GetPersistedItemsAsync(NpgsqlTransaction transaction, string partition, IPersistService service, IEnumerable<Guid> iids, ISecurityContext securityContext)
+        private static async Task<IEnumerable<Thing>> GetPersistedItemsAsync(NpgsqlTransaction transaction, string partition, IPersistService service, IEnumerable<Guid> iids, ISecurityContext securityContext)
         {
-            return service.GetShallowAsync(
-                transaction, partition, iids, securityContext);
+            return await service.GetShallowAsync(transaction, partition, iids, securityContext);
         }
 
         /// <summary>
@@ -867,9 +855,8 @@ namespace CometServer.Services.Operations
         /// </param>
         private static async Task<Thing> GetPersistedItemAsync(NpgsqlTransaction transaction, string partition, IPersistService service, Guid iid, ISecurityContext securityContext)
         {
-            return (await service.GetShallowAsync(
-                    transaction, partition, [iid], securityContext))
-                .SingleOrDefault();
+            return (await service.GetShallowAsync(transaction, partition, new[] { iid }, securityContext))
+                       .SingleOrDefault();
         }
 
         /// <summary>
@@ -881,10 +868,7 @@ namespace CometServer.Services.Operations
         /// <param name="transaction">
         /// The current transaction to the database.
         /// </param>
-        /// <param name="requestPartition">
-        /// the database partition
-        /// </param>
-        private async Task ApplyDeleteOperationsAsync(CdpPostOperation operation, NpgsqlTransaction transaction, string requestPartition)
+        private async Task ApplyDeleteOperationsAsync(PostOperation operation, NpgsqlTransaction transaction, string requestPartition)
         {
             foreach (var deleteInfo in operation.Delete)
             {
@@ -932,7 +916,7 @@ namespace CometServer.Services.Operations
                                 if (!await service.DeleteFromCollectionPropertyAsync(transaction, resolvedInfo.Partition, propertyName, iid, deletedValue))
                                 {
                                     this.Logger.LogInformation(
-                                        "The item '{PropInfoTypeName}' with iid: '{DeletedValue}' in '{TypeName}.{PropInfoName}' was already deleted: continue processing.",
+                                        "The item '{propInfo.TypeName}' with iid: '{deletedValue}' in '{typeName}.{propInfo.Name}' was already deleted: continue processing.",
                                         propInfo.TypeName,
                                         deletedValue,
                                         typeName,
@@ -960,11 +944,11 @@ namespace CometServer.Services.Operations
                                 if (!await service.DeleteFromCollectionPropertyAsync(transaction, resolvedInfo.Partition, propertyName, iid, deletedOrderedItem))
                                 {
                                     this.Logger.LogInformation(
-                                        "The ordered item '{PropInfoTypeName}' with value: '{DeletedOrderedItemV}' in '{TypeName}.{PropInfoName}' was already deleted: continue processing.",
-                                        propInfo.TypeName,
-                                        deletedOrderedItem.V,
-                                        typeName,
-                                        propInfo.Name);
+                                            "The ordered item '{propInfo.TypeName}' with value: '{deletedOrderedItem.V}' in '{typeName}.{propInfo.Name}' was already deleted: continue processing.",
+                                            propInfo.TypeName,
+                                            deletedOrderedItem.V,
+                                            typeName,
+                                            propInfo.Name);
                                 }
                             }
                         }
@@ -985,7 +969,7 @@ namespace CometServer.Services.Operations
         /// <exception cref="InvalidOperationException">
         /// If the item already exists
         /// </exception>
-        private async Task ApplyCreateOperationsAsync(CdpPostOperation operation, NpgsqlTransaction transaction)
+        private async Task ApplyCreateOperationsAsync(PostOperation operation, NpgsqlTransaction transaction)
         {
             // re-order create
             ReorderCreateOrder(operation);
@@ -1000,13 +984,12 @@ namespace CometServer.Services.Operations
                 foreach (var typeGroup in typeGroups)
                 {
                     var partitions = this.operationThingCache.Where(x => typeGroup.Things.Contains(x.Key)).Select(x => x.Value.Partition).Distinct();
-
                     foreach (var partition in partitions)
                     {
                         var service = this.ServiceProvider.MapToPersitableService(typeGroup.TypeName);
                         var typeGroupIids = typeGroup.Things.Select(x => x.Iid);
 
-                        var persistedItems = (await GetPersistedItemsAsync(transaction, partition, service, typeGroupIids, securityContext)).ToArray();
+                        var persistedItems = await GetPersistedItemsAsync(transaction, partition, service, typeGroupIids, securityContext);
 
                         foreach (var createInfo in typeGroup.Things)
                         {
@@ -1031,9 +1014,9 @@ namespace CometServer.Services.Operations
                             }
 
                             // call before create hook
-                            if (resolvedInfo.Thing is ParameterValueSet || !(await this.OperationSideEffectProcessor.BeforeCreateAsync(resolvedInfo.Thing, resolvedContainerInfo.Thing, transaction, resolvedInfo.Partition, securityContext)))
+                            if (resolvedInfo.Thing is ParameterValueSet || !await this.OperationSideEffectProcessor.BeforeCreateAsync(resolvedInfo.Thing, resolvedContainerInfo.Thing, transaction, resolvedInfo.Partition, securityContext))
                             {
-                                this.Logger.LogWarning("Skipping create operation of thing {CreateInfoTypeName} with id {CreateInfoIid} as a consequence of the side-effect.", createInfo.TypeName, createInfo.Iid);
+                                this.Logger.LogWarning("Skipping create operation of thing {createInfo.TypeName} with id {createInfo.Iid} as a consequence of the side-effect.", createInfo.TypeName, createInfo.Iid);
                                 continue;
                             }
 
@@ -1071,7 +1054,7 @@ namespace CometServer.Services.Operations
         /// <exception cref="InvalidOperationException">
         /// If mandatory resources cannot be found to perform the operation
         /// </exception>
-        private async Task ApplyCopyOperationsAsync(CdpPostOperation operation, NpgsqlTransaction transaction, string requestPartition)
+        private async Task ApplyCopyOperationsAsync(PostOperation operation, NpgsqlTransaction transaction, string requestPartition)
         {
             if (operation.Copy.Count == 0)
             {
@@ -1087,7 +1070,6 @@ namespace CometServer.Services.Operations
             foreach (var copyinfo in operation.Copy)
             {
                 var targetEngineeringModelSetup = await modelSetupService.GetEngineeringModelSetupFromDataBaseCache(transaction, copyinfo.Target.TopContainer.Iid);
-
                 if (targetEngineeringModelSetup == null)
                 {
                     throw new InvalidOperationException("The target EngineeringModelSetup could not be found");
@@ -1099,8 +1081,7 @@ namespace CometServer.Services.Operations
                 var securityContext = new RequestSecurityContext { ContainerReadAllowed = true, ContainerWriteAllowed = true };
 
                 var containerService = this.ServiceProvider.MapToReadService(copyinfo.Target.Container.ClassKind.ToString());
-                var container = (await containerService.GetShallowAsync(transaction, requestPartition, [copyinfo.Target.Container.Iid], securityContext)).SingleOrDefault();
-
+                var container = (await containerService.GetShallowAsync(transaction, requestPartition, new[] { copyinfo.Target.Container.Iid }, securityContext)).SingleOrDefault();
                 if (container == null)
                 {
                     throw new InvalidOperationException("The container for the copy operation cannot be found.");
@@ -1109,8 +1090,7 @@ namespace CometServer.Services.Operations
                 var mrdlService = (IModelReferenceDataLibraryService)this.ServiceProvider.MapToReadService(nameof(ModelReferenceDataLibrary));
                 var iterationservice = this.ServiceProvider.MapToReadService(nameof(Iteration));
 
-                var targetIteration = (Iteration)(await iterationservice.GetShallowAsync(transaction, targetModelPartition, [copyinfo.Target.IterationId.Value], securityContext)).SingleOrDefault();
-
+                var targetIteration = (Iteration)(await iterationservice.GetShallowAsync(transaction, targetModelPartition, new[] { copyinfo.Target.IterationId.Value }, securityContext)).SingleOrDefault();
                 if (targetIteration == null)
                 {
                     throw new InvalidOperationException("The target iteration could not be found");
@@ -1124,7 +1104,6 @@ namespace CometServer.Services.Operations
                 var idmap = this.CopySourceService.GenerateCopyReference(sourceThings);
 
                 var elementDefs = sourceThings.OfType<ElementDefinition>().ToList();
-
                 if (elementDefs.Count == 1)
                 {
                     await ((ServiceBase)service).CopyAsync(transaction, targetIterationPartition, topCopy, container, sourceThings, copyinfo, idmap, rdls, targetEngineeringModelSetup, securityContext);
@@ -1144,12 +1123,10 @@ namespace CometServer.Services.Operations
 
                     var sourceUsages = sourceThings.OfType<ElementUsage>().ToList();
                     var usageService = this.ServiceProvider.MapToPersitableService(ClassKind.ElementUsage.ToString());
-
                     foreach (var elementUsage in sourceUsages)
                     {
                         var sourceElementDefContainer = elementDefs.Single(x => x.ContainedElement.Contains(elementUsage.Iid));
                         var elementDefContainer = elementDefCopies.SingleOrDefault(x => x.Iid == idmap[sourceElementDefContainer.Iid]);
-
                         if (elementDefContainer == null)
                         {
                             throw new InvalidOperationException("The target element definition container could not be found for the usage to copy.");
@@ -1158,6 +1135,7 @@ namespace CometServer.Services.Operations
                         await ((ServiceBase)usageService).CopyAsync(transaction, targetIterationPartition, elementUsage, elementDefContainer, sourceThings, copyinfo, idmap, rdls, targetEngineeringModelSetup, securityContext);
                     }
                 }
+
             }
         }
 
@@ -1170,7 +1148,7 @@ namespace CometServer.Services.Operations
         /// <param name="transaction">
         /// The current transaction to the database.
         /// </param>
-        private async Task ApplyUpdateOperationsAsync(CdpPostOperation operation, NpgsqlTransaction transaction)
+        private async Task ApplyUpdateOperationsAsync(PostOperation operation, NpgsqlTransaction transaction)
         {
             foreach (var updateInfo in operation.Update)
             {
@@ -1188,7 +1166,7 @@ namespace CometServer.Services.Operations
                 if (updatableThing == null)
                 {
                     this.Logger.LogInformation(
-                        "The requested update resource '{UpdateInfoKeyTypeName}' with iid: '{UpdateInfoKeyIid}' could not be retrieved.",
+                        "The requested update resource '{updateInfoKey.TypeName}' with iid: '{updateInfoKey.Iid}' could not be retrieved.",
                         updateInfoKey.TypeName,
                         updateInfoKey.Iid);
 
@@ -1197,7 +1175,6 @@ namespace CometServer.Services.Operations
                 }
 
                 Thing containerInfo = null;
-
                 if (!metaInfo.IsTopContainer)
                 {
                     containerInfo = this.GetContainerInfo(updatableThing).Thing;
@@ -1232,203 +1209,201 @@ namespace CometServer.Services.Operations
                     {
                         case PropertyKind.Scalar:
                         case PropertyKind.ValueArray:
-                        {
-                            // apply scalar or valuarray value update
-                            if (metaInfo.ApplyPropertyUpdate(updatableThing, propertyName, update.Value))
                             {
-                                isUpdated = true;
+                                // apply scalar or valuarray value update
+                                if (metaInfo.ApplyPropertyUpdate(updatableThing, propertyName, update.Value))
+                                {
+                                    isUpdated = true;
+                                }
+
+                                isAnyUpdated = isAnyUpdated || isUpdated;
+
+                                break;
                             }
-
-                            isAnyUpdated = isAnyUpdated || isUpdated;
-
-                            break;
-                        }
 
                         case PropertyKind.List:
-                        {
-                            var collectionItems = (IEnumerable)update.Value;
-
-                            if (propInfo.Aggregation != AggregationKind.Composite)
                             {
-                                // add new collection items to unordered non-composite list property
-                                foreach (var newValue in collectionItems)
+                                var collectionItems = (IEnumerable)update.Value;
+                                if (propInfo.Aggregation != AggregationKind.Composite)
                                 {
-                                    isUpdated = await service.AddToCollectionPropertyAsync(transaction, resolvedInfo.Partition, propertyName, resolvedInfo.InstanceInfo.Iid, newValue);
+                                    // add new collection items to unordered non-composite list property
+                                    foreach (var newValue in collectionItems)
+                                    {
+                                        isUpdated = await service.AddToCollectionPropertyAsync(transaction, resolvedInfo.Partition, propertyName, resolvedInfo.InstanceInfo.Iid, newValue);
 
-                                    isAnyUpdated = isAnyUpdated || isUpdated;
+                                        isAnyUpdated = isAnyUpdated || isUpdated;
+                                    }
                                 }
-                            }
-                            else if (propInfo.Aggregation == AggregationKind.Composite)
-                            {
-                                // move containment of collection items defined in unordered composite list property
-                                foreach (Guid containedIid in collectionItems)
+                                else if (propInfo.Aggregation == AggregationKind.Composite)
                                 {
-                                    if (operation.Create.Any(x => x.Iid == containedIid))
+                                    // move containment of collection items defined in unordered composite list property
+                                    foreach (Guid containedIid in collectionItems)
                                     {
-                                        continue;
+                                        if (operation.Create.Any(x => x.Iid == containedIid))
+                                        {
+                                            continue;
+                                        }
+
+                                        // change containment of the indicated item
+                                        var containedThingService = this.ServiceProvider.MapToPersitableService(propInfo.TypeName);
+                                        var containedThing = (await containedThingService.GetShallowAsync(
+                                            transaction,
+                                            resolvedInfo.Partition,
+                                            new[] { containedIid },
+                                            new RequestSecurityContext { ContainerReadAllowed = true })).SingleOrDefault();
+
+                                        if (containedThing == null)
+                                        {
+                                            this.Logger.LogInformation(
+                                                "The containment change of item '{propInfo.TypeName}' with iid: '{containedIid}' was not completed as the item could not be retrieved.",
+                                                propInfo.TypeName,
+                                                containedIid);
+
+                                            continue;
+                                        }
+
+                                        // try apply containment change
+                                        isUpdated = await containedThingService.UpdateConceptAsync(transaction, resolvedInfo.Partition, containedThing, updatableThing);
+
+                                        // try apply containment change
+                                        if (!isUpdated)
+                                        {
+                                            this.Logger.LogInformation(
+                                                "The containment change of item '{propInfo.TypeName}' with iid: '{containedIid}' to container '{resolvedInfo.InstanceInfo.TypeName}' with '{resolvedInfo.InstanceInfo.Iid}' could not be performed.",
+                                                propInfo.TypeName,
+                                                containedIid,
+                                                resolvedInfo.InstanceInfo.TypeName,
+                                                resolvedInfo.InstanceInfo.Iid);
+                                        }
+
+                                        isAnyUpdated = isAnyUpdated || isUpdated;
                                     }
-
-                                    // change containment of the indicated item
-                                    var containedThingService = this.ServiceProvider.MapToPersitableService(propInfo.TypeName);
-
-                                    var containedThing = (await containedThingService.GetShallowAsync(
-                                        transaction,
-                                        resolvedInfo.Partition,
-                                        [containedIid],
-                                        new RequestSecurityContext { ContainerReadAllowed = true })).SingleOrDefault();
-
-                                    if (containedThing == null)
-                                    {
-                                        this.Logger.LogInformation(
-                                            "The containment change of item '{PropInfoTypeName}' with iid: '{ContainedIid}' was not completed as the item could not be retrieved.",
-                                            propInfo.TypeName,
-                                            containedIid);
-
-                                        continue;
-                                    }
-
-                                    // try apply containment change
-                                    isUpdated = await containedThingService.UpdateConceptAsync(transaction, resolvedInfo.Partition, containedThing, updatableThing);
-
-                                    // try apply containment change
-                                    if (!isUpdated)
-                                    {
-                                        this.Logger.LogInformation(
-                                            "The containment change of item '{PropInfoTypeName}' with iid: '{ContainedIid}' to container '{ResolvedInfoInstanceInfoTypeName}' with '{ResolvedInfoInstanceInfoIid}' could not be performed.",
-                                            propInfo.TypeName,
-                                            containedIid,
-                                            resolvedInfo.InstanceInfo.TypeName,
-                                            resolvedInfo.InstanceInfo.Iid);
-                                    }
-
-                                    isAnyUpdated = isAnyUpdated || isUpdated;
                                 }
-                            }
 
-                            break;
-                        }
+                                break;
+                            }
 
                         case PropertyKind.OrderedList:
-                        {
-                            var orderedCollectionItems = ((IEnumerable<OrderedItem>)update.Value).ToList();
-
-                            if (propInfo.Aggregation != AggregationKind.Composite)
                             {
-                                foreach (var newOrderedItem in orderedCollectionItems.Where(x => !x.M.HasValue))
+                                var orderedCollectionItems = ((IEnumerable<OrderedItem>)update.Value).ToList();
+                                if (propInfo.Aggregation != AggregationKind.Composite)
                                 {
-                                    var isDeleteUpdated = await service.DeleteFromCollectionPropertyAsync(transaction, resolvedInfo.Partition, propertyName, resolvedInfo.InstanceInfo.Iid, newOrderedItem);
-
-                                    // add ordered item to collection property
-                                    isUpdated = await service.AddToCollectionPropertyAsync(
-                                        transaction,
-                                        resolvedInfo.Partition,
-                                        propertyName,
-                                        resolvedInfo.InstanceInfo.Iid,
-                                        newOrderedItem) || isDeleteUpdated;
-
-                                    isAnyUpdated = isAnyUpdated || isUpdated;
-                                }
-
-                                foreach (var orderedItemUpdate in orderedCollectionItems.Where(x => x.M.HasValue))
-                                {
-                                    orderedItemUpdate.MoveItem(orderedItemUpdate.K, orderedItemUpdate.M.Value);
-
-                                    // try apply collection property reorder
-                                    isUpdated = await service.ReorderCollectionPropertyAsync(transaction, resolvedInfo.Partition, propertyName, resolvedInfo.InstanceInfo.Iid, orderedItemUpdate);
-
-                                    if (!isUpdated)
+                                    foreach (var newOrderedItem in orderedCollectionItems.Where(x => !x.M.HasValue))
                                     {
-                                        this.Logger.LogInformation(
-                                            "The item '{OrderedItemUpdateV}' order update from sequence {OrderedItemUpdateK} to {OrderedItemUpdateM} of {ResolvedInfoInstanceInfoTypeName}.{PropertyName} with iid: '{UpdatableThingIid}' could not be performed.",
-                                            orderedItemUpdate.V,
-                                            orderedItemUpdate.K,
-                                            orderedItemUpdate.M,
-                                            resolvedInfo.InstanceInfo.TypeName,
-                                            propertyName,
-                                            updatableThing.Iid);
-                                    }
+                                        isUpdated = await service.DeleteFromCollectionPropertyAsync(transaction, resolvedInfo.Partition, propertyName, resolvedInfo.InstanceInfo.Iid, newOrderedItem);
 
-                                    isAnyUpdated = isAnyUpdated || isUpdated;
-                                }
-                            }
-                            else if (propInfo.Aggregation == AggregationKind.Composite)
-                            {
-                                // the create section will have handled new composite ordered items; only handle reordering of contained items here
-                                foreach (var orderUpdateItemInfo in orderedCollectionItems.Where(x => x.M.HasValue))
-                                {
-                                    var containedThingService = this.ServiceProvider.MapToPersitableService(propInfo.TypeName);
-                                    var containedItemIid = Guid.Parse(orderUpdateItemInfo.V.ToString());
-
-                                    //create ClasslessDto for contained object and get DtoInfo from that
-                                    var dtoInfo = new ClasslessDTO
-                                    {
-                                        { nameof(Thing.Iid), containedItemIid },
-                                        { nameof(Thing.ClassKind), propInfo.TypeName },
-                                    }.GetInfoPlaceholder();
-
-                                    var dtoResolverHelper = new DtoResolveHelper(dtoInfo);
-
-                                    //Resolve the correct partition for the specific object
-                                    await this.ResolveService.ResolveItemsAsync(transaction, resolvedInfo.Partition, new Dictionary<DtoInfo, DtoResolveHelper> { { dtoInfo, dtoResolverHelper } });
-
-                                    var containedThing = (await containedThingService.GetShallowAsync(
+                                        // add ordered item to collection property
+                                        isUpdated = await service.AddToCollectionPropertyAsync(
                                             transaction,
-                                            dtoResolverHelper.Partition,
-                                            [containedItemIid],
-                                            new RequestSecurityContext { ContainerReadAllowed = true }))
-                                        .SingleOrDefault();
+                                            resolvedInfo.Partition,
+                                            propertyName,
+                                            resolvedInfo.InstanceInfo.Iid,
+                                            newOrderedItem);
 
-                                    if (containedThing == null)
-                                    {
-                                        this.Logger.LogInformation(
-                                            "The contained item '{PropInfoTypeName}' with iid: '{ContainedItemIid}' could not be retrieved.",
-                                            propInfo.TypeName,
-                                            containedItemIid);
-
-                                        continue;
+                                        isAnyUpdated = isAnyUpdated || isUpdated;
                                     }
 
-                                    // update containment order
-                                    var orderedItemUpdate = new OrderedItem
+                                    foreach (var orderedItemUpdate in orderedCollectionItems.Where(x => x.M.HasValue))
                                     {
-                                        V = containedItemIid
-                                    };
+                                        orderedItemUpdate.MoveItem(orderedItemUpdate.K, orderedItemUpdate.M.Value);
 
-                                    orderedItemUpdate.MoveItem(orderUpdateItemInfo.K, orderUpdateItemInfo.M.Value);
+                                        // try apply collection property reorder
+                                        isUpdated = await service.ReorderCollectionPropertyAsync(transaction, resolvedInfo.Partition, propertyName, resolvedInfo.InstanceInfo.Iid, orderedItemUpdate);
 
-                                    isUpdated = await containedThingService.ReorderContainmentAsync(transaction, dtoResolverHelper.Partition, orderedItemUpdate);
+                                        if (!isUpdated)
+                                        {
+                                            this.Logger.LogInformation(
+                                                "The item '{orderedItemUpdate.V}' order update from sequence {orderedItemUpdate.K} to {orderedItemUpdate.M} of {resolvedInfo.InstanceInfo.TypeName}.{propertyName} with iid: '{updatableThing.Iid}' could not be performed.",
+                                                orderedItemUpdate.V,
+                                                orderedItemUpdate.K,
+                                                orderedItemUpdate.M,
+                                                resolvedInfo.InstanceInfo.TypeName,
+                                                propertyName,
+                                                updatableThing.Iid);
+                                        }
 
-                                    if (!orderedListToBeChecked.Contains(propertyName))
-                                    {
-                                        orderedListToBeChecked.Add(propertyName);
+                                        isAnyUpdated = isAnyUpdated || isUpdated;
                                     }
-
-                                    if (!isUpdated)
-                                    {
-                                        this.Logger.LogInformation(
-                                            "The contained item '{PropInfoTypeName}' with iid: '{ContainedItemIid}' could not be reordered.",
-                                            propInfo.TypeName,
-                                            containedItemIid);
-                                    }
-
-                                    isAnyUpdated = isAnyUpdated || isUpdated;
                                 }
-                            }
+                                else if (propInfo.Aggregation == AggregationKind.Composite)
+                                {
+                                    // the create section will have handled new composite ordered items; only handle reordering of contained items here
+                                    foreach (var orderUpdateItemInfo in orderedCollectionItems.Where(x => x.M.HasValue))
+                                    {
+                                        var containedThingService = this.ServiceProvider.MapToPersitableService(propInfo.TypeName);
+                                        var containedItemIid = Guid.Parse(orderUpdateItemInfo.V.ToString());
 
-                            break;
-                        }
+                                        //create ClasslessDto for contained object and get DtoInfo from that
+                                        var dtoInfo = new ClasslessDTO
+                                        {
+                                            {nameof(Thing.Iid), containedItemIid},
+                                            {nameof(Thing.ClassKind), propInfo.TypeName},
+                                        }.GetInfoPlaceholder();
+
+                                        var dtoResolverHelper = new DtoResolveHelper(dtoInfo);
+
+                                        //Resolve the correct partition for the specific object
+                                        await this.ResolveService.ResolveItemsAsync(transaction, resolvedInfo.Partition, new Dictionary<DtoInfo, DtoResolveHelper> { { dtoInfo, dtoResolverHelper } });
+
+                                        var containedThing = (await containedThingService.GetShallowAsync(
+                                                transaction,
+                                                dtoResolverHelper.Partition,
+                                                new[] { containedItemIid },
+                                                new RequestSecurityContext { ContainerReadAllowed = true }))
+                                                .SingleOrDefault();
+
+                                        if (containedThing == null)
+                                        {
+                                            this.Logger.LogInformation(
+                                                "The contained item '{propInfo.TypeName}' with iid: '{containedItemIid}' could not be retrieved.",
+                                                propInfo.TypeName,
+                                                containedItemIid);
+
+                                            continue;
+                                        }
+
+                                        // update containment order
+                                        var orderedItemUpdate = new OrderedItem
+                                        {
+                                            V = containedItemIid
+                                        };
+                                        orderedItemUpdate.MoveItem(orderUpdateItemInfo.K, orderUpdateItemInfo.M.Value);
+
+                                        isUpdated = await containedThingService.ReorderContainmentAsync(transaction, dtoResolverHelper.Partition, orderedItemUpdate);
+
+                                        if (!orderedListToBeChecked.Contains(propertyName))
+                                        {
+                                            orderedListToBeChecked.Add(propertyName);
+                                        }
+
+                                        if (!isUpdated)
+                                        {
+                                            this.Logger.LogInformation(
+                                                    "The contained item '{propInfo.TypeName}' with iid: '{containedItemIid}' could not be reordered.",
+                                                    propInfo.TypeName,
+                                                    containedItemIid);
+                                        }
+
+                                        isAnyUpdated = isAnyUpdated || isUpdated;
+                                    }
+                                }
+
+                                break;
+                            }
                     }
                 }
 
                 if (isAnyUpdated)
                 {
                     // PreCheck CanWrite
-                    if (service is ServiceBase serviceBase
-                        && !serviceBase.TransactionManager.IsFullAccessEnabled()
-                        && !await serviceBase.PermissionService.CanWriteAsync(transaction, originalThing, updateInfoKey.TypeName,
-                            resolvedInfo.Partition, ServiceBase.UpdateOperation, securityContext))
+                    if (service is ServiceBase serviceBase)
                     {
-                        throw new SecurityException("The person " + this.CredentialsService.Credentials.Person.UserName + " does not have an appropriate update permission for " + originalThing.GetType().Name + ".");
+                        if (!serviceBase.TransactionManager.IsFullAccessEnabled()
+                            && !await serviceBase.PermissionService.CanWriteAsync(transaction, originalThing, updateInfoKey.TypeName,
+                            resolvedInfo.Partition, ServiceBase.UpdateOperation, securityContext))
+                        {
+                            throw new SecurityException("The person " + this.CredentialsService.Credentials.Person.UserName + " does not have an appropriate update permission for " + originalThing.GetType().Name + ".");
+                        }
                     }
 
                     // apply scalar updates to the thing
@@ -1462,8 +1437,6 @@ namespace CometServer.Services.Operations
             {
                 if (metaInfo.GetValue(propertyName, updatedThing) is IEnumerable<OrderedItem> propertyValue)
                 {
-                    propertyValue = propertyValue.ToArray();
-
                     if (propertyValue.Select(x => x.K).Count() != propertyValue.Select(x => x.K).Distinct().Count())
                     {
                         throw new BadRequestException($"{updatedThing.ClassKind} (Iid:{updatedThing.Iid}) contains duplicate keys after saving to database for property {propertyName}.\n Conflicting changes were made.\n Transaction was canceled.");
@@ -1487,7 +1460,7 @@ namespace CometServer.Services.Operations
         {
             if (!this.operationThingCache.TryGetValue(dtoInfo, out var resolvedInfo))
             {
-                this.Logger.LogInformation("The item '{DtoInfoTypeName}' with iid: '{DtoInfoIid}' was already deleted: continue processing.", dtoInfo.TypeName, dtoInfo.Iid);
+                this.Logger.LogInformation("The item '{dtoInfo.TypeName}' with iid: '{dtoInfo.Iid}' was already deleted: continue processing.", dtoInfo.TypeName, dtoInfo.Iid);
                 return;
             }
 
@@ -1526,13 +1499,13 @@ namespace CometServer.Services.Operations
         }
 
         /// <summary>
-        /// Reorder the create list of a <see cref="CdpPostOperation"/>
+        /// Reorder the create list of a <see cref="PostOperation"/>
         /// </summary>
-        /// <param name="postOperation">The <see cref="CdpPostOperation"/></param>
+        /// <param name="postOperation">The <see cref="PostOperation"/></param>
         /// <remarks>
         /// This is done to make sure that some things that depend on other are created last
         /// </remarks>
-        private static void ReorderCreateOrder(CdpPostOperation postOperation)
+        private static void ReorderCreateOrder(PostOperation postOperation)
         {
             var subscriptions = postOperation.Create.OfType<ParameterSubscription>().ToArray();
 

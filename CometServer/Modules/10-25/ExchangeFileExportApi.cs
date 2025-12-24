@@ -22,6 +22,7 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
+#pragma warning disable S6667
 namespace CometServer.Modules
 {
     using System;
@@ -132,7 +133,7 @@ namespace CometServer.Modules
                     return;
                 }
 
-                await this.PostResponseData(req, res, requestUtils, transactionManager, credentialsService, metaInfoProvider, jsonSerializer, jsonExchangeFileWriter);
+                await this.PostResponseDataAsync(req, res, requestUtils, transactionManager, credentialsService, metaInfoProvider, jsonSerializer, jsonExchangeFileWriter);
             }).RequireAuthorization(AuthenticationSchemes);
         }
 
@@ -167,7 +168,7 @@ namespace CometServer.Modules
         /// <returns>
         /// An awaitable <see cref="Task"/>
         /// </returns>
-        protected async Task PostResponseData(HttpRequest httpRequest, HttpResponse httpResponse, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IJsonExchangeFileWriter jsonExchangeFileWriter)
+        protected async Task PostResponseDataAsync(HttpRequest httpRequest, HttpResponse httpResponse, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IJsonExchangeFileWriter jsonExchangeFileWriter)
         {
             var reqsw = Stopwatch.StartNew();
             var requestToken = this.TokenGeneratorService.GenerateRandomToken();
@@ -268,7 +269,7 @@ namespace CometServer.Modules
         /// thrown when at least one of the provided <paramref name="iids"/> does not correspond to an <see cref="EngineeringModelSetup"/>
         /// the user has access to.
         /// </exception>
-        private static IEnumerable<EngineeringModelSetup> QueryExportEngineeringModelSetups (ICredentialsService credentialsService, IEnumerable<Guid> iids)
+        private static IEnumerable<EngineeringModelSetup> QueryExportEngineeringModelSetups(ICredentialsService credentialsService, IEnumerable<Guid> iids)
         {
             if (!iids.Any())
             {

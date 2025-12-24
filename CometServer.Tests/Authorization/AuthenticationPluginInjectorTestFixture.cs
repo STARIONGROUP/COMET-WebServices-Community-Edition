@@ -25,14 +25,11 @@
 
 namespace CometServer.Tests.Authorization
 {
-    using CometServer.Authentication;
-
-    using Microsoft.Extensions.Logging;
-
-    using Moq;
-
-    using NUnit.Framework;
     using System.IO;
+    using CometServer.Authentication;
+    using Microsoft.Extensions.Logging;
+    using Moq;
+    using NUnit.Framework;
 
     /// <summary>
     /// Test fixture for the <see cref="AuthenticationPluginInjector"/> class

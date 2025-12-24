@@ -24,12 +24,6 @@
 
 namespace CometServer.Tests
 {
-    using System;
-    using System.Collections.Generic;
-    using System.IO;
-    using System.Linq;
-    using System.Threading.Tasks;
-
     using CDP4Common;
     using CDP4Common.CommonData;
     using CDP4Common.Dto;
@@ -38,9 +32,7 @@ namespace CometServer.Tests
     using CDP4Common.Exceptions;
     using CDP4Common.MetaInfo;
     using CDP4Common.Types;
-
     using CDP4Orm.Dao;
-
     using CometServer.Authorization;
     using CometServer.Exceptions;
     using CometServer.Helpers;
@@ -49,12 +41,16 @@ namespace CometServer.Tests
     using CometServer.Services.Operations;
     using CometServer.Services.Operations.SideEffects;
     using CometServer.Services.Protocol;
-
     using Moq;
-
     using Npgsql;
-
     using NUnit.Framework;
+    using System;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Linq;
+    using System.Threading.Tasks;
+
+    using CDP4DalCommon.Protocol.Operations;
 
     using Alias = CDP4Common.DTO.Alias;
     using ElementDefinition = CDP4Common.DTO.ElementDefinition;
@@ -149,7 +145,7 @@ namespace CometServer.Tests
 
             var deleteObjectWithoutClassKind = new ClasslessDTO() { { IidKey, Guid.NewGuid() } };
 
-            var postOperation = new CdpPostOperation();
+            var postOperation = new PostOperation();
             postOperation.Delete.Add(deleteObjectWithoutIid);
 
             Assert.ThrowsAsync<InvalidOperationException>(
@@ -181,7 +177,7 @@ namespace CometServer.Tests
                 { "Name", TestName }
             };
 
-            var postOperation = new CdpPostOperation();
+            var postOperation = new PostOperation();
             postOperation.Delete.Add(deleteObjectWithScalarPropertySet);
 
             Assert.ThrowsAsync<InvalidOperationException>(
@@ -218,7 +214,7 @@ namespace CometServer.Tests
                 Symbol = "testSymbol"
             };
 
-            var postOperation = new CdpPostOperation();
+            var postOperation = new PostOperation();
             postOperation.Create.Add(newSimpleQuantityKind);
 
             Assert.Throws(
@@ -241,7 +237,7 @@ namespace CometServer.Tests
                 LogEntry = []
             };
 
-            var postOperation = new CdpPostOperation();
+            var postOperation = new PostOperation();
             postOperation.Create.Add(newEngineeringModel);
 
             Assert.Throws(
@@ -385,7 +381,7 @@ namespace CometServer.Tests
                 Symbol = "testSymbol"
             };
 
-            var postOperation = new CdpPostOperation();
+            var postOperation = new PostOperation();
             postOperation.Create.Add(newSimpleQuantityKind);
 
             Assert.Throws(
@@ -423,7 +419,7 @@ namespace CometServer.Tests
                 { "ParameterType", new[] { newSimpleQuantityKind.Iid } }
             };
 
-            var postOperation = new CdpPostOperation();
+            var postOperation = new PostOperation();
             postOperation.Create.Add(newSimpleQuantityKind);
             postOperation.Update.Add(modelReferenceDataLibrary);
 
@@ -466,7 +462,7 @@ namespace CometServer.Tests
                 { "ParameterType", new[] { newSimpleQuantityKind.Iid } }
             };
 
-            var postOperation = new CdpPostOperation();
+            var postOperation = new PostOperation();
             postOperation.Create.Add(newAlias);
             postOperation.Create.Add(newSimpleQuantityKind);
             postOperation.Update.Add(modelReferenceDataLibrary);
@@ -481,7 +477,7 @@ namespace CometServer.Tests
 
             var updateObjectWithoutClassKind = new ClasslessDTO() { { IidKey, Guid.NewGuid() } };
 
-            var postOperation = new CdpPostOperation();
+            var postOperation = new PostOperation();
             postOperation.Update.Add(updateObjectWithoutIid);
 
             Assert.Throws(
@@ -718,7 +714,7 @@ namespace CometServer.Tests
             this.serviceProvider.Setup(x => x.MapToPersitableService(ClassKind.ParameterSubscription.ToString())).Returns(paramSubscriptionService);
             this.serviceProvider.Setup(x => x.MapToPersitableService(ClassKind.ParameterGroup.ToString())).Returns(paramGroupService);
 
-            var postOperation = new CdpPostOperation();
+            var postOperation = new PostOperation();
 
             var copyinfo = new CopyInfo
             {

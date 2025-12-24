@@ -38,6 +38,8 @@ namespace CometServer.Services.ChangeLog
     using CDP4Common.Helpers;
     using CDP4Common.Polyfills;
 
+    using CDP4DalCommon.Protocol.Operations;
+
     using CDP4Orm.Dao;
     using CDP4Orm.Dao.Resolve;
 
@@ -177,7 +179,7 @@ namespace CometServer.Services.ChangeLog
         /// The revisionNumber of the <see cref="transaction"/>
         /// </param>
         /// <param name="operation">
-        /// <see cref="CdpPostOperation"/> that resulted to all the changes.
+        /// <see cref="PostOperation"/> that resulted to all the changes.
         /// </param>
         /// <param name="things">
         /// The <see cref="IReadOnlyList{T}"/> of type <see cref="CDP4Common.DTO.Thing"/> that contains changed <see cref="CDP4Common.DTO.Thing"/>
@@ -185,7 +187,7 @@ namespace CometServer.Services.ChangeLog
         /// <returns>
         /// True if change log data was added, otherwise false
         /// </returns>
-        public async Task<bool> TryAppendModelChangeLogDataAsync(NpgsqlTransaction transaction, string partition, Guid actor, int transactionRevision, CdpPostOperation operation, IReadOnlyList<Thing> things)
+        public async Task<bool> TryAppendModelChangeLogDataAsync(NpgsqlTransaction transaction, string partition, Guid actor, int transactionRevision, PostOperation operation, IReadOnlyList<Thing> things)
         {
             var sw = Stopwatch.StartNew();
             this.Logger.LogInformation("Starting to append changelog data");
@@ -294,7 +296,7 @@ namespace CometServer.Services.ChangeLog
                     {
                         modelLogEntry.LogEntryChangelogItem.AddRange(newLogEntryChangelogItems.Select(x => x.Iid));
 
-                        var operationData = new CdpPostOperation();
+                        var operationData = new PostOperation();
 
                         operationData.Create.AddRange(newLogEntryChangelogItems);
 
@@ -371,7 +373,7 @@ namespace CometServer.Services.ChangeLog
         /// The <see cref="ModelLogEntry"/>
         /// </param>
         /// <param name="operation">
-        /// The <see cref="CdpPostOperation"/>
+        /// The <see cref="PostOperation"/>
         /// </param>
         /// <param name="changedThings">
         /// An <see cref="IReadOnlyList{T}"/> of type <see cref="Thing"/> that contains all changed things.
@@ -379,7 +381,7 @@ namespace CometServer.Services.ChangeLog
         /// <returns>
         /// The created <see cref="CDP4Common.CommonData.LogEntryChangelogItem"/> if one was created, otherwise null.
         /// </returns>
-        private async Task<LogEntryChangelogItem> CreateAddOrUpdateLogEntryChangelogItemAsync(NpgsqlTransaction transaction, string partition, Thing changedThing, ModelLogEntry modelLogEntry, CdpPostOperation operation, IReadOnlyList<Thing> changedThings)
+        private async Task<LogEntryChangelogItem> CreateAddOrUpdateLogEntryChangelogItemAsync(NpgsqlTransaction transaction, string partition, Thing changedThing, ModelLogEntry modelLogEntry, PostOperation operation, IReadOnlyList<Thing> changedThings)
         {
             if (!IsAddLogEntryChangeLogItemAllowed(changedThing.ClassKind))
             {

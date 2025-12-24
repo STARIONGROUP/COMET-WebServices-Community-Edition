@@ -26,8 +26,6 @@ namespace CometServer.Modules
 {
     using Carter.Response;
 
-    using CDP4DalCommon.Tasks;
-
     using CDP4ServicesMessaging.Services.BackgroundMessageProducers;
 
     using CometServer.Authorization;

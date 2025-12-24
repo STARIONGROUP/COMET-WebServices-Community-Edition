@@ -29,7 +29,8 @@ namespace CometServer.Modules
     using System.Collections.Generic;
     using System.IO;
 
-    using CometServer.Services.Operations;
+    using CDP4DalCommon.Protocol.Operations;
+
     using CometServer.Services;
 
     using Microsoft.AspNetCore.Http;
@@ -76,8 +77,8 @@ namespace CometServer.Modules
         public Dictionary<string, Stream> Files;
 
         /// <summary>
-        /// Gets or sets the <see cref="CdpPostOperation"/>
+        /// Gets or sets the <see cref="PostOperation"/>
         /// </summary>
-        public CdpPostOperation OperationData { get; set; }
+        public PostOperation OperationData { get; set; }
     }
 }

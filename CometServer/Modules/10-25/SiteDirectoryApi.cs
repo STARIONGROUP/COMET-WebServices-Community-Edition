@@ -39,7 +39,8 @@ namespace CometServer.Modules
     using CDP4Common.DTO;
     using CDP4Common.Exceptions;
 
-    using CDP4DalCommon.Tasks;
+    using CDP4DalCommon.Protocol.Operations;
+    using CDP4DalCommon.Protocol.Tasks;
 
     using CDP4JsonSerializer;
 
@@ -169,7 +170,7 @@ namespace CometServer.Modules
                         return;
                     }
 
-                    await this.GetResponseData(req, res, requestUtils, transactionManager, credentialsService, headerInfoProvider, serviceProvider, metaInfoProvider, revisionService, revisionResolver, jsonSerializer, messagePackSerializer, permissionInstanceFilterService);
+                    await this.GetResponseDataAsync(req, res, requestUtils, transactionManager, credentialsService, headerInfoProvider, serviceProvider, metaInfoProvider, revisionService, revisionResolver, jsonSerializer, messagePackSerializer, permissionInstanceFilterService);
                 }).RequireAuthorization(AuthenticationSchemes);
 
             app.MapGet("SiteDirectory/{*path}",
@@ -195,7 +196,7 @@ namespace CometServer.Modules
                         return;
                     }
 
-                    await this.GetResponseData(req, res, requestUtils, transactionManager, credentialsService, headerInfoProvider, serviceProvider, metaInfoProvider, revisionService, revisionResolver, jsonSerializer, messagePackSerializer, permissionInstanceFilterService);
+                    await this.GetResponseDataAsync(req, res, requestUtils, transactionManager, credentialsService, headerInfoProvider, serviceProvider, metaInfoProvider, revisionService, revisionResolver, jsonSerializer, messagePackSerializer, permissionInstanceFilterService);
                 }).RequireAuthorization(AuthenticationSchemes);
 
             app.MapPost("SiteDirectory/{iid:guid}",
@@ -238,6 +239,7 @@ namespace CometServer.Modules
 
                         res.StatusCode = (int)HttpStatusCode.BadRequest;
                         await res.AsJson($"exception:{ex.Message}");
+                        return;
                     }
                     catch (Exception ex)
                     {
@@ -247,6 +249,7 @@ namespace CometServer.Modules
 
                         res.StatusCode = (int)HttpStatusCode.InternalServerError;
                         await res.AsJson($"exception:{ex.Message}");
+                        return;
                     }
 
                     if (postRequestData.IsMultiPart )
@@ -257,15 +260,16 @@ namespace CometServer.Modules
 
                         res.StatusCode = (int)HttpStatusCode.BadRequest;
                         await res.AsJson("The SiteDirectory does not support MultiPart POST request");
+                        return;
                     }
 
                     if (requestUtils.QueryParameters.WaitTime > 0)
                     {
-                        await this.EnqueCometTaskForPostRequest(postRequestData, requestToken, res, cometTask, requestUtils, transactionManager, credentialsService, headerInfoProvider, metaInfoProvider, operationProcessor, revisionService, jsonSerializer, messagePackSerializer, permissionInstanceFilterService, modelCreatorManager);
+                        await this.EnqueueCometTaskForPostRequestAsync(postRequestData, requestToken, res, cometTask, requestUtils, transactionManager, credentialsService, headerInfoProvider, metaInfoProvider, operationProcessor, revisionService, jsonSerializer, messagePackSerializer, permissionInstanceFilterService, modelCreatorManager);
                     }
                     else
                     {
-                        await this.PostResponseData(postRequestData, requestToken, res, cometTask, requestUtils, transactionManager, credentialsService, headerInfoProvider, metaInfoProvider, operationProcessor, revisionService, jsonSerializer, messagePackSerializer, permissionInstanceFilterService, modelCreatorManager);
+                        await this.PostResponseDataAsync(postRequestData, requestToken, res, cometTask, requestUtils, transactionManager, credentialsService, headerInfoProvider, metaInfoProvider, operationProcessor, revisionService, jsonSerializer, messagePackSerializer, permissionInstanceFilterService, modelCreatorManager);
                     }
                 }).RequireAuthorization(AuthenticationSchemes);
         }
@@ -317,7 +321,7 @@ namespace CometServer.Modules
         /// <returns>
         /// An awaitable <see cref="Task"/>
         /// </returns>
-        protected async Task GetResponseData(HttpRequest httpRequest, HttpResponse httpResponse, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, Services.IServiceProvider serviceProvider, IMetaInfoProvider metaInfoProvider, IRevisionService revisionService, IRevisionResolver revisionResolver, ICdp4JsonSerializer jsonSerializer, IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService)
+        protected async Task GetResponseDataAsync(HttpRequest httpRequest, HttpResponse httpResponse, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, Services.IServiceProvider serviceProvider, IMetaInfoProvider metaInfoProvider, IRevisionService revisionService, IRevisionResolver revisionResolver, ICdp4JsonSerializer jsonSerializer, IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService)
         {
             NpgsqlTransaction transaction = null;
 
@@ -475,13 +479,13 @@ namespace CometServer.Modules
             };
 
             jsonSerializer.Initialize(metaInfoProvider, postRequestData.Version);
-            postRequestData.OperationData = jsonSerializer.Deserialize<CdpPostOperation>(httpRequest.Body);
+            postRequestData.OperationData = jsonSerializer.Deserialize<PostOperation>(httpRequest.Body);
 
             return postRequestData;
         }
 
         /// <summary>
-        /// Enques the handling of hte POST request on a background task. In case it takes longer to complete than the specified wait time a <see cref="CometTask"/>
+        /// Enqueues the handling of hte POST request on a background task. In case it takes longer to complete than the specified wait time a <see cref="CometTask"/>
         /// is returned. Otherwise a 10-25 response is retunred.
         /// </summary>
         /// <param name="postRequestData">
@@ -534,11 +538,11 @@ namespace CometServer.Modules
         /// <returns>
         /// an awaitable <see cref="Task"/>
         /// </returns>
-        protected async Task EnqueCometTaskForPostRequest(PostRequestData postRequestData, string requestToken, HttpResponse httpResponse, CometTask cometTask, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, IMetaInfoProvider metaInfoProvider, IOperationProcessor operationProcessor, IRevisionService revisionService, ICdp4JsonSerializer jsonSerializer, IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService, IModelCreatorManager modelCreatorManager)
+        protected async Task EnqueueCometTaskForPostRequestAsync(PostRequestData postRequestData, string requestToken, HttpResponse httpResponse, CometTask cometTask, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, IMetaInfoProvider metaInfoProvider, IOperationProcessor operationProcessor, IRevisionService revisionService, ICdp4JsonSerializer jsonSerializer, IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService, IModelCreatorManager modelCreatorManager)
         {
             var longRunningCometTask = Task.Run(() =>
             {
-                var task = this.PostResponseData(postRequestData, requestToken, httpResponse, cometTask, requestUtils, transactionManager, credentialsService, headerInfoProvider, metaInfoProvider, operationProcessor, revisionService, jsonSerializer, messagePackSerializer, permissionInstanceFilterService, modelCreatorManager);
+                var task = this.PostResponseDataAsync(postRequestData, requestToken, httpResponse, cometTask, requestUtils, transactionManager, credentialsService, headerInfoProvider, metaInfoProvider, operationProcessor, revisionService, jsonSerializer, messagePackSerializer, permissionInstanceFilterService, modelCreatorManager);
                 this.logger.LogTrace(task.IsCompletedSuccessfully.ToString());
             });
 
@@ -610,7 +614,7 @@ namespace CometServer.Modules
         /// <returns>
         /// An awaitable <see cref="Task"/>
         /// </returns>
-        protected async Task PostResponseData(PostRequestData postRequestData, string requestToken, HttpResponse httpResponse, CometTask cometTask, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, IMetaInfoProvider metaInfoProvider, IOperationProcessor operationProcessor, IRevisionService revisionService, ICdp4JsonSerializer jsonSerializer, IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService, IModelCreatorManager modelCreatorManager)
+        protected async Task PostResponseDataAsync(PostRequestData postRequestData, string requestToken, HttpResponse httpResponse, CometTask cometTask, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, IMetaInfoProvider metaInfoProvider, IOperationProcessor operationProcessor, IRevisionService revisionService, ICdp4JsonSerializer jsonSerializer, IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService, IModelCreatorManager modelCreatorManager)
         {
             NpgsqlTransaction transaction = null;
 

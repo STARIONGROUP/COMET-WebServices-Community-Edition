@@ -33,6 +33,8 @@ namespace CometServer.ChangeNotification
 
     using CDP4Common.DTO;
 
+    using CDP4JsonSerializer;
+
     using CDP4Orm.Dao;
 
     using CometServer.ChangeNotification.UserPreference;
@@ -40,8 +42,6 @@ namespace CometServer.ChangeNotification
     using CometServer.Services.Email;
 
     using Microsoft.Extensions.Logging;
-
-    using Newtonsoft.Json;
 
     using Npgsql;
 
@@ -79,6 +79,11 @@ namespace CometServer.ChangeNotification
         /// Gets or sets the (injected) <see cref="IUserPreferenceDao"/>
         /// </summary>
         public IUserPreferenceDao UserPreferenceDao { get; set; }
+
+        /// <summary>
+        /// Gets or sets the INJECTED <see cref="ICdp4JsonSerializer"/>
+        /// </summary>
+        public ICdp4JsonSerializer JsonSerializer { get; set; }
 
         /// <summary>
         /// Gets or sets the DataSource manager.
@@ -189,16 +194,14 @@ namespace CometServer.ChangeNotification
                 return [];
             }
 
-            if (person.DefaultEmailAddress != null && emailAddresses.Any(x => x.Iid == person.DefaultEmailAddress.Value))
+            if (person.DefaultEmailAddress != null && emailAddresses.Exists(x => x.Iid == person.DefaultEmailAddress.Value))
             {
                 return [emailAddresses.Single(x => x.Iid == person.DefaultEmailAddress.Value)];
             }
             else
             {
-                return [emailAddresses.First()];
+                return [emailAddresses[0]];
             }
-
-            return [];
         }
 
         /// <summary>
@@ -242,7 +245,7 @@ namespace CometServer.ChangeNotification
             foreach (var userPreference in userPreferences)
             {
                 var engineeringModelSuffix = userPreference.ShortName.Replace("ChangeLogSubscriptions_", "");
-                var changeNotificationSubscriptionUserPreference = JsonConvert.DeserializeObject<ChangeNotificationSubscriptionUserPreference>(userPreference.Value);
+                var changeNotificationSubscriptionUserPreference = this.JsonSerializer.Deserialize<ChangeNotificationSubscriptionUserPreference>(userPreference.Value);
 
                 changeLogSubscriptions.Add(engineeringModelSuffix, changeNotificationSubscriptionUserPreference);
             }

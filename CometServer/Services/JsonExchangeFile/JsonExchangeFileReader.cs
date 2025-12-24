@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="JsonExchangeFileReader.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -30,6 +30,7 @@ namespace CometServer.Services
     using System.Diagnostics;
     using System.IO;
     using System.Linq;
+    using System.Text.Json;
 
     using CDP4Common.CommonData;
     using CDP4Common.DTO;
@@ -42,8 +43,6 @@ namespace CometServer.Services
     using ICSharpCode.SharpZipLib.Zip;
 
     using Microsoft.Extensions.Logging;
-
-    using Newtonsoft.Json.Linq;
 
     /// <summary>
     /// The purpose of the <see cref="JsonExchangeFileReader"/> is toread data from
@@ -342,10 +341,10 @@ namespace CometServer.Services
 
                 zipFile.Password = password;
 
-                this.Logger.LogDebug("extracting Things from: EngineeringModels/{EngineeringModelIid}.json", engineeringModelSetup.EngineeringModelIid);
+                this.Logger.LogDebug("extracting Things from: EngineeringModels/{EngineeringModelIid}/{EngineeringModelIid}.json", engineeringModelSetup.EngineeringModelIid, engineeringModelSetup.EngineeringModelIid);
 
                 var engineeringModelZipEntry = zipFile.GetEntry($"EngineeringModels/{engineeringModelSetup.EngineeringModelIid}/{engineeringModelSetup.EngineeringModelIid}.json");
-                var engineeringModelItems = this.ReadInfoFromArchiveEntry(version, zipFile,engineeringModelZipEntry);
+                var engineeringModelItems = this.ReadInfoFromArchiveEntry(version, zipFile, engineeringModelZipEntry);
 
                 this.Logger.LogInformation("{Count} Engineering Model item(s) encountered", engineeringModelItems.Count);
                 return engineeringModelItems.AsReadOnly();
@@ -395,7 +394,7 @@ namespace CometServer.Services
                 // read iteration data
                 this.Logger.LogDebug("Extractring things from: EngineeringModels/{EngineeringModelIid}/Iterations/{IterationIid}.json", engineeringModelSetup.EngineeringModelIid, iterationSetup.IterationIid);
 
-                var iterationZipEntry = zipFile.GetEntry($"EngineeringModels/{engineeringModelSetup.EngineeringModelIid}/Iterations/{iterationSetup.IterationIid}.json"); 
+                var iterationZipEntry = zipFile.GetEntry($"EngineeringModels/{engineeringModelSetup.EngineeringModelIid}/Iterations/{iterationSetup.IterationIid}.json");
                 var iterationItems = this.ReadInfoFromArchiveEntry(version, zipFile, iterationZipEntry);
 
                 this.Logger.LogInformation("{Count} Iteration item(s) encountered", iterationItems.Count);
@@ -404,7 +403,7 @@ namespace CometServer.Services
             catch (Exception ex)
             {
                 this.Logger.LogError(ex, "Failed to load file");
-                
+
                 throw new FileLoadException($"Failed to load file. Error: {ex.Message}");
             }
         }
@@ -569,20 +568,15 @@ namespace CometServer.Services
             try
             {
                 var content = reader.ReadToEnd();
-                var parsedContent = JObject.Parse(content);
+                var jsonElement = this.JsonSerializer.Deserialize<JsonElement>(content);
 
-                if (parsedContent?["credentials"] != null)
+                if (jsonElement.TryGetProperty("credentials"u8, out var credentialValue))
                 {
-                    foreach (var children in parsedContent["credentials"].Children())
+                    foreach (var children in credentialValue.EnumerateArray().Where(x => x.ValueKind == JsonValueKind.Object))
                     {
-                        if (!(children is JProperty property))
-                        {
-                            continue;
-                        }
-
-                        var password = (property.First["password"] as JValue)?.Value.ToString();
-                        var salt = (property.First["salt"] as JValue)?.Value.ToString();
-                        credentialsList.Add(new MigrationPasswordCredentials(new Guid(property.Name), password, salt));
+                        var password = children.GetProperty("password"u8).GetString();
+                        var salt = children.GetProperty("salt"u8).GetString();
+                        credentialsList.Add(new MigrationPasswordCredentials(new Guid(children.GetString()!), password, salt));
                     }
                 }
             }

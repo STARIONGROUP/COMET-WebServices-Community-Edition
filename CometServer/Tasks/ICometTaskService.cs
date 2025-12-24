@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ICometTaskService.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 // 
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 // 
@@ -30,7 +30,7 @@ namespace CometServer.Tasks
 
     using CDP4Common.DTO;
 
-    using CDP4DalCommon.Tasks;
+    using CDP4DalCommon.Protocol.Tasks;
 
     /// <summary>
     /// The purpose of the <see cref="ICometTaskService"/> is to provide access to running <see cref="CometTask"/>s which are created for each

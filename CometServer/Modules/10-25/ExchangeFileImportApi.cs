@@ -141,18 +141,18 @@ namespace CometServer.Modules
             app.MapPost("/Data/Exchange", async (HttpRequest req, HttpResponse res,
                 IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, IJsonExchangeFileReader jsonExchangeFileReader, IMigrationService migrationService, IRevisionService revisionService, IEngineeringModelDao engineeringModelDao, Services.IServiceProvider serviceProvider, IPersonService personService, IPersonRoleService personRoleService, IPersonPermissionService personPermissionService, IDefaultPermissionProvider defaultPermissionProvider, IParticipantRoleService participantRoleService, IParticipantPermissionService participantPermissionService, IDataStoreController dataStoreController, ISiteDirectoryService siteDirectoryService, IEngineeringModelSetupService engineeringModelSetupService) =>
             {
-                await this.SeedDataStore(req, res, requestUtils, transactionManager, jsonExchangeFileReader, migrationService, revisionService, engineeringModelDao, serviceProvider, personService, personRoleService, personPermissionService, defaultPermissionProvider, participantRoleService, participantPermissionService, dataStoreController, siteDirectoryService, engineeringModelSetupService);
+                await this.SeedDataStoreAsync(req, res, requestUtils, transactionManager, jsonExchangeFileReader, migrationService, revisionService, engineeringModelDao, serviceProvider, personService, personRoleService, personPermissionService, defaultPermissionProvider, participantRoleService, participantPermissionService, dataStoreController, siteDirectoryService, engineeringModelSetupService);
             });
 
             app.MapPost("/Data/Import", async (HttpRequest req, HttpResponse res,
                 IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, IJsonExchangeFileReader jsonExchangeFileReader, IMigrationService migrationService, IRevisionService revisionService, IEngineeringModelDao engineeringModelDao, Services.IServiceProvider serviceProvider, IPersonService personService, IPersonRoleService personRoleService, IPersonPermissionService personPermissionService, IDefaultPermissionProvider defaultPermissionProvider, IParticipantRoleService participantRoleService, IParticipantPermissionService participantPermissionService, IDataStoreController dataStoreController) =>
             {
-                await this.ImportDataStore(req, res, requestUtils, transactionManager, jsonExchangeFileReader, migrationService, revisionService, engineeringModelDao, serviceProvider, personService, personRoleService, personPermissionService, defaultPermissionProvider, participantRoleService, participantPermissionService, dataStoreController);
+                await this.ImportDataStoreAsync(req, res, requestUtils, transactionManager, jsonExchangeFileReader, migrationService, revisionService, engineeringModelDao, serviceProvider, personService, personRoleService, personPermissionService, defaultPermissionProvider, participantRoleService, participantPermissionService, dataStoreController);
             });
 
             app.MapPost("/Data/Restore", async (HttpRequest req, HttpResponse res, IDataStoreController dataStoreController) =>
             {
-                await this.RestoreDatastore(req, res, dataStoreController);
+                await this.RestoreDatastoreAsync(req, res, dataStoreController);
             });
         }
 
@@ -171,7 +171,7 @@ namespace CometServer.Modules
         /// <returns>
         /// An awaitable <see cref="Task"/>
         /// </returns>
-        internal async Task RestoreDatastore(HttpRequest httpRequest, HttpResponse response, IDataStoreController dataStoreController)
+        internal async Task RestoreDatastoreAsync(HttpRequest httpRequest, HttpResponse response, IDataStoreController dataStoreController)
         {
             var reqsw = Stopwatch.StartNew();
             var requestToken = this.tokenGeneratorService.GenerateRandomToken();
@@ -225,7 +225,7 @@ namespace CometServer.Modules
         /// <returns>
         /// the file path where the seed file has been stored
         /// </returns>
-        private async Task<string> SaveTemporarySeedFile(HttpRequest request)
+        private async Task<string> SaveTemporarySeedFileAsync(HttpRequest request)
         {
             var uploadDirectory = this.appConfigService.AppConfig.Midtier.UploadDirectory;
 
@@ -288,7 +288,7 @@ namespace CometServer.Modules
         /// <returns>
         /// The <see cref="Task{Response}"/>.
         /// </returns>
-        internal async Task ImportDataStore(HttpRequest httpRequest, HttpResponse response, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, IJsonExchangeFileReader jsonExchangeFileReader, IMigrationService migrationService, IRevisionService revisionService, IEngineeringModelDao engineeringModelDao, Services.IServiceProvider serviceProvider, IPersonService personService, IPersonRoleService personRoleService, IPersonPermissionService personPermissionService, IDefaultPermissionProvider defaultPermissionProvider, IParticipantRoleService participantRoleService, IParticipantPermissionService participantPermissionService, IDataStoreController dataStoreController)
+        internal async Task ImportDataStoreAsync(HttpRequest httpRequest, HttpResponse response, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, IJsonExchangeFileReader jsonExchangeFileReader, IMigrationService migrationService, IRevisionService revisionService, IEngineeringModelDao engineeringModelDao, Services.IServiceProvider serviceProvider, IPersonService personService, IPersonRoleService personRoleService, IPersonPermissionService personPermissionService, IDefaultPermissionProvider defaultPermissionProvider, IParticipantRoleService participantRoleService, IParticipantPermissionService participantPermissionService, IDataStoreController dataStoreController)
         {
             var reqsw = Stopwatch.StartNew();
             var requestToken = this.tokenGeneratorService.GenerateRandomToken();
@@ -299,6 +299,7 @@ namespace CometServer.Modules
 
                 response.StatusCode = (int)HttpStatusCode.Forbidden;
                 await response.AsJson("Data store IMPORT is not allowed");
+                return;
             }
 
             this.logger.LogInformation("{Request}:{RequestToken} - Starting data store IMPORT", httpRequest.QueryNameMethodPath(), requestToken);
@@ -307,10 +308,10 @@ namespace CometServer.Modules
 
             try
             {
-                temporarySeedFilePath = await this.SaveTemporarySeedFile(httpRequest);
+                temporarySeedFilePath = await this.SaveTemporarySeedFileAsync(httpRequest);
 
                 // drop existing data stores
-                await this.DropDataStoreAndPrepareNew(dataStoreController);
+                await this.DropDataStoreAndPrepareNewAsync(dataStoreController);
 
                 var version = httpRequest.QueryDataModelVersion();
 
@@ -408,7 +409,7 @@ namespace CometServer.Modules
         /// <returns>
         /// An awaitable <see cref="Task"/>
         /// </returns>
-        internal async Task SeedDataStore(HttpRequest request, HttpResponse response, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, IJsonExchangeFileReader jsonExchangeFileReader, IMigrationService migrationService, IRevisionService revisionService, IEngineeringModelDao engineeringModelDao, Services.IServiceProvider serviceProvider, IPersonService personService, IPersonRoleService personRoleService, IPersonPermissionService personPermissionService, IDefaultPermissionProvider defaultPermissionProvider, IParticipantRoleService participantRoleService, IParticipantPermissionService participantPermissionService, IDataStoreController dataStoreController, ISiteDirectoryService siteDirectoryService, IEngineeringModelSetupService engineeringModelSetupService)
+        internal async Task SeedDataStoreAsync(HttpRequest request, HttpResponse response, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, IJsonExchangeFileReader jsonExchangeFileReader, IMigrationService migrationService, IRevisionService revisionService, IEngineeringModelDao engineeringModelDao, Services.IServiceProvider serviceProvider, IPersonService personService, IPersonRoleService personRoleService, IPersonPermissionService personPermissionService, IDefaultPermissionProvider defaultPermissionProvider, IParticipantRoleService participantRoleService, IParticipantPermissionService participantPermissionService, IDataStoreController dataStoreController, ISiteDirectoryService siteDirectoryService, IEngineeringModelSetupService engineeringModelSetupService)
         {
             if (personService == null)
             {
@@ -439,10 +440,10 @@ namespace CometServer.Modules
 
             this.logger.LogInformation("{Request}:{RequestToken} - Starting data store SEED", request.QueryNameMethodPath(), requestToken);
             
-            var temporarySeedFilePath = await this.SaveTemporarySeedFile(request);
+            var temporarySeedFilePath = await this.SaveTemporarySeedFileAsync(request);
 
             // drop existing data stores
-            await this.DropDataStoreAndPrepareNew(dataStoreController);
+            await this.DropDataStoreAndPrepareNewAsync(dataStoreController);
 
             var version = request.QueryDataModelVersion();
 
@@ -587,7 +588,7 @@ namespace CometServer.Modules
                     this.logger.LogInformation("Start clearing the current data store");
                     transaction = await transactionManager.SetupTransactionAsync(null);
                     transactionManager.SetFullAccessState(true);
-                    await ClearDatabaseSchemas(transaction);
+                    await ClearDatabaseSchemasAsync(transaction);
                     await transaction.CommitAsync();
                 }
 
@@ -636,7 +637,7 @@ namespace CometServer.Modules
                     siteDirCommand.Connection = transaction.Connection;
                     siteDirCommand.Transaction = transaction;
 
-                    await ExecuteSiteDirectorySchemaScripts(siteDirCommand);
+                    await this.ExecuteSiteDirectorySchemaScriptsAsync(siteDirCommand);
                 }
 
                 // apply migration on new SiteDirectory partition
@@ -887,7 +888,7 @@ namespace CometServer.Modules
                 this.logger.LogInformation("Start clearing the current data store");
                 transaction = await transactionManager.SetupTransactionAsync(null);
                 transactionManager.SetFullAccessState(true);
-                await ClearDatabaseSchemas(transaction);
+                await ClearDatabaseSchemasAsync(transaction);
                 await transaction.CommitAsync();
 
                 sw.Start();
@@ -928,7 +929,7 @@ namespace CometServer.Modules
                     siteDirCommand.Connection = transaction.Connection;
                     siteDirCommand.Transaction = transaction;
 
-                    await ExecuteSiteDirectorySchemaScripts(siteDirCommand);
+                    await this.ExecuteSiteDirectorySchemaScriptsAsync(siteDirCommand);
                 }
 
                 // apply migration on new SiteDirectory partition
@@ -1135,14 +1136,17 @@ namespace CometServer.Modules
         /// Executes all SQL scripts to create SiteDirectory schema
         /// </summary>
         /// <param name="sqlCommand">The <see cref="NpgsqlCommand"/></param>
-        private static async Task  ExecuteSiteDirectorySchemaScripts(NpgsqlCommand sqlCommand)
+        private async Task  ExecuteSiteDirectorySchemaScriptsAsync(NpgsqlCommand sqlCommand)
         {
+            this.logger.LogInformation("Executing SiteDirectory Setup SQL");
             sqlCommand.ReadSqlFromResource("CDP4Orm.AutoGenStructure.01_SiteDirectory_setup.sql");
             await sqlCommand.ExecuteNonQueryAsync();
 
+            this.logger.LogInformation("Executing SiteDirectory Structure SQL");
             sqlCommand.ReadSqlFromResource("CDP4Orm.AutoGenStructure.02_SiteDirectory_structure.sql");
             await sqlCommand.ExecuteNonQueryAsync();
 
+            this.logger.LogInformation("Executing SiteDirectory Triggers SQL");
             sqlCommand.ReadSqlFromResource("CDP4Orm.AutoGenStructure.03_SiteDirectory_triggers.sql");
             await sqlCommand.ExecuteNonQueryAsync();
         }
@@ -1211,7 +1215,7 @@ namespace CometServer.Modules
         /// <param name="transaction">
         /// The transaction.
         /// </param>
-        private static async Task ClearDatabaseSchemas(NpgsqlTransaction transaction)
+        private static async Task ClearDatabaseSchemasAsync(NpgsqlTransaction transaction)
         {
             // clear the current database data (except public and pg_catalog schemas)
             await using var cleanSchemaCommand = new NpgsqlCommand();
@@ -1244,7 +1248,7 @@ namespace CometServer.Modules
         /// Drops existing working and restore data stores if they exist
         /// and creates a new working data store.
         /// </summary>
-        private async Task DropDataStoreAndPrepareNew(IDataStoreController dataStoreController)
+        private async Task DropDataStoreAndPrepareNewAsync(IDataStoreController dataStoreController)
         {
             var sw = Stopwatch.StartNew();
 
