@@ -824,7 +824,17 @@ namespace CometServer.Modules
             }
 
             jsonSerializer.Initialize(metaInfoProvider, postRequestData.Version);
-            postRequestData.OperationData = jsonSerializer.Deserialize<PostOperation>(bodyStream);
+
+            try
+            {
+                postRequestData.OperationData = jsonSerializer.Deserialize<PostOperation>(bodyStream);
+            }
+            catch (Exception e)
+            {
+                this.logger.LogWarning(e, "The POST message could not be deserialized");
+
+                throw new BadRequestException("The POST message could not be deserialized", e);
+            }
 
             return postRequestData;
         }
