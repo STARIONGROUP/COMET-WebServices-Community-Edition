@@ -130,9 +130,9 @@ namespace CometServer.Modules
                     identity = await this.AuthorizeAsync(credentialsService, req);
                     await res.AsJson(credentialsService.Credentials.UserName);
                 }
-                catch (AuthorizationException)
+                catch (AuthorizationException ex)
                 {
-                    this.logger.LogWarning("The GET UserName was not authorized for {Identity}", identity);
+                    this.logger.LogWarning(ex,"The GET UserName was not authorized for {Identity}", identity);
 
                     res.UpdateWithNotAutherizedSettings();
                     await res.AsJson("not authorized");

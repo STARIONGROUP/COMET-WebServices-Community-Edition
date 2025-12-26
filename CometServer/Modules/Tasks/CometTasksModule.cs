@@ -38,7 +38,6 @@ namespace CometServer.Modules.Tasks
     using CometServer.Exceptions;
     using CometServer.Health;
     using CometServer.Helpers;
-    using CometServer.Modules.Health;
     using CometServer.Tasks;
 
     using Microsoft.AspNetCore.Builder;
@@ -55,7 +54,7 @@ namespace CometServer.Modules.Tasks
         /// <summary>
         /// The (injected) <see cref="ILogger{HealthModule}"/>;
         /// </summary>
-        private readonly ILogger<HealthModule> logger;
+        private readonly ILogger<CometTasksModule> logger;
 
         /// <summary>
         /// The (injected) <see cref="cometHasStartedService"/> that is used to determine whether the
@@ -74,7 +73,7 @@ namespace CometServer.Modules.Tasks
         protected IDataSource DataSource { get; set; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="HealthModule"/>
+        /// Initializes a new instance of the <see cref="CometTasksModule"/>
         /// </summary>
         /// <param name="logger">
         /// The (injected) <see cref="ILogger{HealthModule}"/>;
@@ -89,7 +88,7 @@ namespace CometServer.Modules.Tasks
         /// <param name="dataSource">
         ///The (injected) <see cref="IDataSource"/> 
         /// </param>
-        public CometTasksModule(ILogger<HealthModule> logger, ICometHasStartedService cometHasStartedService, ICometTaskService cometTaskService, IDataSource dataSource)
+        public CometTasksModule(ILogger<CometTasksModule> logger, ICometHasStartedService cometHasStartedService, ICometTaskService cometTaskService, IDataSource dataSource)
         {
             this.logger = logger;
             this.cometHasStartedService = cometHasStartedService;
@@ -147,7 +146,7 @@ namespace CometServer.Modules.Tasks
             {
                 await this.Authorize(credentialsService, req.HttpContext.User.Identity.Name);
 
-                this.logger.LogInformation("retrieving CometTasks for user: {personId}", credentialsService.Credentials.Person.Iid);
+                this.logger.LogInformation("retrieving CometTasks for user: {PersonId}", credentialsService.Credentials.Person.Iid);
 
                 var cometTasks = this.cometTaskService.QueryTasks(credentialsService.Credentials.Person.Iid);
 
@@ -194,7 +193,7 @@ namespace CometServer.Modules.Tasks
             {
                 await this.Authorize(credentialsService, req.HttpContext.User.Identity.Name);
 
-                this.logger.LogInformation("retrieving CometTask {taskID} for user: {personId}", taskId, credentialsService.Credentials.Person.Iid);
+                this.logger.LogInformation("retrieving CometTask {TaskID} for user: {PersonId}", taskId, credentialsService.Credentials.Person.Iid);
 
                 var cometTask = this.cometTaskService.QueryTask(taskId);
 
@@ -206,9 +205,9 @@ namespace CometServer.Modules.Tasks
 
                 res.StatusCode = (int)HttpStatusCode.Forbidden;
             }
-            catch (AuthorizationException)
+            catch (AuthorizationException ex)
             {
-                this.logger.LogWarning("The GET REQUEST was not authorized for {Identity}", req.HttpContext.User.Identity.Name);
+                this.logger.LogWarning(ex, "The GET REQUEST was not authorized for {Identity}", req.HttpContext.User.Identity.Name);
 
                 res.UpdateWithNotAutherizedSettings();
                 await res.AsJson("not authorized");
@@ -292,9 +291,9 @@ namespace CometServer.Modules.Tasks
 
                 await credentialsService.ResolveCredentialsAsync(transaction, username);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                this.logger.LogWarning("Authorization failed for {username}", username);
+                this.logger.LogWarning(ex,"Authorization failed for {Username}", username);
 
                 throw;
             }

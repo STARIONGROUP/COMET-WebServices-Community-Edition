@@ -240,7 +240,7 @@ namespace CometServer.Services
                 var siteDirectoryZipEntry = zipFile.GetEntry("SiteDirectory.json");
 
                 var returnedSiteDirectory = this.ReadInfoFromArchiveEntry(version, zipFile, siteDirectoryZipEntry);
-                this.Logger.LogInformation("{count} Site Directory item(s) encountered", returnedSiteDirectory.Count);
+                this.Logger.LogInformation("{Count} Site Directory item(s) encountered", returnedSiteDirectory.Count);
 
                 var returned = new List<CDP4Common.DTO.Thing>(returnedSiteDirectory);
                 var processedRdls = new List<string>();
@@ -271,14 +271,14 @@ namespace CometServer.Services
 
                     while (requiredRdl != null)
                     {
-                        this.Logger.LogInformation("Required Reference Data Library encountered: {requiredRdl}", requiredRdl);
+                        this.Logger.LogInformation("Required Reference Data Library encountered: {RequiredRdl}", requiredRdl);
 
                         var siteRdlDto =
                             (SiteReferenceDataLibrary)
                             returnedSiteDirectory.Single(
                                 x => x.ClassKind == ClassKind.SiteReferenceDataLibrary && x.Iid == requiredRdl);
 
-                        this.Logger.LogDebug("extracting Things from: SiteReferenceDataLibraries/{siteRdlDto}.json", siteRdlDto.Iid);
+                        this.Logger.LogDebug("extracting Things from: SiteReferenceDataLibraries/{SiteRdlDto}.json", siteRdlDto.Iid);
 
                         var siteRdlFilePath = $"SiteReferenceDataLibraries/{siteRdlDto.Iid}.json";
 
@@ -437,13 +437,13 @@ namespace CometServer.Services
             zipFile.Password = password;
 
             // select file binary from the archive archive
-            this.Logger.LogDebug("Extracting data from EngineeringModels/{EngineeringModelIid}/FileRevisions/{hash}", engineeringModelSetup.EngineeringModelIid, hash);
+            this.Logger.LogDebug("Extracting data from EngineeringModels/{EngineeringModelIid}/FileRevisions/{Hash}", engineeringModelSetup.EngineeringModelIid, hash);
 
             var fileZipEntry = zipFile.GetEntry($"EngineeringModels/{engineeringModelSetup.EngineeringModelIid}/FileRevisions/{hash}");
 
             using var stream = ReadStreamFromArchive(zipFile, fileZipEntry);
 
-            this.Logger.LogInformation("Store file binary with hash {hash}", hash);
+            this.Logger.LogInformation("Store file binary with hash {Hash}", hash);
 
             this.FileBinaryService.StoreBinaryData(hash, stream);
         }

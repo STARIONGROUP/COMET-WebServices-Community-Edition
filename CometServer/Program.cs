@@ -87,7 +87,7 @@ namespace CometServer
 
                 logger.LogInformation("################################################################");
 
-                logger.LogInformation("Starting CDP4-COMET Services v{version}", resourceLoader.QueryVersion());
+                logger.LogInformation("Starting CDP4-COMET Services v{Version}", resourceLoader.QueryVersion());
 
                 var appConfigService = host.Services.GetService<IAppConfigService>();
 
@@ -124,7 +124,7 @@ namespace CometServer
 
                 var uri = configuration.GetSection("Kestrel:Endpoints:Http:Url").Value;
 
-                logger.LogInformation("CDP4-COMET REST API Ready to accept connections at {uri}", uri);
+                logger.LogInformation("CDP4-COMET REST API Ready to accept connections at {Uri}", uri);
 
                 await host.RunAsync();
                 

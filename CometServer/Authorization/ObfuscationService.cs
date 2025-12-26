@@ -79,7 +79,7 @@ namespace CometServer.Authorization
             }
 
             var sw = Stopwatch.StartNew();
-            this.Logger.LogTrace("Starting to Obfuscating the response for user:{user}", credentials.UserName);
+            this.Logger.LogTrace("Starting to Obfuscating the response for user:{User}", credentials.UserName);
 
             // gather all parts of the response once
             var elementDefinitions = resourceResponse.OfType<ElementDefinition>().ToList();
@@ -140,7 +140,7 @@ namespace CometServer.Authorization
                 }
             }
 
-            this.Logger.LogTrace("Response Obfuscated the response for user:{user} in {sw} [ms]", credentials.UserName, sw.ElapsedMilliseconds);
+            this.Logger.LogTrace("Response Obfuscated the response for user:{User} in {SW} [ms]", credentials.UserName, sw.ElapsedMilliseconds);
         }
 
         /// <summary>
