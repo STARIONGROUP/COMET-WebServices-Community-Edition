@@ -49,10 +49,10 @@ namespace CometServer.Tests.SideEffects
     [TestFixture]
     public class MeasurementScaleSideEffectTestFixture
     {
-        private MeasurementScale rootMeasurementScale;
+        private OrdinalScale rootMeasurementScale;
         private MappingToReferenceScale rootMappingToReferenceScale;
         private ScaleValueDefinition scaleValueDefinition;
-        private MeasurementScale containerMeasurementScale;
+        private OrdinalScale containerMeasurementScale;
 
         private SiteReferenceDataLibrary srdl;
         private ModelReferenceDataLibrary mrdl;

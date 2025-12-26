@@ -170,6 +170,8 @@ namespace CometServer
             catch (Exception exception)
             {
                 this.logger.LogError(exception, "An error occured during migration.");
+
+                // migration failed, after logging the exception we rethrow it
                 throw;
             }
         }

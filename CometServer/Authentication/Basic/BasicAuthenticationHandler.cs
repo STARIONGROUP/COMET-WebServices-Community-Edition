@@ -257,6 +257,8 @@ namespace CometServer.Authentication.Basic
             catch (Exception ex)
             {
                 this.Logger.LogError(ex, "Basic authentication failed");
+
+                // basic auth failed, lets rethrow the exception after logging it
                 throw;
             }
         }

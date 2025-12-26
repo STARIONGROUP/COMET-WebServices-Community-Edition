@@ -217,9 +217,7 @@ namespace CometServer.Tests
             var postOperation = new PostOperation();
             postOperation.Create.Add(newSimpleQuantityKind);
 
-            Assert.Throws(
-                typeof(Cdp4ModelValidationException),
-                () => this.operationProcessor.ValidateCreateOperations(postOperation, new Dictionary<string, Stream>()));
+            Assert.Throws<Cdp4ModelValidationException>(() => this.operationProcessor.ValidateCreateOperations(postOperation, new Dictionary<string, Stream>()));
         }
 
         [Test]
@@ -240,9 +238,7 @@ namespace CometServer.Tests
             var postOperation = new PostOperation();
             postOperation.Create.Add(newEngineeringModel);
 
-            Assert.Throws(
-                typeof(InvalidOperationException),
-                () => this.operationProcessor.ValidateCreateOperations(postOperation, this.fileStore));
+            Assert.Throws<InvalidOperationException>(() => this.operationProcessor.ValidateCreateOperations(postOperation, this.fileStore));
         }
 
         [Test]
@@ -384,9 +380,7 @@ namespace CometServer.Tests
             var postOperation = new PostOperation();
             postOperation.Create.Add(newSimpleQuantityKind);
 
-            Assert.Throws(
-                typeof(InvalidOperationException),
-                () => this.operationProcessor.ValidateCreateOperations(postOperation, this.fileStore));
+            Assert.Throws<InvalidOperationException>(() => this.operationProcessor.ValidateCreateOperations(postOperation, this.fileStore));
         }
 
         [Test]
@@ -487,9 +481,7 @@ namespace CometServer.Tests
             postOperation.Update.Clear();
             postOperation.Update.Add(updateObjectWithoutClassKind);
 
-            Assert.Throws(
-                typeof(InvalidOperationException),
-                () => OperationProcessor.ValidateUpdateOperations(postOperation));
+            Assert.Throws<InvalidOperationException>(() => OperationProcessor.ValidateUpdateOperations(postOperation));
 
             var completeUpdateObject = new ClasslessDTO() { { IidKey, Guid.NewGuid() }, { ClasskindKey, Guid.NewGuid() } };
             postOperation.Update.Clear();

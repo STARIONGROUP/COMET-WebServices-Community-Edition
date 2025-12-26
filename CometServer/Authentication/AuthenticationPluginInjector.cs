@@ -46,7 +46,7 @@ namespace CometServer.Authentication
         /// <summary>
         /// A collection of <see cref="Assembly" /> that has been discovered
         /// </summary>
-        private List<Assembly> discoveredAssemblies = new List<Assembly>();
+        private readonly List<Assembly> discoveredAssemblies = [];
 
         /// <summary>
         /// The name of the folder where all authentication modules reside.

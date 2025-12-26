@@ -275,6 +275,7 @@ namespace CometServer.Modules
             {
                 this.logger.LogWarning(ex, "Authorization failed for {Username}", username);
 
+                // Authorize failed, after logging the exception we rethrow it
                 throw;
             }
         }
