@@ -80,7 +80,7 @@ namespace CometServer.Services.Operations
         /// <summary>
         /// Gets or sets the (injected) <see cref="ILogger"/>
         /// </summary>
-        public ILogger<CredentialsService> Logger { get; set; }
+        public ILogger<OperationProcessor> Logger { get; set; }
 
         /// <summary>
         /// The base properties of a DTO which can not be updated directly.
