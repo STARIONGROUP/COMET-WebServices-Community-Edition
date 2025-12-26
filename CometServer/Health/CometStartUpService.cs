@@ -86,17 +86,17 @@ namespace CometServer.Health
         /// <summary>
         /// Executs the tasks to startup the CDP4-COMET server
         /// </summary>
-        /// <param name="cancellationToken">
-        /// The <see cref="cancellationToken"/> that can be used to cancel the operation
+        /// <param name="stoppingToken">
+        /// The <see cref="stoppingToken"/> that can be used to cancel the operation
         /// </param>
         /// <returns>
         /// an awaitable <see cref="Task"/>
         /// </returns>
-        protected override async Task ExecuteAsync(CancellationToken cancellationToken)
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             try
             {
-                if (!await this.DataStoreConnectionChecker.CheckConnectionAsync(cancellationToken))
+                if (!await this.DataStoreConnectionChecker.CheckConnectionAsync(stoppingToken))
                 {
                     this.Logger.LogCritical("The CDP4-COMET REST API has terminated - The data-store was not availble within the configured BacktierWaitTime: {BacktierWaitTime}", this.AppConfigService.AppConfig.Midtier.BacktierWaitTime);
                     this.applicationLifetime.StopApplication();

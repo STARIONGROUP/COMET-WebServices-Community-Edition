@@ -131,22 +131,22 @@ namespace CometServer.Tasks
         /// <summary>
         /// Adds or updates the <see cref="CometTask"/> in the Cache
         /// </summary>
-        /// <param name="cometTask">
+        /// <param name="task">
         /// The <see cref="CometTask"/> that is to be added or updated
         /// </param>
-        public void AddOrUpdateTask(CometTask cometTask)
+        public void AddOrUpdateTask(CometTask task)
         {
             var cacheEntryOptions = new MemoryCacheEntryOptions()
                 .SetAbsoluteExpiration(TimeSpan.FromSeconds(this.appConfigService.AppConfig.LongRunningTasksConfig.RetentionTime))
                 .RegisterPostEvictionCallback(this.EvictionCallback, state: this);
 
-            var key = $"{KeyPrefix}{cometTask.Id}";
+            var key = $"{KeyPrefix}{task.Id}";
 
-            this.memoryCache.Set(key, cometTask, cacheEntryOptions);
+            this.memoryCache.Set(key, task, cacheEntryOptions);
 
-            this.tasks.AddOrUpdate(key, cometTask, (_, _) => cometTask);
+            this.tasks.AddOrUpdate(key, task, (_, _) => task);
 
-            this.logger.LogInformation("The long running task {id} for actor {actor} has been added or updated", key, cometTask.Actor);
+            this.logger.LogInformation("The long running task {Id} for actor {Actor} has been added or updated", key, task.Actor);
         }
 
         /// <summary>
@@ -217,11 +217,11 @@ namespace CometServer.Tasks
 
                 if (this.tasks.TryRemove(s, out _))
                 {
-                    this.logger.LogInformation("The long running task {id} for actor {actor} has been evicted because of {reason}", key, cometTask.Actor, reason);
+                    this.logger.LogInformation("The long running task {Id} for actor {Actor} has been evicted because of {Reason}", key, cometTask.Actor, reason);
                 }
                 else
                 {
-                    this.logger.LogDebug("The long running task {id} for actor {actor} could not be evicted from the tasks since it does not exist", key, cometTask.Actor);
+                    this.logger.LogDebug("The long running task {Id} for actor {Actor} could not be evicted from the tasks since it does not exist", key, cometTask.Actor);
                 }
 
                 if (reason == EvictionReason.Replaced && this.memoryCache.TryGetValue(s, out CometTask updatedCometTask))
