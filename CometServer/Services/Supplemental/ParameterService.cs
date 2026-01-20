@@ -99,20 +99,43 @@ namespace CometServer.Services
                 things.Add(measurementScale);
             }
 
+            await this.AddChildParameterTypeThings(transaction, securityContext, parameterType, things);
+
+            return things.DistinctBy(x => x.Iid).ToList();
+        }
+
+        /// <summary>
+        /// Adds (extra) child things based on the ParameterType
+        /// </summary>
+        /// <param name="transaction">The <see cref="NpgsqlTransaction" /></param>
+        /// <param name="securityContext">The <see cref="ISecurityContext" /></param>
+        /// <param name="parameterType">The <see cref="ParameterType"/></param>
+        /// <param name="things">A List of Things where to add the found things to</param>
+        /// <returns></returns>
+        private async Task AddChildParameterTypeThings(NpgsqlTransaction transaction, ISecurityContext securityContext, ParameterType parameterType, List<Thing> things)
+        {
+            IEnumerable<Thing> newThings;
+
             switch (parameterType)
             {
                 case EnumerationParameterType enumerationParameterType:
-                    things.AddRange(await this.QueryEnumerationValueDefinitions(enumerationParameterType, transaction, securityContext));
+
+                    newThings = await this.QueryEnumerationValueDefinitions(enumerationParameterType, transaction, securityContext);
+                    things.AddRange(newThings.Except(things));
                     break;
+
                 case SampledFunctionParameterType sampledFunctionParameterType:
-                    things.AddRange(await this.QueryParameterTypeAssignmentsAsync(sampledFunctionParameterType, transaction, securityContext));
+
+                    newThings = await this.QueryParameterTypeAssignmentsAsync(sampledFunctionParameterType, transaction, securityContext);
+                    things.AddRange(newThings.Except(things));
                     break;
+
                 case CompoundParameterType compoundParameterType:
-                    things.AddRange(await this.QueryParameterTypeComponentsAsync(compoundParameterType, transaction, securityContext));
+
+                    newThings = await this.QueryParameterTypeComponentsAsync(compoundParameterType, transaction, securityContext, things);
+                    things.AddRange(newThings.Except(things));
                     break;
             }
-
-            return things.DistinctBy(x => x.Iid).ToList();
         }
 
         /// <summary>
@@ -262,6 +285,9 @@ namespace CometServer.Services
         /// </param>
         /// <param name="transaction">The <see cref="NpgsqlTransaction" /></param>
         /// <param name="securityContext">The <see cref="ISecurityContext" /></param>
+        /// <param name="currentList">
+        /// An optional list that can be checked on objects already present,
+        /// as adding child components is executed recursively and might trigger infinite an loop</param>
         /// <returns>
         /// A collection of linked <see cref="ParameterTypeComponent" />s with associated <see cref="ParameterType" /> and
         /// <see cref="MeasurementScale" />
@@ -270,7 +296,7 @@ namespace CometServer.Services
         /// If one of the referenced <see cref="ParameterTypeComponent" />,
         /// <see cref="ParameterType" /> or <see cref="MeasurementScale" /> cannot be retrieved
         /// </exception>
-        private async Task<List<Thing>> QueryParameterTypeComponentsAsync(CompoundParameterType compoundParameterType, NpgsqlTransaction transaction, ISecurityContext securityContext)
+        private async Task<List<Thing>> QueryParameterTypeComponentsAsync(CompoundParameterType compoundParameterType, NpgsqlTransaction transaction, ISecurityContext securityContext, List<Thing> currentList = null)
         {
             var things = new List<Thing>();
             var parameterTypeComponents = await this.CachedReferenceDataService.QueryParameterTypeComponentsAsync(transaction, securityContext);
@@ -284,6 +310,11 @@ namespace CometServer.Services
                     throw new ThingNotFoundException($"ParameterTypeComponent {componentId} does not exist");
                 }
 
+                if (!(!currentList?.Contains(parameterTypeComponent) ?? true)) 
+                {
+                    continue;
+                }
+
                 things.Add(parameterTypeComponent);
             }
 
@@ -294,7 +325,14 @@ namespace CometServer.Services
                     throw new ThingNotFoundException($"ParameterType {parameterTypeId} does not exist");
                 }
 
+                if (!(!currentList?.Contains(parameterType) ?? true))
+                {
+                    // Also prevents possible infinite loop
+                    continue;
+                }
+
                 things.Add(parameterType);
+                await this.AddChildParameterTypeThings(transaction, securityContext, parameterType, things);
             }
 
             foreach (var measurementScaleId in things.OfType<ParameterTypeComponent>().Where(x => x.Scale.HasValue).Select(x => x.Scale.Value).Distinct().ToList())
@@ -302,6 +340,11 @@ namespace CometServer.Services
                 if (!measurementScales.TryGetValue(measurementScaleId, out var measurementScale))
                 {
                     throw new ThingNotFoundException($"MeasurementScale {measurementScaleId} does not exist");
+                }
+
+                if (!(!currentList?.Contains(measurementScale) ?? true)) 
+                {
+                    continue; 
                 }
 
                 things.Add(measurementScale);
