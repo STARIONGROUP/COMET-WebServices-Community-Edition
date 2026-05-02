@@ -7,6 +7,6 @@
   ╚██████╗██████╔╝██║          ██║      ╚██████╗╚██████╔╝██║ ╚═╝ ██║███████╗   ██║   
    ╚═════╝╚═════╝ ╚═╝          ╚═╝       ╚═════╝ ╚═════╝ ╚═╝     ╚═╝╚══════╝   ╚═╝   
 
-         copyright 2015-2024 STARION Group S.A. https://www.stariongroup.eu
+         copyright 2015-2026 STARION Group S.A. https://www.stariongroup.eu
 		 email: info@stariongroup.eu
 	     CDP4-COMET WebServices version: COMETWebServicesVersion

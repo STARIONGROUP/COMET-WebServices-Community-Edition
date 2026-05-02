@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <Company>Starion Group S.A.</Company>
     <Title>CDP4Orm-CE.Tests</Title>
     <Description>CDP4-COMET Data-Model Object Relational Mapping</Description>
