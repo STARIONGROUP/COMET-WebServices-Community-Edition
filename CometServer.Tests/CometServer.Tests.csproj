@@ -6,7 +6,6 @@
     <Title>CometServer-CE.Tests</Title>
     <Description>Unit tests Library for the Comet Server</Description>
     <Copyright>Copyright © Starion Group S.A.</Copyright>
-    <Authors>Sam Gerené, Alex Vorobiev, Alexander van Delft</Authors>
     <Configurations>Debug;Release</Configurations>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
