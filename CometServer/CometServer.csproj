@@ -18,8 +18,8 @@
   <ItemGroup>
     <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="9.0.0" />
     <PackageReference Include="Carter" Version="10.0.0" />
-    <PackageReference Include="CDP4MessagePackSerializer-CE" Version="30.0.1" />
-    <PackageReference Include="CDP4ServicesMessaging-CE" Version="30.0.1" />
+    <PackageReference Include="CDP4MessagePackSerializer-CE" Version="30.1.0" />
+    <PackageReference Include="CDP4ServicesMessaging-CE" Version="30.1.0" />
     <PackageReference Include="FluentResults" Version="4.0.0" />
     <PackageReference Include="FluentValidation" Version="12.1.1" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Negotiate" Version="10.0.7" />
