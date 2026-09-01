@@ -127,7 +127,19 @@ jobs:
         run: dotnet restore integration-tests/IntegrationTestSuite/WebservicesIntegrationTests.sln
 
       - name: Run Integration Tests
-        run: dotnet test integration-tests/IntegrationTestSuite/WebservicesIntegrationTests.sln --logger "trx;LogFileName=test_results.trx" --verbosity detailed
+        run: |
+          set +e
+          dotnet test integration-tests/IntegrationTestSuite/MessagePackIntegrationTests/MessagePackIntegrationTests.csproj \
+            --settings integration-tests/IntegrationTestSuite/.runsettings \
+            --logger "trx;LogFileName=msgpack_results.trx" --verbosity detailed
+          MESSAGEPACK_EXIT=$?
+          dotnet test integration-tests/IntegrationTestSuite/WebservicesIntegrationTests/WebservicesIntegrationTests.csproj \
+            --settings integration-tests/IntegrationTestSuite/.runsettings \
+            --logger "trx;LogFileName=test_results.trx" --verbosity detailed
+          WEBSERVICES_EXIT=$?
+          echo "MessagePackIntegrationTests exit code: $MESSAGEPACK_EXIT"
+          echo "WebservicesIntegrationTests exit code: $WEBSERVICES_EXIT"
+          [ $MESSAGEPACK_EXIT -eq 0 ] && [ $WEBSERVICES_EXIT -eq 0 ]
 
       - name: Shutdown Integration Test session
         run: dotnet-coverage shutdown integrationtestsession
