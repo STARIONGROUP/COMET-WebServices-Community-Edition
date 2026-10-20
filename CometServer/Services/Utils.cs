@@ -32,6 +32,8 @@ namespace CometServer.Services
     
     using CometServer.Configuration;
 
+    using Npgsql;
+
     using Thing = CDP4Common.DTO.Thing;
 
     /// <summary>
@@ -40,7 +42,7 @@ namespace CometServer.Services
     public static class Utils
     {
         /// <summary>
-        /// Construct a POSTGRESQL connection string based on the passed in database name.
+        /// Construct a POSTGRESQL connection string for the <see cref="BacktierConfig.Database"/>.
         /// </summary>
         /// <param name="backtierConfig">
         /// The <see cref="BacktierConfig"/> that provides the connection string settings
@@ -50,28 +52,18 @@ namespace CometServer.Services
         /// </returns>
         public static string GetConnectionString(BacktierConfig backtierConfig)
         {
-            var connectionString = $"Server={backtierConfig.HostName};Port={backtierConfig.Port};User Id={backtierConfig.UserName};Password={backtierConfig.Password};Database={backtierConfig.Database};CommandTimeout={backtierConfig.StatementTimeout};";
+            var builder = CreateConnectionStringBuilder(backtierConfig, backtierConfig.Database);
 
             if (backtierConfig.MaximumPoolSize != 0)
             {
-                connectionString = $"{connectionString}Maximum Pool Size={backtierConfig.MaximumPoolSize};";
+                builder.MaxPoolSize = backtierConfig.MaximumPoolSize;
             }
 
-            if (backtierConfig.ConnectionTimeout!= 0)
-            {
-                connectionString = $"{connectionString}Timeout={backtierConfig.ConnectionTimeout};";
-            }
-
-            if (backtierConfig.Keepalive != 0)
-            {
-                connectionString = $"{connectionString}Keepalive={backtierConfig.Keepalive};";
-            }
-
-            return connectionString;
+            return builder.ConnectionString;
         }
 
         /// <summary>
-        /// Construct a POSTGRESQL connection string based on the passed in database namefor management purposes.
+        /// Construct a POSTGRESQL connection string for the <see cref="BacktierConfig.DatabaseManage"/>, used for management purposes.
         /// </summary>
         /// <param name="backtierConfig">
         /// The <see cref="BacktierConfig"/> that provides the connection string settings
@@ -81,19 +73,71 @@ namespace CometServer.Services
         /// </returns>
         public static string GetManageDatabaseConnectionString(BacktierConfig backtierConfig)
         {
-            var connectionString = $"Server={backtierConfig.HostName};Port={backtierConfig.Port};User Id={backtierConfig.UserName};Password={backtierConfig.Password};Database={backtierConfig.DatabaseManage};CommandTimeout={backtierConfig.StatementTimeout};Maximum Pool Size=1;";
+            var builder = CreateConnectionStringBuilder(backtierConfig, backtierConfig.DatabaseManage);
+
+            builder.MaxPoolSize = 1;
+
+            return builder.ConnectionString;
+        }
+
+        /// <summary>
+        /// Creates the <see cref="NpgsqlConnectionStringBuilder"/> with the settings shared by all connection strings,
+        /// including the TLS settings, so these cannot differ between the databases.
+        /// </summary>
+        /// <param name="backtierConfig">
+        /// The <see cref="BacktierConfig"/> that provides the connection string settings
+        /// </param>
+        /// <param name="database">
+        /// The name of the database to connect to
+        /// </param>
+        /// <returns>
+        /// The <see cref="NpgsqlConnectionStringBuilder"/>
+        /// </returns>
+        private static NpgsqlConnectionStringBuilder CreateConnectionStringBuilder(BacktierConfig backtierConfig, string database)
+        {
+            var builder = new NpgsqlConnectionStringBuilder
+            {
+                Host = backtierConfig.HostName,
+                Port = backtierConfig.Port,
+                Username = backtierConfig.UserName,
+                Password = backtierConfig.Password,
+                Database = database,
+                CommandTimeout = backtierConfig.StatementTimeout,
+                SslMode = backtierConfig.SslMode,
+                CheckCertificateRevocation = backtierConfig.CheckCertificateRevocation
+            };
 
             if (backtierConfig.ConnectionTimeout != 0)
             {
-                connectionString = $"{connectionString}Timeout={backtierConfig.ConnectionTimeout};";
+                builder.Timeout = backtierConfig.ConnectionTimeout;
             }
 
             if (backtierConfig.Keepalive != 0)
             {
-                connectionString = $"{connectionString}Keepalive={backtierConfig.Keepalive};";
+                builder.KeepAlive = backtierConfig.Keepalive;
             }
 
-            return connectionString;
+            if (!string.IsNullOrWhiteSpace(backtierConfig.RootCertificate))
+            {
+                builder.RootCertificate = backtierConfig.RootCertificate;
+            }
+
+            if (!string.IsNullOrWhiteSpace(backtierConfig.ClientCertificate))
+            {
+                builder.SslCertificate = backtierConfig.ClientCertificate;
+            }
+
+            if (!string.IsNullOrWhiteSpace(backtierConfig.ClientCertificateKey))
+            {
+                builder.SslKey = backtierConfig.ClientCertificateKey;
+            }
+
+            if (!string.IsNullOrEmpty(backtierConfig.ClientCertificatePassword))
+            {
+                builder.SslPassword = backtierConfig.ClientCertificatePassword;
+            }
+
+            return builder;
         }
 
         /// <summary>

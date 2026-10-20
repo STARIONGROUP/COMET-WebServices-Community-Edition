@@ -43,8 +43,10 @@ namespace CometServer.Services.DataStore
         /// The <see cref="cancellationToken"/> that can be used to cancel the operation
         /// </param>
         /// <returns>
-        /// returns true when a connection can be made within the <see cref="MidtierConfig.BacktierWaitTime"/>, false otherwise
+        /// <see cref="DataStoreConnectionStatus.Connected"/> when a connection can be made within the <see cref="MidtierConfig.BacktierWaitTime"/>,
+        /// <see cref="DataStoreConnectionStatus.TimedOut"/> when not, and <see cref="DataStoreConnectionStatus.ConfigurationError"/>
+        /// as soon as an error occurs that waiting will not resolve
         /// </returns>
-        Task<bool> CheckConnectionAsync(CancellationToken cancellationToken);
+        Task<DataStoreConnectionStatus> CheckConnectionAsync(CancellationToken cancellationToken);
     }
 }
