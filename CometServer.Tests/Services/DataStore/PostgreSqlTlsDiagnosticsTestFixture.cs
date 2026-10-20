@@ -85,13 +85,13 @@ namespace CometServer.Tests.Services.DataStore
         {
             using var serverCertificate = TestCertificateFactory.CreateServerCertificate(this.certificateAuthority, "comet-db", "localhost");
 
-            var findings = PostgreSqlTlsDiagnostics.EvaluateCertificate(this.CreateConfig("comet-db", this.certificateAuthorityFile), serverCertificate, [], DateTime.Now);
+            var findings = PostgreSqlTlsDiagnostics.EvaluateCertificate(CreateConfig("comet-db", this.certificateAuthorityFile), serverCertificate, [], DateTime.Now);
 
             Assert.Multiple(() =>
             {
                 Assert.That(findings[0], Does.Contain("CN=comet-db").And.Contain("CN=COMET Test CA").And.Contain("[comet-db, localhost]"));
                 Assert.That(findings, Has.None.StartsWith("PROBLEM:"));
-                Assert.That(findings.Last(), Is.EqualTo("No problem was found with the server certificate"));
+                Assert.That(findings[^1], Is.EqualTo("No problem was found with the server certificate"));
             });
         }
 
@@ -100,7 +100,7 @@ namespace CometServer.Tests.Services.DataStore
         {
             using var serverCertificate = TestCertificateFactory.CreateServerCertificate(this.certificateAuthority, "comet-db");
 
-            var findings = PostgreSqlTlsDiagnostics.EvaluateCertificate(this.CreateConfig("comet-db", this.otherCertificateAuthorityFile), serverCertificate, [], DateTime.Now);
+            var findings = PostgreSqlTlsDiagnostics.EvaluateCertificate(CreateConfig("comet-db", this.otherCertificateAuthorityFile), serverCertificate, [], DateTime.Now);
 
             var problems = Problems(findings);
 
@@ -117,7 +117,7 @@ namespace CometServer.Tests.Services.DataStore
             using var intermediate = TestCertificateFactory.CreateCertificate(this.certificateAuthority, "CN=COMET Intermediate CA", DateTimeOffset.Now.AddDays(-10), DateTimeOffset.Now.AddDays(10), isCertificateAuthority: true);
             using var serverCertificate = TestCertificateFactory.CreateServerCertificate(intermediate, "comet-db");
 
-            var config = this.CreateConfig("comet-db", this.certificateAuthorityFile);
+            var config = CreateConfig("comet-db", this.certificateAuthorityFile);
 
             var withIntermediate = PostgreSqlTlsDiagnostics.EvaluateCertificate(config, serverCertificate, [serverCertificate, intermediate], DateTime.Now);
             var withoutIntermediate = PostgreSqlTlsDiagnostics.EvaluateCertificate(config, serverCertificate, [], DateTime.Now);
@@ -135,7 +135,7 @@ namespace CometServer.Tests.Services.DataStore
             using var expiredIntermediate = TestCertificateFactory.CreateCertificate(this.certificateAuthority, "CN=Expired Intermediate CA", DateTimeOffset.Now.AddDays(-20), DateTimeOffset.Now.AddDays(-2), isCertificateAuthority: true);
             using var serverCertificate = TestCertificateFactory.CreateServerCertificate(expiredIntermediate, "comet-db");
 
-            var findings = PostgreSqlTlsDiagnostics.EvaluateCertificate(this.CreateConfig("comet-db", this.certificateAuthorityFile), serverCertificate, [expiredIntermediate], DateTime.Now);
+            var findings = PostgreSqlTlsDiagnostics.EvaluateCertificate(CreateConfig("comet-db", this.certificateAuthorityFile), serverCertificate, [expiredIntermediate], DateTime.Now);
 
             Assert.Multiple(() =>
             {
@@ -151,7 +151,7 @@ namespace CometServer.Tests.Services.DataStore
 
             using var serverCertificate = TestCertificateFactory.CreateServerCertificate(this.certificateAuthority, "comet-db");
 
-            var config = this.CreateConfig("comet-db", null);
+            var config = CreateConfig("comet-db", null);
             Assume.That(config.GetEffectiveRootCertificate().Path, Is.Null, "a default root.crt exists on this machine");
 
             var findings = PostgreSqlTlsDiagnostics.EvaluateCertificate(config, serverCertificate, [], DateTime.Now);
@@ -164,7 +164,7 @@ namespace CometServer.Tests.Services.DataStore
         {
             using var serverCertificate = TestCertificateFactory.CreateServerCertificate(this.certificateAuthority, "comet-db");
 
-            var findings = PostgreSqlTlsDiagnostics.EvaluateCertificate(this.CreateConfig("comet-db", this.WriteFile("not-a-certificate.crt", "this is not a certificate")), serverCertificate, [], DateTime.Now);
+            var findings = PostgreSqlTlsDiagnostics.EvaluateCertificate(CreateConfig("comet-db", this.WriteFile("not-a-certificate.crt", "this is not a certificate")), serverCertificate, [], DateTime.Now);
 
             Assert.That(Problems(findings), Has.One.Contains("could not be read as a PEM or DER certificate"));
         }
@@ -176,7 +176,7 @@ namespace CometServer.Tests.Services.DataStore
 
             var corruptFile = this.WriteFile("corrupt.crt", "-----BEGIN CERTIFICATE-----\nbm90IGEgY2VydGlmaWNhdGU=\n-----END CERTIFICATE-----\n");
 
-            var findings = PostgreSqlTlsDiagnostics.EvaluateCertificate(this.CreateConfig("comet-db", corruptFile), serverCertificate, [], DateTime.Now);
+            var findings = PostgreSqlTlsDiagnostics.EvaluateCertificate(CreateConfig("comet-db", corruptFile), serverCertificate, [], DateTime.Now);
 
             Assert.That(Problems(findings), Has.One.Contains(corruptFile));
         }
@@ -186,7 +186,7 @@ namespace CometServer.Tests.Services.DataStore
         {
             using var serverCertificate = TestCertificateFactory.CreateServerCertificate(this.certificateAuthority, "comet-db", "localhost");
 
-            var findings = PostgreSqlTlsDiagnostics.EvaluateCertificate(this.CreateConfig("127.0.0.1", this.certificateAuthorityFile), serverCertificate, [], DateTime.Now);
+            var findings = PostgreSqlTlsDiagnostics.EvaluateCertificate(CreateConfig("127.0.0.1", this.certificateAuthorityFile), serverCertificate, [], DateTime.Now);
 
             var problems = Problems(findings);
 
@@ -202,7 +202,7 @@ namespace CometServer.Tests.Services.DataStore
         {
             using var serverCertificate = TestCertificateFactory.CreateCertificate(this.certificateAuthority, "CN=comet-db", DateTimeOffset.Now.AddDays(-1), DateTimeOffset.Now.AddDays(1), dnsNames: ["comet-db"], ipAddresses: [IPAddress.Loopback]);
 
-            var findings = PostgreSqlTlsDiagnostics.EvaluateCertificate(this.CreateConfig("127.0.0.1", this.certificateAuthorityFile), serverCertificate, [], DateTime.Now);
+            var findings = PostgreSqlTlsDiagnostics.EvaluateCertificate(CreateConfig("127.0.0.1", this.certificateAuthorityFile), serverCertificate, [], DateTime.Now);
 
             Assert.Multiple(() =>
             {
@@ -216,7 +216,7 @@ namespace CometServer.Tests.Services.DataStore
         {
             using var serverCertificate = TestCertificateFactory.CreateCertificate(this.certificateAuthority, "CN=comet-db", DateTimeOffset.Now.AddDays(-1), DateTimeOffset.Now.AddDays(1));
 
-            var findings = PostgreSqlTlsDiagnostics.EvaluateCertificate(this.CreateConfig("comet-db", this.certificateAuthorityFile), serverCertificate, [], DateTime.Now);
+            var findings = PostgreSqlTlsDiagnostics.EvaluateCertificate(CreateConfig("comet-db", this.certificateAuthorityFile), serverCertificate, [], DateTime.Now);
 
             Assert.Multiple(() =>
             {
@@ -230,7 +230,7 @@ namespace CometServer.Tests.Services.DataStore
         {
             using var serverCertificate = TestCertificateFactory.CreateServerCertificate(this.certificateAuthority, "comet-db");
 
-            var backtierConfig = this.CreateConfig("127.0.0.1", this.certificateAuthorityFile);
+            var backtierConfig = CreateConfig("127.0.0.1", this.certificateAuthorityFile);
             backtierConfig.SslMode = SslMode.VerifyCA;
 
             var findings = PostgreSqlTlsDiagnostics.EvaluateCertificate(backtierConfig, serverCertificate, [], DateTime.Now);
@@ -243,7 +243,7 @@ namespace CometServer.Tests.Services.DataStore
         {
             using var serverCertificate = TestCertificateFactory.CreateCertificate(this.certificateAuthority, "CN=comet-db", DateTimeOffset.Now.AddDays(-10), DateTimeOffset.Now.AddDays(-2), dnsNames: ["comet-db"]);
 
-            var findings = PostgreSqlTlsDiagnostics.EvaluateCertificate(this.CreateConfig("comet-db", this.certificateAuthorityFile), serverCertificate, [], DateTime.Now);
+            var findings = PostgreSqlTlsDiagnostics.EvaluateCertificate(CreateConfig("comet-db", this.certificateAuthorityFile), serverCertificate, [], DateTime.Now);
 
             var problems = Problems(findings);
 
@@ -259,7 +259,7 @@ namespace CometServer.Tests.Services.DataStore
         {
             using var serverCertificate = TestCertificateFactory.CreateCertificate(this.certificateAuthority, "CN=comet-db", DateTimeOffset.Now.AddDays(2), DateTimeOffset.Now.AddDays(5), dnsNames: ["comet-db"]);
 
-            var findings = PostgreSqlTlsDiagnostics.EvaluateCertificate(this.CreateConfig("comet-db", this.certificateAuthorityFile), serverCertificate, [], DateTime.Now);
+            var findings = PostgreSqlTlsDiagnostics.EvaluateCertificate(CreateConfig("comet-db", this.certificateAuthorityFile), serverCertificate, [], DateTime.Now);
 
             Assert.That(findings, Has.One.StartsWith("PROBLEM: the server certificate is not valid yet"));
         }
@@ -269,7 +269,7 @@ namespace CometServer.Tests.Services.DataStore
         {
             using var serverCertificate = TestCertificateFactory.CreateServerCertificate(this.certificateAuthority, "comet-db");
 
-            var backtierConfig = this.CreateConfig("comet-db", this.certificateAuthorityFile);
+            var backtierConfig = CreateConfig("comet-db", this.certificateAuthorityFile);
             backtierConfig.CheckCertificateRevocation = true;
 
             var findings = PostgreSqlTlsDiagnostics.EvaluateCertificate(backtierConfig, serverCertificate, [], DateTime.Now);
@@ -282,7 +282,7 @@ namespace CometServer.Tests.Services.DataStore
         {
             using var serverCertificate = TestCertificateFactory.CreateCertificate(this.otherCertificateAuthority, "CN=other-host", DateTimeOffset.Now.AddDays(-10), DateTimeOffset.Now.AddDays(-2));
 
-            var backtierConfig = this.CreateConfig("comet-db", this.certificateAuthorityFile);
+            var backtierConfig = CreateConfig("comet-db", this.certificateAuthorityFile);
             backtierConfig.SslMode = SslMode.Require;
 
             var findings = PostgreSqlTlsDiagnostics.EvaluateCertificate(backtierConfig, serverCertificate, [], DateTime.Now);
@@ -310,7 +310,7 @@ namespace CometServer.Tests.Services.DataStore
                 await stream.WriteAsync("N"u8.ToArray());
             });
 
-            var findings = await new PostgreSqlTlsDiagnostics().DiagnoseAsync(this.CreateConfig("localhost", this.certificateAuthorityFile, Port(listener)), CancellationToken.None);
+            var findings = await new PostgreSqlTlsDiagnostics().DiagnoseAsync(CreateConfig("localhost", this.certificateAuthorityFile, Port(listener)), CancellationToken.None);
 
             await serverTask;
 
@@ -330,7 +330,7 @@ namespace CometServer.Tests.Services.DataStore
             var port = Port(listener);
             listener.Stop();
 
-            var findings = await new PostgreSqlTlsDiagnostics().DiagnoseAsync(this.CreateConfig("127.0.0.1", this.certificateAuthorityFile, port), CancellationToken.None);
+            var findings = await new PostgreSqlTlsDiagnostics().DiagnoseAsync(CreateConfig("127.0.0.1", this.certificateAuthorityFile, port), CancellationToken.None);
 
             Assert.That(findings, Has.One.StartsWith("The TLS diagnostics could not connect to"));
         }
@@ -354,19 +354,21 @@ namespace CometServer.Tests.Services.DataStore
                 await sslStream.AuthenticateAsServerAsync(serverCertificate);
             });
 
-            var findings = await new PostgreSqlTlsDiagnostics().DiagnoseAsync(this.CreateConfig("localhost", this.otherCertificateAuthorityFile, Port(listener)), CancellationToken.None);
+            var findings = await new PostgreSqlTlsDiagnostics().DiagnoseAsync(CreateConfig("localhost", this.otherCertificateAuthorityFile, Port(listener)), CancellationToken.None);
 
             await serverTask;
 
             Assert.Multiple(() =>
             {
-                Assert.That(findings, Has.Some.StartsWith("The PostgreSQL server negotiated"));
+                // the certificate is not trusted, so the handshake is rejected and the recorded certificate is evaluated
+                Assert.That(findings, Has.None.StartsWith("The PostgreSQL server negotiated"));
+                Assert.That(findings, Has.None.Contains("failed before the certificate could be checked"));
                 Assert.That(findings, Has.Some.Contains("presented the certificate 'CN=localhost' issued by 'CN=COMET Test CA'"));
                 Assert.That(Problems(findings), Has.One.Contains("is not trusted by Backtier:RootCertificate"));
             });
         }
 
-        private BacktierConfig CreateConfig(string hostName, string rootCertificate, int port = 5432)
+        private static BacktierConfig CreateConfig(string hostName, string rootCertificate, int port = 5432)
         {
             return new BacktierConfig
             {

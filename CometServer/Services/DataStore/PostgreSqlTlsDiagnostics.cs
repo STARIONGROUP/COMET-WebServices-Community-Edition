@@ -77,6 +77,9 @@ namespace CometServer.Services.DataStore
             using var timeoutSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             timeoutSource.CancelAfter(Timeout);
 
+            X509Certificate2 serverCertificate = null;
+            var presentedCertificates = new List<X509Certificate2>();
+
             try
             {
                 using var tcpClient = new TcpClient();
@@ -96,15 +99,13 @@ namespace CometServer.Services.DataStore
                     return findings;
                 }
 
-                X509Certificate2 serverCertificate = null;
-                var presentedCertificates = new List<X509Certificate2>();
-
                 var sslClientAuthenticationOptions = new SslClientAuthenticationOptions
                 {
                     TargetHost = backtierConfig.HostName,
-                    RemoteCertificateValidationCallback = (_, certificate, chain, _) =>
+                    RemoteCertificateValidationCallback = (_, certificate, chain, sslPolicyErrors) =>
                     {
-                        // accept anything: this handshake only collects the certificate, no credentials are sent
+                        // record the certificate so it can be explained, but do not accept an invalid one:
+                        // the handshake then fails and the recorded certificate is evaluated in the catch below
                         if (certificate != null)
                         {
                             serverCertificate = X509CertificateLoader.LoadCertificate(certificate.GetRawCertData());
@@ -115,7 +116,7 @@ namespace CometServer.Services.DataStore
                             presentedCertificates.AddRange(chain.ChainElements.Select(element => X509CertificateLoader.LoadCertificate(element.Certificate.RawData)));
                         }
 
-                        return true;
+                        return sslPolicyErrors == SslPolicyErrors.None;
                     }
                 };
 
@@ -130,6 +131,11 @@ namespace CometServer.Services.DataStore
                     return findings;
                 }
 
+                findings.AddRange(EvaluateCertificate(backtierConfig, serverCertificate, presentedCertificates, DateTime.Now));
+            }
+            catch (AuthenticationException) when (serverCertificate != null)
+            {
+                // the certificate was rejected by the TLS validation of the operating system, explain why
                 findings.AddRange(EvaluateCertificate(backtierConfig, serverCertificate, presentedCertificates, DateTime.Now));
             }
             catch (AuthenticationException ex)
@@ -226,7 +232,7 @@ namespace CometServer.Services.DataStore
         /// <returns>
         /// The findings about the chain
         /// </returns>
-        private static IEnumerable<string> EvaluateChain(BacktierConfig backtierConfig, X509Certificate2 serverCertificate, IEnumerable<X509Certificate2> presentedCertificates)
+        private static List<string> EvaluateChain(BacktierConfig backtierConfig, X509Certificate2 serverCertificate, IEnumerable<X509Certificate2> presentedCertificates)
         {
             var findings = new List<string>();
 
@@ -278,10 +284,14 @@ namespace CometServer.Services.DataStore
             }
 
             // the validity of the server certificate itself is reported by EvaluateCertificate, here only the CA certificates
-            foreach (var expiredElement in chain.ChainElements.Skip(1).Where(element => element.ChainElementStatus.Any(status => status.Status == X509ChainStatusFlags.NotTimeValid)))
+            var expiredCertificateAuthorities = chain.ChainElements.Skip(1)
+                .Where(element => element.ChainElementStatus.Any(status => status.Status == X509ChainStatusFlags.NotTimeValid))
+                .Select(element => element.Certificate);
+
+            foreach (var expiredCertificateAuthority in expiredCertificateAuthorities)
             {
-                findings.Add($"PROBLEM: the CA certificate '{expiredElement.Certificate.Subject}' in the chain of the server certificate is not valid now, " +
-                             $"it is valid from {expiredElement.Certificate.NotBefore:yyyy-MM-dd HH:mm} to {expiredElement.Certificate.NotAfter:yyyy-MM-dd HH:mm}. " +
+                findings.Add($"PROBLEM: the CA certificate '{expiredCertificateAuthority.Subject}' in the chain of the server certificate is not valid now, " +
+                             $"it is valid from {expiredCertificateAuthority.NotBefore:yyyy-MM-dd HH:mm} to {expiredCertificateAuthority.NotAfter:yyyy-MM-dd HH:mm}. " +
                              "Renew the CA certificate, both on the PostgreSQL server and in the configured CA file");
             }
 

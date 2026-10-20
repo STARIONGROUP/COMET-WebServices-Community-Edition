@@ -93,7 +93,7 @@ namespace CometServer.Tests.Services.DataStore
         {
             var exception = new NpgsqlException("Exception while performing SSL handshake", new AuthenticationException("The remote certificate was rejected by the provided RemoteCertificateValidationCallback."));
 
-            this.dataSource.Setup(x => x.OpenNewConnectionAsync()).Returns(ValueTask.FromException<NpgsqlConnection>(exception));
+            this.dataSource.Setup(x => x.OpenNewConnectionAsync()).Returns(() => ValueTask.FromException<NpgsqlConnection>(exception));
 
             var stopwatch = Stopwatch.StartNew();
 
@@ -115,7 +115,7 @@ namespace CometServer.Tests.Services.DataStore
         {
             var exception = new NpgsqlException("SSL connection requested. No SSL enabled connection from this host is configured.");
 
-            this.dataSource.Setup(x => x.OpenNewConnectionAsync()).Returns(ValueTask.FromException<NpgsqlConnection>(exception));
+            this.dataSource.Setup(x => x.OpenNewConnectionAsync()).Returns(() => ValueTask.FromException<NpgsqlConnection>(exception));
 
             var result = await this.dataStoreConnectionChecker.CheckConnectionAsync(CancellationToken.None);
 
@@ -132,7 +132,7 @@ namespace CometServer.Tests.Services.DataStore
 
             var exception = new NpgsqlException("Failed to connect to 127.0.0.1:5432", new SocketException((int)SocketError.ConnectionRefused));
 
-            this.dataSource.Setup(x => x.OpenNewConnectionAsync()).Returns(ValueTask.FromException<NpgsqlConnection>(exception));
+            this.dataSource.Setup(x => x.OpenNewConnectionAsync()).Returns(() => ValueTask.FromException<NpgsqlConnection>(exception));
 
             var result = await this.dataStoreConnectionChecker.CheckConnectionAsync(CancellationToken.None);
 
@@ -156,7 +156,7 @@ namespace CometServer.Tests.Services.DataStore
         [Test]
         public void Verify_that_cancellation_is_not_treated_as_a_transient_error()
         {
-            this.dataSource.Setup(x => x.OpenNewConnectionAsync()).Returns(ValueTask.FromException<NpgsqlConnection>(new OperationCanceledException()));
+            this.dataSource.Setup(x => x.OpenNewConnectionAsync()).Returns(() => ValueTask.FromException<NpgsqlConnection>(new OperationCanceledException()));
 
             Assert.That(async () => await this.dataStoreConnectionChecker.CheckConnectionAsync(CancellationToken.None), Throws.InstanceOf<OperationCanceledException>());
 
@@ -171,7 +171,7 @@ namespace CometServer.Tests.Services.DataStore
                 .ReturnsAsync(new List<string> { "The PostgreSQL server negotiated Tls13", "PROBLEM: the server certificate expired" });
 
             var exception = new NpgsqlException("Exception while performing SSL handshake", new AuthenticationException("rejected"));
-            this.dataSource.Setup(x => x.OpenNewConnectionAsync()).Returns(ValueTask.FromException<NpgsqlConnection>(exception));
+            this.dataSource.Setup(x => x.OpenNewConnectionAsync()).Returns(() => ValueTask.FromException<NpgsqlConnection>(exception));
 
             await this.dataStoreConnectionChecker.CheckConnectionAsync(CancellationToken.None);
 
@@ -186,7 +186,7 @@ namespace CometServer.Tests.Services.DataStore
             this.dataStoreConnectionChecker.PostgreSqlTlsDiagnostics = null;
 
             var exception = new NpgsqlException("Exception while performing SSL handshake", new AuthenticationException("rejected"));
-            this.dataSource.Setup(x => x.OpenNewConnectionAsync()).Returns(ValueTask.FromException<NpgsqlConnection>(exception));
+            this.dataSource.Setup(x => x.OpenNewConnectionAsync()).Returns(() => ValueTask.FromException<NpgsqlConnection>(exception));
 
             var result = await this.dataStoreConnectionChecker.CheckConnectionAsync(CancellationToken.None);
 
@@ -217,7 +217,7 @@ namespace CometServer.Tests.Services.DataStore
         {
             var exception = new PostgresException("password authentication failed for user \"cdp4\"", "FATAL", "FATAL", PostgresErrorCodes.InvalidPassword);
 
-            this.dataSource.Setup(x => x.OpenNewConnectionAsync()).Returns(ValueTask.FromException<NpgsqlConnection>(exception));
+            this.dataSource.Setup(x => x.OpenNewConnectionAsync()).Returns(() => ValueTask.FromException<NpgsqlConnection>(exception));
 
             var result = await this.dataStoreConnectionChecker.CheckConnectionAsync(CancellationToken.None);
 
@@ -234,7 +234,7 @@ namespace CometServer.Tests.Services.DataStore
 
             var exception = new PostgresException("the database system is starting up", "FATAL", "FATAL", PostgresErrorCodes.CannotConnectNow);
 
-            this.dataSource.Setup(x => x.OpenNewConnectionAsync()).Returns(ValueTask.FromException<NpgsqlConnection>(exception));
+            this.dataSource.Setup(x => x.OpenNewConnectionAsync()).Returns(() => ValueTask.FromException<NpgsqlConnection>(exception));
 
             var result = await this.dataStoreConnectionChecker.CheckConnectionAsync(CancellationToken.None);
 
@@ -288,7 +288,7 @@ namespace CometServer.Tests.Services.DataStore
 
             var exception = new PostgresException("database \"cdp4server\" does not exist", "FATAL", "FATAL", PostgresErrorCodes.InvalidCatalogName);
 
-            this.dataSource.Setup(x => x.OpenNewConnectionAsync()).Returns(ValueTask.FromException<NpgsqlConnection>(exception));
+            this.dataSource.Setup(x => x.OpenNewConnectionAsync()).Returns(() => ValueTask.FromException<NpgsqlConnection>(exception));
 
             var result = await this.dataStoreConnectionChecker.CheckConnectionAsync(CancellationToken.None);
 
