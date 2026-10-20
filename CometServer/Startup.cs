@@ -446,6 +446,7 @@ namespace CometServer
             //  database services
             builder.RegisterType<MigrationEngine>().As<IMigrationEngine>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).SingleInstance();
             builder.RegisterType<DataStoreConnectionChecker>().As<IDataStoreConnectionChecker>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).SingleInstance();
+            builder.RegisterType<PostgreSqlTlsDiagnostics>().As<IPostgreSqlTlsDiagnostics>().SingleInstance();
             builder.RegisterType<Cdp4TransactionManager>().As<ICdp4TransactionManager>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
             builder.RegisterAssemblyTypes(typeof(BaseDao).Assembly).Where(x => typeof(BaseDao).IsAssignableFrom(x)).AsImplementedInterfaces().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
             builder.RegisterType<RevisionDao>().As<IRevisionDao>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();

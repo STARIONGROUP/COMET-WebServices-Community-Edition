@@ -25,6 +25,7 @@
 namespace CometServer
 {
     using System;
+    using System.Configuration;
     using System.Threading.Tasks;
 
     using Autofac.Extensions.DependencyInjection;
@@ -36,7 +37,6 @@ namespace CometServer
 
     using Microsoft.Extensions.Hosting;
     using Microsoft.AspNetCore.Hosting;
-    using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
 
@@ -115,24 +115,41 @@ namespace CometServer
                 logger.LogInformation("Backtier-IsDbSeedEnabled: {IsDbSeedEnabled}", appConfigService.AppConfig.Backtier.IsDbSeedEnabled);
                 logger.LogInformation("Backtier-IsDbImportEnabled: {IsDbImportEnabled}", appConfigService.AppConfig.Backtier.IsDbImportEnabled);
                 logger.LogInformation("Backtier-IsDbRestoreEnabled: {IsDbRestoreEnabled}", appConfigService.AppConfig.Backtier.IsDbRestoreEnabled);
+                logger.LogInformation("Backtier-SslMode: {SslMode}", appConfigService.AppConfig.Backtier.SslMode);
+                var rootCertificate = appConfigService.AppConfig.Backtier.GetEffectiveRootCertificate();
+                logger.LogInformation("Backtier-RootCertificate: {RootCertificate} ({RootCertificateSource})", rootCertificate.Path ?? "none", rootCertificate.Source);
+                logger.LogInformation("Backtier-ClientCertificate: {ClientCertificate}", string.IsNullOrWhiteSpace(appConfigService.AppConfig.Backtier.ClientCertificate) ? "none" : appConfigService.AppConfig.Backtier.ClientCertificate);
+                logger.LogInformation("Backtier-CheckCertificateRevocation: {CheckCertificateRevocation}", appConfigService.AppConfig.Backtier.CheckCertificateRevocation);
 
                 logger.LogInformation("ThingsMessageProducer-IsEnabled: {IsEnabled}", appConfigService.AppConfig.ServiceMessagingConfig.IsEnabled);
 
                 logger.LogInformation("################################################################");
 
-                var configuration = host.Services.GetService<IConfiguration>();
-
-                var uri = configuration.GetSection("Kestrel:Endpoints:Http:Url").Value;
-
-                logger.LogInformation("CDP4-COMET REST API Ready to accept connections at {Uri}", uri);
+                logger.LogInformation("CDP4-COMET REST API is starting, requests are accepted once the data store has been checked and the migrations have run");
 
                 await host.RunAsync();
-                
+
+                if (Environment.ExitCode != 0)
+                {
+                    logger.LogCritical("Terminated CDP4-COMET WebServices because the startup failed, see the errors above (exit code {ExitCode})", Environment.ExitCode);
+                    return Environment.ExitCode;
+                }
+
                 logger.LogInformation("Terminated CDP4-COMET WebServices cleanly");
                 return 0;
             }
             catch (Exception e)
             {
+                var configurationError = FindConfigurationError(e);
+
+                if (configurationError != null)
+                {
+                    // an invalid setting: the message says what to change, the stack trace only helps when debugging
+                    logger.LogCritical("Terminated CDP4-COMET WebServices because of an invalid configuration: {ConfigurationError}", configurationError.Message);
+                    logger.LogDebug(e, "The configuration could not be loaded");
+                    return -1;
+                }
+
                 logger.LogCritical(e, "An unhandled exception occurred during startup-bootstrapping");
                 return -1;
             }
@@ -143,6 +160,29 @@ namespace CometServer
                     await backgroundMessageProducer.DequeueAsync();
                 }
             }
+        }
+
+        /// <summary>
+        /// Finds a <see cref="ConfigurationErrorsException"/> in the exception or its inner exceptions, for instance when
+        /// the dependency injection container wraps it while creating the <see cref="IAppConfigService"/>
+        /// </summary>
+        /// <param name="exception">
+        /// The exception
+        /// </param>
+        /// <returns>
+        /// The <see cref="ConfigurationErrorsException"/>, or null when there is none
+        /// </returns>
+        internal static ConfigurationErrorsException FindConfigurationError(Exception exception)
+        {
+            for (var current = exception; current != null; current = current.InnerException)
+            {
+                if (current is ConfigurationErrorsException configurationErrorsException)
+                {
+                    return configurationErrorsException;
+                }
+            }
+
+            return null;
         }
     }
 }

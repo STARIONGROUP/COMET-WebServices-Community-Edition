@@ -56,14 +56,37 @@ jobs:
       - name: cdp4-test-database-community-edition Image
         run: docker pull stariongroup/cdp4-test-database-community-edition:4.2.0
 
-      - name: Start PostgreSQL Container
+      - name: Create TLS certificates for PostgreSQL
         run: |
-            docker run -it -d \
-             -e POSTGRES_PASSWORD=postgres \
-             -p 5432:5432 \
-             --tmpfs /var/lib/postgresql/data:rw \
-             --name comet-db \
-             stariongroup/cdp4-test-database-community-edition:4.2.0
+          mkdir -p "$RUNNER_TEMP/db-tls" && cd "$RUNNER_TEMP/db-tls"
+          # throw-away CA and server certificate, valid for this run only
+          openssl req -x509 -newkey rsa:2048 -nodes -days 1 -subj "/CN=COMET CI Test CA" -keyout ca.key -out ca.crt
+          openssl req -newkey rsa:2048 -nodes -subj "/CN=localhost" -keyout server.key -out server.csr
+          openssl x509 -req -in server.csr -CA ca.crt -CAkey ca.key -CAcreateserial -days 1 -out server.crt \
+            -extfile <(printf "subjectAltName=DNS:localhost")
+          # a second CA, used to check that a certificate from the wrong CA is rejected
+          openssl req -x509 -newkey rsa:2048 -nodes -days 1 -subj "/CN=Wrong CA" -keyout wrong-ca.key -out wrong-ca.crt
+          # network connections must use TLS; the init script of the image uses the local socket
+          printf "local all all trust\nhostssl all all all scram-sha-256\n" > pg_hba.conf
+          # PostgreSQL only accepts a private key owned by its own user (uid 70 in the alpine based image)
+          sudo chown 70:70 server.key server.crt pg_hba.conf
+          sudo chmod 600 server.key
+
+      - name: Start PostgreSQL Container (TLS only)
+        run: |
+          docker run -d \
+            -e POSTGRES_PASSWORD=postgres \
+            -p 127.0.0.1:5432:5432 \
+            --tmpfs /var/lib/postgresql/data:rw \
+            -v "$RUNNER_TEMP/db-tls:/etc/postgresql-tls:ro" \
+            --name comet-db \
+            stariongroup/cdp4-test-database-community-edition:4.2.0 \
+            postgres \
+              -c ssl=on \
+              -c ssl_cert_file=/etc/postgresql-tls/server.crt \
+              -c ssl_key_file=/etc/postgresql-tls/server.key \
+              -c ssl_min_protocol_version=TLSv1.2 \
+              -c hba_file=/etc/postgresql-tls/pg_hba.conf
 
       - name: Wait for PostgreSQL to be ready
         run: |
@@ -90,6 +113,9 @@ jobs:
             --log-level Verbose
 
       - name: Start API
+        env:
+          Backtier__SslMode: VerifyFull
+          Backtier__RootCertificate: ${{ runner.temp }}/db-tls/ca.crt
         run: |
           set x
           dotnet run --project CometServer/CometServer.csproj -c Debug --no-build --no-restore > api.log 2>&1 &
@@ -123,6 +149,21 @@ jobs:
         run: |
           curl --form file=@"integration-tests/Data/Data.zip" http://localhost:5000/Data/Exchange
 
+      - name: Verify that the API uses a verified TLS connection to PostgreSQL
+        run: |
+          # the database is created by the seed above, the API connects to it and reports ready afterwards
+          for i in {1..60}; do
+            grep -q "ready to accept requests" api.log && break
+            echo "[$i/60] API not ready yet, retrying in 2 seconds..."
+            sleep 2
+          done
+          grep "ready to accept requests" api.log
+          grep "is encrypted using TLS" api.log
+          if grep -E "NOT encrypted|not fully verified" api.log; then
+            echo "::error::the connection to PostgreSQL is not encrypted or not verified"
+            exit 1
+          fi
+
       - name: Restore Dependencies for Integration Tests
         run: dotnet restore integration-tests/IntegrationTestSuite/WebservicesIntegrationTests.sln
 
@@ -140,6 +181,30 @@ jobs:
           echo "MessagePackIntegrationTests exit code: $MESSAGEPACK_EXIT"
           echo "WebservicesIntegrationTests exit code: $WEBSERVICES_EXIT"
           [ $MESSAGEPACK_EXIT -eq 0 ] && [ $WEBSERVICES_EXIT -eq 0 ]
+
+      - name: Verify that TLS misconfigurations stop the API
+        run: |
+          # each check starts a second API instance that must stop at once with exit code 1 and the expected message
+          set +e
+          check() {
+            expected="$1"
+            shift
+            env "$@" Kestrel__Endpoints__Http__Url=http://localhost:5099 \
+              timeout 120 dotnet run --project CometServer/CometServer.csproj -c Debug --no-build --no-restore > tls-check.log 2>&1
+            code=$?
+            if [ $code -ne 1 ] || ! grep -q "$expected" tls-check.log; then
+              echo "::error::expected exit code 1 and '$expected', got exit code $code"
+              cat tls-check.log
+              exit 1
+            fi
+            echo "OK: $expected"
+          }
+          check "is not trusted by Backtier:RootCertificate" \
+            Backtier__SslMode=VerifyFull Backtier__RootCertificate="$RUNNER_TEMP/db-tls/wrong-ca.crt"
+          check "is not valid for the host name '127.0.0.1'" \
+            Backtier__SslMode=VerifyFull Backtier__RootCertificate="$RUNNER_TEMP/db-tls/ca.crt" Backtier__HostName=127.0.0.1
+          check "only accepts encrypted connections" \
+            Backtier__SslMode=Disable
 
       - name: Shutdown Integration Test session
         run: dotnet-coverage shutdown integrationtestsession
