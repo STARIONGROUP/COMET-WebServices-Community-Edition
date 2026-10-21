@@ -26,6 +26,7 @@ namespace CometServer
 {
     using System;
     using System.Configuration;
+    using System.Runtime.InteropServices;
     using System.Threading.Tasks;
 
     using Autofac.Extensions.DependencyInjection;
@@ -88,6 +89,8 @@ namespace CometServer
                 logger.LogInformation("################################################################");
 
                 logger.LogInformation("Starting CDP4-COMET Services v{Version}", resourceLoader.QueryVersion());
+
+                logger.LogInformation("Runtime: {FrameworkDescription} on {OSDescription} ({RuntimeIdentifier})", RuntimeInformation.FrameworkDescription, RuntimeInformation.OSDescription, RuntimeInformation.RuntimeIdentifier);
 
                 var appConfigService = host.Services.GetService<IAppConfigService>();
 

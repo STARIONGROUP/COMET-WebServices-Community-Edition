@@ -22,13 +22,13 @@
     <PackageReference Include="CDP4ServicesMessaging-CE" Version="30.1.0" />
     <PackageReference Include="FluentResults" Version="4.0.0" />
     <PackageReference Include="FluentValidation" Version="12.1.1" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.Negotiate" Version="10.0.7" />
-    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.7" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Negotiate" Version="10.0.13" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.13" />
     <PackageReference Include="Hangfire.Core" Version="1.8.23" />
     <PackageReference Include="Hangfire.AspNetCore" Version="1.8.23" />
     <PackageReference Include="HangFire.Autofac" Version="2.7.0" />
     <PackageReference Include="Hangfire.MemoryStorage" Version="1.8.1.2" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.7" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.13" />
     <PackageReference Include="prometheus-net.AspNetCore" Version="8.2.1" />
     <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
     <PackageReference Include="Serilog.Enrichers.Environment" Version="3.0.1" />
@@ -37,11 +37,13 @@
     <PackageReference Include="Serilog.Sinks.Async" Version="2.1.0" />
     <PackageReference Include="Serilog.Sinks.Grafana.Loki" Version="8.3.2" />
     <PackageReference Include="SharpZipLib" Version="1.4.2" />
-    <PackageReference Include="System.Configuration.ConfigurationManager" Version="10.0.7" />
-    <PackageReference Include="System.Resources.Extensions" Version="10.0.7" />
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="10.0.13" />
+    <PackageReference Include="System.Resources.Extensions" Version="10.0.13" />
     <PackageReference Include="MailKit" Version="4.16.0" />
   </ItemGroup>
   <ItemGroup Label="Transitive Dependency overrides">
+      <!-- MimeKit (via MailKit) references System.Security.Cryptography.Pkcs 10.0.0; remove when MimeKit references 10.0.13 or later -->
+      <PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.13" />
       <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
   </ItemGroup>
   <ItemGroup>
