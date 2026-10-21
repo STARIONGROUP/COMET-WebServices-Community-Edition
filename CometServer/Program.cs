@@ -26,6 +26,7 @@ namespace CometServer
 {
     using System;
     using System.Configuration;
+    using System.Runtime.InteropServices;
     using System.Threading.Tasks;
 
     using Autofac.Extensions.DependencyInjection;
@@ -41,7 +42,9 @@ namespace CometServer
     using Microsoft.Extensions.Logging;
 
     using Serilog;
-    
+
+    using ILogger = Microsoft.Extensions.Logging.ILogger;
+
     /// <summary>
     /// The <see cref="Program"/> is the entry point for the console application
     /// </summary>
@@ -81,77 +84,17 @@ namespace CometServer
 
             try
             {
-                var resourceLoader = host.Services.GetService<IResourceLoader>();
+                LogVersion(logger, host.Services.GetService<IResourceLoader>());
 
-                logger.LogInformation(resourceLoader.QueryLogo());
-
-                logger.LogInformation("################################################################");
-
-                logger.LogInformation("Starting CDP4-COMET Services v{Version}", resourceLoader.QueryVersion());
-
-                var appConfigService = host.Services.GetService<IAppConfigService>();
-
-                logger.LogInformation("Configuration Loaded:");
-
-                logger.LogInformation("Midtier-UploadDirectory: {UploadDirectory}", appConfigService.AppConfig.Midtier.UploadDirectory);
-                logger.LogInformation("Midtier-FileStorageDirectory: {FileStorageDirectory}", appConfigService.AppConfig.Midtier.FileStorageDirectory);
-                logger.LogInformation("Midtier-TemporaryFileStorageDirectory: {TemporaryFileStorageDirectory}", appConfigService.AppConfig.Midtier.TemporaryFileStorageDirectory);
-                logger.LogInformation("Midtier-IsExportEnabled: {IsExportEnabled}", appConfigService.AppConfig.Midtier.IsExportEnabled);
-                logger.LogInformation("Midtier-ExportDirectory: {ExportDirectory}", appConfigService.AppConfig.Midtier.ExportDirectory);
-                logger.LogInformation("Midtier-BacktierWaitTime: {BacktierWaitTime}", appConfigService.AppConfig.Midtier.BacktierWaitTime);
-
-                logger.LogInformation("Changelog-CollectChanges: {CollectChanges}", appConfigService.AppConfig.Changelog.CollectChanges);
-                logger.LogInformation("Changelog-AllowEmailNotification: {AllowEmailNotification}", appConfigService.AppConfig.Changelog.AllowEmailNotification);
-
-                logger.LogInformation("Backtier-HostName: {HostName}", appConfigService.AppConfig.Backtier.HostName);
-                logger.LogInformation("Backtier-Port: {Port}", appConfigService.AppConfig.Backtier.Port);
-                logger.LogInformation("Backtier-Database: {Database}", appConfigService.AppConfig.Backtier.Database);
-                logger.LogInformation("Backtier-DatabaseRestore: {DatabaseRestore}", appConfigService.AppConfig.Backtier.DatabaseRestore);
-                logger.LogInformation("Backtier-DatabaseManage: {DatabaseManage}", appConfigService.AppConfig.Backtier.DatabaseManage);
-                logger.LogInformation("Backtier-StatementTimeout: {StatementTimeout}", appConfigService.AppConfig.Backtier.StatementTimeout);
-                logger.LogInformation("Backtier-ConnectionTimeout: {ConnectionTimeout}", appConfigService.AppConfig.Backtier.ConnectionTimeout);
-                logger.LogInformation("Backtier-Keepalive: {Keepalive}", appConfigService.AppConfig.Backtier.Keepalive);
-                logger.LogInformation("Backtier-MaximumPoolSize: {MaximumPoolSize}", appConfigService.AppConfig.Backtier.MaximumPoolSize);
-                logger.LogInformation("Backtier-IsDbSeedEnabled: {IsDbSeedEnabled}", appConfigService.AppConfig.Backtier.IsDbSeedEnabled);
-                logger.LogInformation("Backtier-IsDbImportEnabled: {IsDbImportEnabled}", appConfigService.AppConfig.Backtier.IsDbImportEnabled);
-                logger.LogInformation("Backtier-IsDbRestoreEnabled: {IsDbRestoreEnabled}", appConfigService.AppConfig.Backtier.IsDbRestoreEnabled);
-                logger.LogInformation("Backtier-SslMode: {SslMode}", appConfigService.AppConfig.Backtier.SslMode);
-                var rootCertificate = appConfigService.AppConfig.Backtier.GetEffectiveRootCertificate();
-                logger.LogInformation("Backtier-RootCertificate: {RootCertificate} ({RootCertificateSource})", rootCertificate.Path ?? "none", rootCertificate.Source);
-                logger.LogInformation("Backtier-ClientCertificate: {ClientCertificate}", string.IsNullOrWhiteSpace(appConfigService.AppConfig.Backtier.ClientCertificate) ? "none" : appConfigService.AppConfig.Backtier.ClientCertificate);
-                logger.LogInformation("Backtier-CheckCertificateRevocation: {CheckCertificateRevocation}", appConfigService.AppConfig.Backtier.CheckCertificateRevocation);
-
-                logger.LogInformation("ThingsMessageProducer-IsEnabled: {IsEnabled}", appConfigService.AppConfig.ServiceMessagingConfig.IsEnabled);
-
-                logger.LogInformation("################################################################");
-
-                logger.LogInformation("CDP4-COMET REST API is starting, requests are accepted once the data store has been checked and the migrations have run");
+                LogConfiguration(logger, host.Services.GetService<IAppConfigService>().AppConfig);
 
                 await host.RunAsync();
 
-                if (Environment.ExitCode != 0)
-                {
-                    logger.LogCritical("Terminated CDP4-COMET WebServices because the startup failed, see the errors above (exit code {ExitCode})", Environment.ExitCode);
-                    return Environment.ExitCode;
-                }
-
-                logger.LogInformation("Terminated CDP4-COMET WebServices cleanly");
-                return 0;
+                return LogTermination(logger, Environment.ExitCode);
             }
             catch (Exception e)
             {
-                var configurationError = FindConfigurationError(e);
-
-                if (configurationError != null)
-                {
-                    // an invalid setting: the message says what to change, the stack trace only helps when debugging
-                    logger.LogCritical("Terminated CDP4-COMET WebServices because of an invalid configuration: {ConfigurationError}", configurationError.Message);
-                    logger.LogDebug(e, "The configuration could not be loaded");
-                    return -1;
-                }
-
-                logger.LogCritical(e, "An unhandled exception occurred during startup-bootstrapping");
-                return -1;
+                return LogStartupException(logger, e);
             }
             finally
             {
@@ -160,6 +103,128 @@ namespace CometServer
                     await backgroundMessageProducer.DequeueAsync();
                 }
             }
+        }
+
+        /// <summary>
+        /// Logs the logo, the version and the .NET runtime
+        /// </summary>
+        /// <param name="logger">
+        /// The <see cref="ILogger"/>
+        /// </param>
+        /// <param name="resourceLoader">
+        /// The <see cref="IResourceLoader"/> that provides the logo and the version
+        /// </param>
+        internal static void LogVersion(ILogger logger, IResourceLoader resourceLoader)
+        {
+            logger.LogInformation(resourceLoader.QueryLogo());
+
+            logger.LogInformation("################################################################");
+
+            logger.LogInformation("Starting CDP4-COMET Services v{Version}", resourceLoader.QueryVersion());
+
+            logger.LogInformation("Runtime: {FrameworkDescription} on {OSDescription} ({RuntimeIdentifier})", RuntimeInformation.FrameworkDescription, RuntimeInformation.OSDescription, RuntimeInformation.RuntimeIdentifier);
+        }
+
+        /// <summary>
+        /// Logs the loaded configuration
+        /// </summary>
+        /// <param name="logger">
+        /// The <see cref="ILogger"/>
+        /// </param>
+        /// <param name="appConfig">
+        /// The loaded <see cref="AppConfig"/>
+        /// </param>
+        internal static void LogConfiguration(ILogger logger, AppConfig appConfig)
+        {
+            logger.LogInformation("Configuration Loaded:");
+
+            var midtier = appConfig.Midtier;
+            logger.LogInformation("Midtier-UploadDirectory: {UploadDirectory}", midtier.UploadDirectory);
+            logger.LogInformation("Midtier-FileStorageDirectory: {FileStorageDirectory}", midtier.FileStorageDirectory);
+            logger.LogInformation("Midtier-TemporaryFileStorageDirectory: {TemporaryFileStorageDirectory}", midtier.TemporaryFileStorageDirectory);
+            logger.LogInformation("Midtier-IsExportEnabled: {IsExportEnabled}", midtier.IsExportEnabled);
+            logger.LogInformation("Midtier-ExportDirectory: {ExportDirectory}", midtier.ExportDirectory);
+            logger.LogInformation("Midtier-BacktierWaitTime: {BacktierWaitTime}", midtier.BacktierWaitTime);
+
+            logger.LogInformation("Changelog-CollectChanges: {CollectChanges}", appConfig.Changelog.CollectChanges);
+            logger.LogInformation("Changelog-AllowEmailNotification: {AllowEmailNotification}", appConfig.Changelog.AllowEmailNotification);
+
+            var backtier = appConfig.Backtier;
+            logger.LogInformation("Backtier-HostName: {HostName}", backtier.HostName);
+            logger.LogInformation("Backtier-Port: {Port}", backtier.Port);
+            logger.LogInformation("Backtier-Database: {Database}", backtier.Database);
+            logger.LogInformation("Backtier-DatabaseRestore: {DatabaseRestore}", backtier.DatabaseRestore);
+            logger.LogInformation("Backtier-DatabaseManage: {DatabaseManage}", backtier.DatabaseManage);
+            logger.LogInformation("Backtier-StatementTimeout: {StatementTimeout}", backtier.StatementTimeout);
+            logger.LogInformation("Backtier-ConnectionTimeout: {ConnectionTimeout}", backtier.ConnectionTimeout);
+            logger.LogInformation("Backtier-Keepalive: {Keepalive}", backtier.Keepalive);
+            logger.LogInformation("Backtier-MaximumPoolSize: {MaximumPoolSize}", backtier.MaximumPoolSize);
+            logger.LogInformation("Backtier-IsDbSeedEnabled: {IsDbSeedEnabled}", backtier.IsDbSeedEnabled);
+            logger.LogInformation("Backtier-IsDbImportEnabled: {IsDbImportEnabled}", backtier.IsDbImportEnabled);
+            logger.LogInformation("Backtier-IsDbRestoreEnabled: {IsDbRestoreEnabled}", backtier.IsDbRestoreEnabled);
+            logger.LogInformation("Backtier-SslMode: {SslMode}", backtier.SslMode);
+            var rootCertificate = backtier.GetEffectiveRootCertificate();
+            logger.LogInformation("Backtier-RootCertificate: {RootCertificate} ({RootCertificateSource})", rootCertificate.Path ?? "none", rootCertificate.Source);
+            logger.LogInformation("Backtier-ClientCertificate: {ClientCertificate}", string.IsNullOrWhiteSpace(backtier.ClientCertificate) ? "none" : backtier.ClientCertificate);
+            logger.LogInformation("Backtier-CheckCertificateRevocation: {CheckCertificateRevocation}", backtier.CheckCertificateRevocation);
+
+            logger.LogInformation("ThingsMessageProducer-IsEnabled: {IsEnabled}", appConfig.ServiceMessagingConfig.IsEnabled);
+
+            logger.LogInformation("################################################################");
+
+            logger.LogInformation("CDP4-COMET REST API is starting, requests are accepted once the data store has been checked and the migrations have run");
+        }
+
+        /// <summary>
+        /// Logs how the host terminated
+        /// </summary>
+        /// <param name="logger">
+        /// The <see cref="ILogger"/>
+        /// </param>
+        /// <param name="exitCode">
+        /// The exit code set while the host ran; not 0 when the startup failed
+        /// </param>
+        /// <returns>
+        /// The exit code of the process
+        /// </returns>
+        internal static int LogTermination(ILogger logger, int exitCode)
+        {
+            if (exitCode != 0)
+            {
+                logger.LogCritical("Terminated CDP4-COMET WebServices because the startup failed, see the errors above (exit code {ExitCode})", exitCode);
+                return exitCode;
+            }
+
+            logger.LogInformation("Terminated CDP4-COMET WebServices cleanly");
+            return 0;
+        }
+
+        /// <summary>
+        /// Logs an exception that stopped the startup
+        /// </summary>
+        /// <param name="logger">
+        /// The <see cref="ILogger"/>
+        /// </param>
+        /// <param name="exception">
+        /// The exception
+        /// </param>
+        /// <returns>
+        /// The exit code of the process
+        /// </returns>
+        internal static int LogStartupException(ILogger logger, Exception exception)
+        {
+            var configurationError = FindConfigurationError(exception);
+
+            if (configurationError != null)
+            {
+                // an invalid setting: the message says what to change, the stack trace only helps when debugging
+                logger.LogCritical("Terminated CDP4-COMET WebServices because of an invalid configuration: {ConfigurationError}", configurationError.Message);
+                logger.LogDebug(exception, "The configuration could not be loaded");
+                return -1;
+            }
+
+            logger.LogCritical(exception, "An unhandled exception occurred during startup-bootstrapping");
+            return -1;
         }
 
         /// <summary>

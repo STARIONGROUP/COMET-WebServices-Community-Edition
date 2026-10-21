@@ -1,0 +1,69 @@
+# Dependabot keeps the NuGet packages, the Docker base image and the GitHub Actions up to date.
+# Pull requests target the development branch. Major version updates (e.g. moving to .NET 11) are
+# planned upgrades and are therefore not proposed.
+# https://docs.github.com/code-security/dependabot/working-with-dependabot/dependabot-options-reference
+
+version: 2
+
+updates:
+  - package-ecosystem: "nuget"
+    directory: "/"
+    target-branch: "development"
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+    commit-message:
+      prefix: "[Bump]"
+    labels:
+      - "devops"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+    groups:
+      # .NET servicing releases (Patch Tuesday): all Microsoft.* and System.* packages in one pull request
+      dotnet:
+        patterns:
+          - "Microsoft.*"
+          - "System.*"
+        exclude-patterns:
+          - "Microsoft.NET.Test.Sdk"
+      comet-sdk:
+        patterns:
+          - "CDP4*"
+      hangfire:
+        patterns:
+          - "Hangfire*"
+      serilog:
+        patterns:
+          - "Serilog*"
+      test:
+        patterns:
+          - "Microsoft.NET.Test.Sdk"
+          - "NUnit*"
+          - "Moq"
+          - "coverlet*"
+
+  - package-ecosystem: "docker"
+    directory: "/"
+    target-branch: "development"
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+    commit-message:
+      prefix: "[Bump]"
+    labels:
+      - "devops"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    target-branch: "development"
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+    commit-message:
+      prefix: "[Bump]"
+    labels:
+      - "devops"
