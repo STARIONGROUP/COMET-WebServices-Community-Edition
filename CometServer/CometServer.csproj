@@ -21,7 +21,7 @@
     <PackageReference Include="CDP4MessagePackSerializer-CE" Version="30.1.2" />
     <PackageReference Include="CDP4ServicesMessaging-CE" Version="30.1.0" />
     <PackageReference Include="FluentResults" Version="4.0.0" />
-    <PackageReference Include="FluentValidation" Version="12.1.1" />
+    <PackageReference Include="FluentValidation" Version="12.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Negotiate" Version="10.0.13" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.13" />
     <PackageReference Include="Hangfire.Core" Version="1.8.23" />
