@@ -11,7 +11,7 @@ RUN dotnet build CDP4DatabaseAuthentication -c Release
 RUN dotnet build CDP4WspDatabaseAuthentication -c Release
 RUN dotnet publish -r linux-x64 CometServer -c Release -o /app/CometServer/bin/Release/publish
 
-FROM mcr.microsoft.com/dotnet/aspnet:10.0.13-alpine3.24
+FROM mcr.microsoft.com/dotnet/aspnet:10.0.14-alpine3.24
 
 WORKDIR /app
 RUN mkdir /app/logs
