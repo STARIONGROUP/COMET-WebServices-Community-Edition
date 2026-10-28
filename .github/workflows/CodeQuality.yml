@@ -23,7 +23,7 @@ jobs:
           overwrite-settings: false
 
       - name: Setup dotnet
-        uses: actions/setup-dotnet@v5.1.0
+        uses: actions/setup-dotnet@v6.0.0
         with:
           dotnet-version: '10.0.x'
 
