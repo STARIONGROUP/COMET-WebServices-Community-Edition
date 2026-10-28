@@ -51,7 +51,7 @@ jobs:
         run: dotnet test COMET-WebServices.sln --no-restore --no-build --verbosity normal /p:CollectCoverage=true /p:CoverletOutput="../CoverageResults/" /p:MergeWith="../CoverageResults/coverage.json" /p:CoverletOutputFormat=\"cobertura,opencover,json\"
 
       - name: Set up Docker
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: cdp4-test-database-community-edition Image
         run: docker pull stariongroup/cdp4-test-database-community-edition:4.2.0
