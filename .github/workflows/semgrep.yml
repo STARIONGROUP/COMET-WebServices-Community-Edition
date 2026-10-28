@@ -31,7 +31,7 @@ jobs:
               semgrep scan --config "https://semgrep.dev/p/owasp-top-ten" --sarif --output=semgrep-sast.sarif --metrics=off
 
         - name: save report as pipeline artifact
-          uses: actions/upload-artifact@v4
+          uses: actions/upload-artifact@v7
           with:
             name: semgrep-sast.sarif
             path: semgrep-sast.sarif
