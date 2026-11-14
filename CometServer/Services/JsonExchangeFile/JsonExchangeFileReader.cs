@@ -234,13 +234,20 @@ namespace CometServer.Services
 
                 zipFile.Password = password;
 
-                this.Logger.LogDebug("extracting Things from: SiteDirectory.json");
+                if (this.Logger.IsEnabled(LogLevel.Debug))
+                {
+                    this.Logger.LogDebug("extracting Things from: SiteDirectory.json");
+                }
 
                 // read site directory info from file
                 var siteDirectoryZipEntry = zipFile.GetEntry("SiteDirectory.json");
 
                 var returnedSiteDirectory = this.ReadInfoFromArchiveEntry(version, zipFile, siteDirectoryZipEntry);
-                this.Logger.LogInformation("{Count} Site Directory item(s) encountered", returnedSiteDirectory.Count);
+
+                if (this.Logger.IsEnabled(LogLevel.Information))
+                {
+                    this.Logger.LogInformation("{Count} Site Directory item(s) encountered", returnedSiteDirectory.Count);
+                }
 
                 var returned = new List<CDP4Common.DTO.Thing>(returnedSiteDirectory);
                 var processedRdls = new List<string>();
@@ -257,13 +264,20 @@ namespace CometServer.Services
                                 x.ClassKind == ClassKind.ModelReferenceDataLibrary
                                 && x.Iid == engineeringModelSetup.RequiredRdl.Single());
 
-                    this.Logger.LogDebug("extracting Things from: ModelReferenceDataLibraries/{modelRdlDto}.json", modelRdlDto.Iid);
+                    if (this.Logger.IsEnabled(LogLevel.Debug))
+                    {
+                        this.Logger.LogDebug("extracting Things from: ModelReferenceDataLibraries/{modelRdlDto}.json", modelRdlDto.Iid);
+                    }
 
                     var modelRdlZipEntry = zipFile.GetEntry($"ModelReferenceDataLibraries/{modelRdlDto.Iid}.json");
 
                     var modelRdlItems = this.ReadInfoFromArchiveEntry(version, zipFile, modelRdlZipEntry);
 
-                    this.Logger.LogInformation("{Count} Model Reference Data Library item(s) encountered", returnedSiteDirectory.Count);
+                    if (this.Logger.IsEnabled(LogLevel.Information))
+                    {
+                        this.Logger.LogInformation("{Count} Model Reference Data Library item(s) encountered", returnedSiteDirectory.Count);
+                    }
+
                     returned.AddRange(modelRdlItems);
 
                     // load the reference data libraries as per the containment chain
@@ -271,14 +285,20 @@ namespace CometServer.Services
 
                     while (requiredRdl != null)
                     {
-                        this.Logger.LogInformation("Required Reference Data Library encountered: {RequiredRdl}", requiredRdl);
+                        if (this.Logger.IsEnabled(LogLevel.Information))
+                        {
+                            this.Logger.LogInformation("Required Reference Data Library encountered: {RequiredRdl}", requiredRdl);
+                        }
 
                         var siteRdlDto =
                             (SiteReferenceDataLibrary)
                             returnedSiteDirectory.Single(
                                 x => x.ClassKind == ClassKind.SiteReferenceDataLibrary && x.Iid == requiredRdl);
 
-                        this.Logger.LogDebug("extracting Things from: SiteReferenceDataLibraries/{SiteRdlDto}.json", siteRdlDto.Iid);
+                        if (this.Logger.IsEnabled(LogLevel.Debug))
+                        {
+                            this.Logger.LogDebug("extracting Things from: SiteReferenceDataLibraries/{SiteRdlDto}.json", siteRdlDto.Iid);
+                        }
 
                         var siteRdlFilePath = $"SiteReferenceDataLibraries/{siteRdlDto.Iid}.json";
 
@@ -288,7 +308,11 @@ namespace CometServer.Services
 
                             var siteRdlItems = this.ReadInfoFromArchiveEntry(version, zipFile, siteRdlZipEntry);
 
-                            this.Logger.LogInformation("{Count} Site Reference Data Library item(s) encountered", siteRdlItems.Count);
+                            if (this.Logger.IsEnabled(LogLevel.Information))
+                            {
+                                this.Logger.LogInformation("{Count} Site Reference Data Library item(s) encountered", siteRdlItems.Count);
+                            }
+
                             returned.AddRange(siteRdlItems);
 
                             // register this processedRdl
@@ -300,7 +324,10 @@ namespace CometServer.Services
                     }
                 }
 
-                this.Logger.LogInformation("{Count} Site Directory items encountered", returned.Count);
+                if (this.Logger.IsEnabled(LogLevel.Information))
+                {
+                    this.Logger.LogInformation("{Count} Site Directory items encountered", returned.Count);
+                }
 
                 return returned.AsReadOnly();
             }
@@ -341,12 +368,19 @@ namespace CometServer.Services
 
                 zipFile.Password = password;
 
-                this.Logger.LogDebug("extracting Things from: EngineeringModels/{EngineeringModelIid}/{EngineeringModelIid}.json", engineeringModelSetup.EngineeringModelIid, engineeringModelSetup.EngineeringModelIid);
+                if (this.Logger.IsEnabled(LogLevel.Debug))
+                {
+                    this.Logger.LogDebug("extracting Things from: EngineeringModels/{EngineeringModelIid}/{EngineeringModelIid}.json", engineeringModelSetup.EngineeringModelIid, engineeringModelSetup.EngineeringModelIid);
+                }
 
                 var engineeringModelZipEntry = zipFile.GetEntry($"EngineeringModels/{engineeringModelSetup.EngineeringModelIid}/{engineeringModelSetup.EngineeringModelIid}.json");
                 var engineeringModelItems = this.ReadInfoFromArchiveEntry(version, zipFile, engineeringModelZipEntry);
 
-                this.Logger.LogInformation("{Count} Engineering Model item(s) encountered", engineeringModelItems.Count);
+                if (this.Logger.IsEnabled(LogLevel.Information))
+                {
+                    this.Logger.LogInformation("{Count} Engineering Model item(s) encountered", engineeringModelItems.Count);
+                }
+
                 return engineeringModelItems.AsReadOnly();
             }
             catch (Exception ex)
@@ -392,12 +426,20 @@ namespace CometServer.Services
                 zipFile.Password = password;
 
                 // read iteration data
-                this.Logger.LogDebug("Extractring things from: EngineeringModels/{EngineeringModelIid}/Iterations/{IterationIid}.json", engineeringModelSetup.EngineeringModelIid, iterationSetup.IterationIid);
+
+                if (this.Logger.IsEnabled(LogLevel.Debug))
+                {
+                    this.Logger.LogDebug("Extractring things from: EngineeringModels/{EngineeringModelIid}/Iterations/{IterationIid}.json", engineeringModelSetup.EngineeringModelIid, iterationSetup.IterationIid);
+                }
 
                 var iterationZipEntry = zipFile.GetEntry($"EngineeringModels/{engineeringModelSetup.EngineeringModelIid}/Iterations/{iterationSetup.IterationIid}.json");
                 var iterationItems = this.ReadInfoFromArchiveEntry(version, zipFile, iterationZipEntry);
 
-                this.Logger.LogInformation("{Count} Iteration item(s) encountered", iterationItems.Count);
+                if (this.Logger.IsEnabled(LogLevel.Information))
+                {
+                    this.Logger.LogInformation("{Count} Iteration item(s) encountered", iterationItems.Count);
+                }
+
                 return iterationItems;
             }
             catch (Exception ex)
@@ -437,13 +479,20 @@ namespace CometServer.Services
             zipFile.Password = password;
 
             // select file binary from the archive archive
-            this.Logger.LogDebug("Extracting data from EngineeringModels/{EngineeringModelIid}/FileRevisions/{Hash}", engineeringModelSetup.EngineeringModelIid, hash);
+
+            if (this.Logger.IsEnabled(LogLevel.Debug))
+            {
+                this.Logger.LogDebug("Extracting data from EngineeringModels/{EngineeringModelIid}/FileRevisions/{Hash}", engineeringModelSetup.EngineeringModelIid, hash);
+            }
 
             var fileZipEntry = zipFile.GetEntry($"EngineeringModels/{engineeringModelSetup.EngineeringModelIid}/FileRevisions/{hash}");
 
             using var stream = ReadStreamFromArchive(zipFile, fileZipEntry);
 
-            this.Logger.LogInformation("Store file binary with hash {Hash}", hash);
+            if (this.Logger.IsEnabled(LogLevel.Information))
+            {
+                this.Logger.LogInformation("Store file binary with hash {Hash}", hash);
+            }
 
             this.FileBinaryService.StoreBinaryData(hash, stream);
         }
@@ -478,7 +527,10 @@ namespace CometServer.Services
                 returned.AddRange(this.JsonSerializer.Deserialize(stream));
             }
 
-            this.Logger.LogInformation("JSON Deserializer completed in {ElapsedMilliseconds} [ms]", sw.ElapsedMilliseconds);
+            if (this.Logger.IsEnabled(LogLevel.Information))
+            {
+                this.Logger.LogInformation("JSON Deserializer completed in {ElapsedMilliseconds} [ms]", sw.ElapsedMilliseconds);
+            }
 
             return returned.AsReadOnly();
         }

@@ -100,7 +100,11 @@ namespace CometServer.Services.Supplemental
             // do not do anything if no role/permission in things
             if (personRoles.Length == 0 && participantRoles.Length == 0 && personPermissions.Length == 0 && participantPermissions.Length == 0)
             {
-                this.Logger.LogInformation("Filtering-out permissions took {ElapsedMilliseconds} ms (no filtering required)", sw.ElapsedMilliseconds);
+                if (this.Logger.IsEnabled(LogLevel.Information))
+                {
+                    this.Logger.LogInformation("Filtering-out permissions took {ElapsedMilliseconds} ms (no filtering required)", sw.ElapsedMilliseconds);
+                }
+
                 return things;
             }
 
@@ -134,7 +138,11 @@ namespace CometServer.Services.Supplemental
             }
 
             // filter-out permissions
-            this.Logger.LogInformation("Filtering-out permissions took {ElapsedMilliseconds} ms", sw.ElapsedMilliseconds);
+
+            if (this.Logger.IsEnabled(LogLevel.Information))
+            {
+                this.Logger.LogInformation("Filtering-out permissions took {ElapsedMilliseconds} ms", sw.ElapsedMilliseconds);
+            }
 
             return things.Where(
                 x => (x.ClassKind != ClassKind.PersonPermission && x.ClassKind != ClassKind.ParticipantPermission) ||

@@ -226,18 +226,38 @@ namespace CometServer.Services.Operations
             await this.DisableUserTrigger(transaction);
 
             // copy all data from the source to the target partition
-            this.Logger.LogDebug("Copy EngineeringModel data from {SourcePartition} to {TargetPartition}", sourcePartition, targetPartition);
+
+            if (this.Logger.IsEnabled(LogLevel.Debug))
+            {
+                this.Logger.LogDebug("Copy EngineeringModel data from {SourcePartition} to {TargetPartition}", sourcePartition, targetPartition);
+            }
+
             await this.EngineeringModelService.CopyEngineeringModel(transaction, sourcePartition, targetPartition);
-            this.Logger.LogDebug("Copy Iteration data from {SourceIterationPartition} to {TargetIterationPartition}", sourceIterationPartition, targetIterationPartition);
+
+            if (this.Logger.IsEnabled(LogLevel.Debug))
+            {
+                this.Logger.LogDebug("Copy Iteration data from {SourceIterationPartition} to {TargetIterationPartition}", sourceIterationPartition, targetIterationPartition);
+            }
+
             await this.IterationService.CopyIterationAndResetCreatedOnAsync(transaction, sourceIterationPartition, targetIterationPartition);
 
             // wipe the organizational participations
             await this.IterationService.DeleteAllrganizationalParticipantThingsAsync(transaction, targetIterationPartition);
 
             // change id on Thing table for all other things
-            this.Logger.LogDebug("Modify Identifiers of EngineeringModel {TargetPartition} data", targetPartition);
+
+            if (this.Logger.IsEnabled(LogLevel.Debug))
+            {
+                this.Logger.LogDebug("Modify Identifiers of EngineeringModel {TargetPartition} data", targetPartition);
+            }
+
             await this.EngineeringModelService.ModifyIdentifierAsync(transaction, targetPartition);
-            this.Logger.LogDebug("Modify Identifiers of Iteration {TargetIterationPartition} data", targetIterationPartition);
+
+            if (this.Logger.IsEnabled(LogLevel.Debug))
+            {
+                this.Logger.LogDebug("Modify Identifiers of Iteration {TargetIterationPartition} data", targetIterationPartition);
+            }
+
             await this.EngineeringModelService.ModifyIdentifierAsync(transaction, targetIterationPartition);
 
             // update iid for engineering-model and iteration(s)
@@ -252,7 +272,11 @@ namespace CometServer.Services.Operations
             newEngineeringModel.Iid = newModelSetup.EngineeringModelIid;
             newEngineeringModel.EngineeringModelSetup = newModelSetup.Iid;
 
-            this.Logger.LogDebug("Modify Identifier of new EngineeringModel {OldIid} to {EngineeringModelIid}", oldIid, newModelSetup.EngineeringModelIid);
+            if (this.Logger.IsEnabled(LogLevel.Debug))
+            {
+                this.Logger.LogDebug("Modify Identifier of new EngineeringModel {OldIid} to {EngineeringModelIid}", oldIid, newModelSetup.EngineeringModelIid);
+            }
+
             await this.EngineeringModelService.ModifyIdentifierAsync(transaction, targetPartition, newEngineeringModel, oldIid);
 
             if (!await this.EngineeringModelService.UpdateConceptAsync(transaction, targetPartition, newEngineeringModel, null))
@@ -265,7 +289,11 @@ namespace CometServer.Services.Operations
             modelThings.AddRange(await this.IterationService.GetDeepAsync(transaction, targetPartition, null, securityContext));
 
             var sw = Stopwatch.StartNew();
-            this.Logger.LogDebug("start modify {Count} references of things contained in the new engineering-model-setup (rdl included)", modelThings.Count);
+
+            if (this.Logger.IsEnabled(LogLevel.Debug))
+            {
+                this.Logger.LogDebug("start modify {Count} references of things contained in the new engineering-model-setup (rdl included)", modelThings.Count);
+            }
 
             foreach (var modelThing in modelThings)
             {
@@ -318,7 +346,10 @@ namespace CometServer.Services.Operations
                 }
             }
 
-            this.Logger.LogDebug("modified {Count} references of things contained in the new engineering-model-setup in {ElapsedMilliseconds} [ms]", modelThings.Count, sw.ElapsedMilliseconds);
+            if (this.Logger.IsEnabled(LogLevel.Debug))
+            {
+                this.Logger.LogDebug("modified {Count} references of things contained in the new engineering-model-setup in {ElapsedMilliseconds} [ms]", modelThings.Count, sw.ElapsedMilliseconds);
+            }
 
             // IMPORTANT: re-enable user trigger once the current transaction is commited commited
         }
@@ -334,15 +365,27 @@ namespace CometServer.Services.Operations
             var partition = this.RequestUtils.GetEngineeringModelPartitionString(this.newModelIid);
             var iterationPartition = partition.Replace(CDP4Orm.Dao.Utils.EngineeringModelPartition, CDP4Orm.Dao.Utils.IterationSubPartition);
 
-            this.Logger.LogDebug("disable triggers for EngineeringModel {Partition}", partition);
+            if (this.Logger.IsEnabled(LogLevel.Debug))
+            {
+                this.Logger.LogDebug("disable triggers for EngineeringModel {Partition}", partition);
+            }
+
             await this.EngineeringModelService.ModifyUserTriggerAsync(transaction, partition, false);
 
-            this.Logger.LogDebug("disable triggers for Iteration {IterationPartition}", iterationPartition);
+            if (this.Logger.IsEnabled(LogLevel.Debug))
+            {
+                this.Logger.LogDebug("disable triggers for Iteration {IterationPartition}", iterationPartition);
+            }
+
             await this.IterationService.ModifyUserTriggerAsync(transaction, iterationPartition, false);
 
             this.IsUserTriggerDisable = true;
             stopwatch.Stop();
-            this.Logger.LogDebug("Triggers disabling took {ElapsedMilliseconds}[ms]", stopwatch.ElapsedMilliseconds);
+
+            if (this.Logger.IsEnabled(LogLevel.Debug))
+            {
+                this.Logger.LogDebug("Triggers disabling took {ElapsedMilliseconds}[ms]", stopwatch.ElapsedMilliseconds);
+            }
         }
 
         /// <summary>
@@ -360,13 +403,25 @@ namespace CometServer.Services.Operations
             var partition = this.RequestUtils.GetEngineeringModelPartitionString(this.newModelIid);
             var iterationPartition = partition.Replace(CDP4Orm.Dao.Utils.EngineeringModelPartition, CDP4Orm.Dao.Utils.IterationSubPartition);
 
-            this.Logger.LogDebug("enable triggers for EngineeringModel {Partition}", partition);
+            if (this.Logger.IsEnabled(LogLevel.Debug))
+            {
+                this.Logger.LogDebug("enable triggers for EngineeringModel {Partition}", partition);
+            }
+
             await this.EngineeringModelService.ModifyUserTriggerAsync(transaction, partition, true);
 
-            this.Logger.LogDebug("enable triggers for Iteration {IterationPartition}", iterationPartition);
+            if (this.Logger.IsEnabled(LogLevel.Debug))
+            {
+                this.Logger.LogDebug("enable triggers for Iteration {IterationPartition}", iterationPartition);
+            }
+
             await this.IterationService.ModifyUserTriggerAsync(transaction, iterationPartition, true);
             stopwatch.Stop();
-            this.Logger.LogDebug("Triggers enabling took {ElapsedMilliseconds}[ms]", stopwatch.ElapsedMilliseconds);
+
+            if (this.Logger.IsEnabled(LogLevel.Debug))
+            {
+                this.Logger.LogDebug("Triggers enabling took {ElapsedMilliseconds}[ms]", stopwatch.ElapsedMilliseconds);
+            }
         }
     }
 }

@@ -176,7 +176,10 @@ namespace CometServer.Modules
             var reqsw = Stopwatch.StartNew();
             var requestToken = this.tokenGeneratorService.GenerateRandomToken();
 
-            this.logger.LogInformation("{Request}:{RequestToken} - START HTTP REQUEST PROCESSING", httpRequest.QueryNameMethodPath(), requestToken);
+            if (this.logger.IsEnabled(LogLevel.Information))
+            {
+                this.logger.LogInformation("{Request}:{RequestToken} - START HTTP REQUEST PROCESSING", httpRequest.QueryNameMethodPath(), requestToken);
+            }
 
             if (!this.appConfigService.AppConfig.Backtier.IsDbRestoreEnabled)
             {
@@ -189,11 +192,17 @@ namespace CometServer.Modules
 
             try
             {
-                this.logger.LogDebug("{Request}:{RequestToken} - Starting data store rollback", httpRequest.QueryNameMethodPath(), requestToken);
+                if (this.logger.IsEnabled(LogLevel.Debug))
+                {
+                    this.logger.LogDebug("{Request}:{RequestToken} - Starting data store rollback", httpRequest.QueryNameMethodPath(), requestToken);
+                }
 
                 await dataStoreController.RestoreDataStore();
 
-                this.logger.LogDebug("{Request}:{RequestToken} - Finished data store rollback", httpRequest.QueryNameMethodPath(), requestToken);
+                if (this.logger.IsEnabled(LogLevel.Debug))
+                {
+                    this.logger.LogDebug("{Request}:{RequestToken} - Finished data store rollback", httpRequest.QueryNameMethodPath(), requestToken);
+                }
 
                 this.cometHasStartedService.SetHasStartedAndIsReady(true);
 
@@ -209,7 +218,10 @@ namespace CometServer.Modules
             }
             finally
             {
-                this.logger.LogInformation("{Request}:{RequestToken} - Response returned in {ElapsedMilliseconds} [ms]", httpRequest.QueryNameMethodPath(), requestToken, reqsw.ElapsedMilliseconds);
+                if (this.logger.IsEnabled(LogLevel.Information))
+                {
+                    this.logger.LogInformation("{Request}:{RequestToken} - Response returned in {ElapsedMilliseconds} [ms]", httpRequest.QueryNameMethodPath(), requestToken, reqsw.ElapsedMilliseconds);
+                }
             }
         }
 
@@ -295,14 +307,20 @@ namespace CometServer.Modules
 
             if (!this.appConfigService.AppConfig.Backtier.IsDbImportEnabled)
             {
-                this.logger.LogInformation("{Request}:{RequestToken} - Data store IMPORT API invoked but it was disabled from configuration, cancel further processing...", httpRequest.QueryNameMethodPath(), requestToken);
+                if (this.logger.IsEnabled(LogLevel.Information))
+                {
+                    this.logger.LogInformation("{Request}:{RequestToken} - Data store IMPORT API invoked but it was disabled from configuration, cancel further processing...", httpRequest.QueryNameMethodPath(), requestToken);
+                }
 
                 response.StatusCode = (int)HttpStatusCode.Forbidden;
                 await response.AsJson("Data store IMPORT is not allowed");
                 return;
             }
 
-            this.logger.LogInformation("{Request}:{RequestToken} - Starting data store IMPORT", httpRequest.QueryNameMethodPath(), requestToken);
+            if (this.logger.IsEnabled(LogLevel.Information))
+            {
+                this.logger.LogInformation("{Request}:{RequestToken} - Starting data store IMPORT", httpRequest.QueryNameMethodPath(), requestToken);
+            }
             
             var temporarySeedFilePath = string.Empty;
 
@@ -326,7 +344,10 @@ namespace CometServer.Modules
                     return;
                 }
 
-                this.logger.LogInformation("{Request}:{RequestToken} - Finished the data store import in {ElapsedMilliseconds} [ms]", httpRequest.QueryNameMethodPath(), requestToken, reqsw.ElapsedMilliseconds);
+                if (this.logger.IsEnabled(LogLevel.Information))
+                {
+                    this.logger.LogInformation("{Request}:{RequestToken} - Finished the data store import in {ElapsedMilliseconds} [ms]", httpRequest.QueryNameMethodPath(), requestToken, reqsw.ElapsedMilliseconds);
+                }
 
                 this.cometHasStartedService.SetHasStartedAndIsReady(true);
 
@@ -353,7 +374,10 @@ namespace CometServer.Modules
                     this.logger.LogWarning(ex, "{Request}:{RequestToken} - Unable to remove file {TemporarySeedFilePath}", httpRequest.QueryNameMethodPath(), requestToken, temporarySeedFilePath);
                 }
 
-                this.logger.LogInformation("{Request}:{RequestToken} - Response returned in {ElapsedMilliseconds} [ms]", httpRequest.QueryNameMethodPath(), requestToken, reqsw.ElapsedMilliseconds);
+                if (this.logger.IsEnabled(LogLevel.Information))
+                {
+                    this.logger.LogInformation("{Request}:{RequestToken} - Response returned in {ElapsedMilliseconds} [ms]", httpRequest.QueryNameMethodPath(), requestToken, reqsw.ElapsedMilliseconds);
+                }
             }
         }
 
@@ -431,14 +455,20 @@ namespace CometServer.Modules
 
             if (!this.appConfigService.AppConfig.Backtier.IsDbSeedEnabled)
             {
-                this.logger.LogInformation("{Request}:{RequestToken} - Data store SEED API invoked but it was disabled from configuration, cancel further processing...", request.QueryNameMethodPath(), requestToken);
+                if (this.logger.IsEnabled(LogLevel.Information))
+                {
+                    this.logger.LogInformation("{Request}:{RequestToken} - Data store SEED API invoked but it was disabled from configuration, cancel further processing...", request.QueryNameMethodPath(), requestToken);
+                }
 
                 response.StatusCode = (int)HttpStatusCode.Forbidden;
                 await response.AsJson("SEED is not allowed");
                 return;
             }
 
-            this.logger.LogInformation("{Request}:{RequestToken} - Starting data store SEED", request.QueryNameMethodPath(), requestToken);
+            if (this.logger.IsEnabled(LogLevel.Information))
+            {
+                this.logger.LogInformation("{Request}:{RequestToken} - Starting data store SEED", request.QueryNameMethodPath(), requestToken);
+            }
             
             var temporarySeedFilePath = await this.SaveTemporarySeedFileAsync(request);
 
@@ -447,7 +477,10 @@ namespace CometServer.Modules
 
             var version = request.QueryDataModelVersion();
 
-            this.logger.LogInformation("{Request}:{RequestToken} - Seeding version {Version}", request.QueryNameMethodPath(), requestToken, version.ToString());
+            if (this.logger.IsEnabled(LogLevel.Information))
+            {
+                this.logger.LogInformation("{Request}:{RequestToken} - Seeding version {Version}", request.QueryNameMethodPath(), requestToken, version.ToString());
+            }
 
             // handle exchange processing
             if (!await this.InsertModelDataAsync(requestUtils, transactionManager, jsonExchangeFileReader, migrationService, engineeringModelDao, serviceProvider, personService, personRoleService, personPermissionService, defaultPermissionProvider, participantRoleService, participantPermissionService, version, temporarySeedFilePath, null, this.appConfigService.AppConfig.Backtier.IsDbSeedEnabled))
@@ -479,7 +512,10 @@ namespace CometServer.Modules
 
                 reqsw.Stop();
 
-                this.logger.LogInformation("{Request}:{RequestToken} - Finished the data store SEED in {ElapsedMilliseconds}", request.QueryNameMethodPath(), requestToken, reqsw.ElapsedMilliseconds);
+                if (this.logger.IsEnabled(LogLevel.Information))
+                {
+                    this.logger.LogInformation("{Request}:{RequestToken} - Finished the data store SEED in {ElapsedMilliseconds}", request.QueryNameMethodPath(), requestToken, reqsw.ElapsedMilliseconds);
+                }
 
                 this.cometHasStartedService.SetHasStartedAndIsReady(true);
 
@@ -614,7 +650,10 @@ namespace CometServer.Modules
                 var engineeringModelCount = items.OfType<EngineeringModelSetup>().Count();
                 var seededEngineeringModelCount = 0;
 
-                this.logger.LogInformation("{SiteRdlCount} Site Reference Data Libraries and {EngineeringModelCount} Engineering Models will be seeded", siteRdlCount, engineeringModelCount);
+                if (this.logger.IsEnabled(LogLevel.Information))
+                {
+                    this.logger.LogInformation("{SiteRdlCount} Site Reference Data Libraries and {EngineeringModelCount} Engineering Models will be seeded", siteRdlCount, engineeringModelCount);
+                }
 
                 // assign default password to all imported persons.
                 foreach (var person in items.OfType<Person>())
@@ -675,7 +714,10 @@ namespace CometServer.Modules
                     // Add missing Person permissions
                     await this.CreateMissingPersonPermissionsAsync(transaction, personRoleService, personPermissionService, defaultPermissionProvider);
 
-                    this.logger.LogInformation("{SeededSiteRdlCount}/{SiteRdlCount} Site Reference Data Libraries and {SeededEngineeringModelCount}/{EngineeringModelCount} Engineering Models seeded", seededSiteRdlCount, siteRdlCount, seededEngineeringModelCount, engineeringModelCount);
+                    if (this.logger.IsEnabled(LogLevel.Information))
+                    {
+                        this.logger.LogInformation("{SeededSiteRdlCount}/{SiteRdlCount} Site Reference Data Libraries and {SeededEngineeringModelCount}/{EngineeringModelCount} Engineering Models seeded", seededSiteRdlCount, siteRdlCount, seededEngineeringModelCount, engineeringModelCount);
+                    }
 
                     var engineeringModelSetups =
                         items.OfType<EngineeringModelSetup>()
@@ -687,7 +729,10 @@ namespace CometServer.Modules
 
                     foreach (var engineeringModelSetup in engineeringModelSetups)
                     {
-                        this.logger.LogInformation("Inserting data for EngineeringModelSetup {Shortname}:{Name}", engineeringModelSetup.ShortName, engineeringModelSetup.Name);
+                        if (this.logger.IsEnabled(LogLevel.Information))
+                        {
+                            this.logger.LogInformation("Inserting data for EngineeringModelSetup {Shortname}:{Name}", engineeringModelSetup.ShortName, engineeringModelSetup.Name);
+                        }
 
                         // cleanup before handling TopContainer
                         requestUtils.Cache.Clear();
@@ -770,7 +815,10 @@ namespace CometServer.Modules
 
                         seededEngineeringModelCount++;
 
-                        this.logger.LogInformation("{SeededSiteRdlCount}/{SiteRdlCount} Site Reference Data Libraries and {SeededEngineeringModelCount}/{EngineeringModelCount} Engineering Models seeded", seededSiteRdlCount, siteRdlCount, seededEngineeringModelCount, engineeringModelCount);
+                        if (this.logger.IsEnabled(LogLevel.Information))
+                        {
+                            this.logger.LogInformation("{SeededSiteRdlCount}/{SiteRdlCount} Site Reference Data Libraries and {SeededEngineeringModelCount}/{EngineeringModelCount} Engineering Models seeded", seededSiteRdlCount, siteRdlCount, seededEngineeringModelCount, engineeringModelCount);
+                        }
                     }
                 }
 
@@ -779,9 +827,18 @@ namespace CometServer.Modules
                 this.logger.LogInformation("Committing transaction...");
                 await transaction.CommitAsync();
                 commitSw.Stop();
-                this.logger.LogInformation("Transaction committed in {ElapsedMilliseconds} [ms]", commitSw.ElapsedMilliseconds);
+
+                if (this.logger.IsEnabled(LogLevel.Information))
+                {
+                    this.logger.LogInformation("Transaction committed in {ElapsedMilliseconds} [ms]", commitSw.ElapsedMilliseconds);
+                }
+
                 sw.Stop();
-                this.logger.LogInformation("Finished seeding the data store in {ElapsedMilliseconds} [ms]", sw.ElapsedMilliseconds);
+
+                if (this.logger.IsEnabled(LogLevel.Information))
+                {
+                    this.logger.LogInformation("Finished seeding the data store in {ElapsedMilliseconds} [ms]", sw.ElapsedMilliseconds);
+                }
 
                 return result;
             }
@@ -1114,7 +1171,11 @@ namespace CometServer.Modules
                 await transaction.CommitAsync();
 
                 sw.Stop();
-                this.logger.LogInformation("Finished importing the data store in {ElapsedMilliseconds} [ms]", sw.ElapsedMilliseconds);
+
+                if (this.logger.IsEnabled(LogLevel.Information))
+                {
+                    this.logger.LogInformation("Finished importing the data store in {ElapsedMilliseconds} [ms]", sw.ElapsedMilliseconds);
+                }
 
                 return result;
             }
@@ -1262,7 +1323,10 @@ namespace CometServer.Modules
             // Drop the existing database
             await using (var cmd = new NpgsqlCommand())
             {
-                this.logger.LogDebug("Drop the data store");
+                if (this.logger.IsEnabled(LogLevel.Debug))
+                {
+                    this.logger.LogDebug("Drop the data store");
+                }
 
                 await dataStoreController.DropDataStoreConnections(backtierConfig.Database, connection);
 
@@ -1276,7 +1340,10 @@ namespace CometServer.Modules
             // Drop the existing restore database
             await using (var cmd = new NpgsqlCommand())
             {
-                this.logger.LogDebug("Drop the restore data store");
+                if (this.logger.IsEnabled(LogLevel.Debug))
+                {
+                    this.logger.LogDebug("Drop the restore data store");
+                }
 
                 cmd.Connection = connection;
                 
@@ -1288,7 +1355,11 @@ namespace CometServer.Modules
             // Create a new database
             await using (var cmd = new NpgsqlCommand())
             {
-                this.logger.LogDebug("Create the data store");
+                if (this.logger.IsEnabled(LogLevel.Debug))
+                {
+                    this.logger.LogDebug("Create the data store");
+                }
+
                 cmd.Connection = connection;
 
                 cmd.CommandText = $"CREATE DATABASE \"{backtierConfig.Database}\" WITH OWNER = \"{backtierConfig.UserName}\" TEMPLATE = \"{backtierConfig.DatabaseManage}\" ENCODING = 'UTF8';";
@@ -1296,7 +1367,10 @@ namespace CometServer.Modules
                 await cmd.ExecuteNonQueryAsync();
             }
 
-            this.logger.LogInformation("dropping existing data stores completed in {ElapsedMilliseconds} [ms]", sw.ElapsedMilliseconds);
+            if (this.logger.IsEnabled(LogLevel.Information))
+            {
+                this.logger.LogInformation("dropping existing data stores completed in {ElapsedMilliseconds} [ms]", sw.ElapsedMilliseconds);
+            }
         }
 
         /// <summary>
@@ -1582,7 +1656,10 @@ namespace CometServer.Modules
 
                     if (participantPermission == null)
                     {
-                        this.logger.LogDebug("Create ParticipantPermission for class {ClassKind} for ParticipantRole {ParticipantRole}", classKind, participantRole.Iid);
+                        if (this.logger.IsEnabled(LogLevel.Debug))
+                        {
+                            this.logger.LogDebug("Create ParticipantPermission for class {ClassKind} for ParticipantRole {ParticipantRole}", classKind, participantRole.Iid);
+                        }
 
                         var permission = new ParticipantPermission(Guid.NewGuid(), 0)
                         {
@@ -1660,7 +1737,10 @@ namespace CometServer.Modules
 
                     if (personPermission == null)
                     {
-                        this.logger.LogDebug("Create PersonPermission for class {ClassKind} for PersonRole {PersonRole}", classKind, personRole.Iid);
+                        if (this.logger.IsEnabled(LogLevel.Debug))
+                        {
+                            this.logger.LogDebug("Create PersonPermission for class {ClassKind} for PersonRole {PersonRole}", classKind, personRole.Iid);
+                        }
 
                         var permission = new PersonPermission(Guid.NewGuid(), 0)
                         {

@@ -196,7 +196,11 @@ namespace CometServer.Services
                 await this.CacheService.BulkWriteToCacheAsync(transaction, revisionsGroupdByPartition.Key, revisionsGroupdByPartition.Value);
             }
 
-            this.Logger.LogDebug("Write to Cache and Revisions table done in {ElapsedMilliseconds}[ms]", stopwatch.ElapsedMilliseconds);
+            if (this.Logger.IsEnabled(LogLevel.Debug))
+            {
+                this.Logger.LogDebug("Write to Cache and Revisions table done in {ElapsedMilliseconds}[ms]", stopwatch.ElapsedMilliseconds);
+            }
+
             stopwatch.Stop();
             return thingRevisionInfos.Select(x => x.Thing);
         }

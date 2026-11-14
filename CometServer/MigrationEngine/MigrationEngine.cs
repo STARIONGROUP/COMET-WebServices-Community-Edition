@@ -163,7 +163,10 @@ namespace CometServer
 
                 await transaction.CommitAsync();
 
-                this.logger.LogInformation("Migration done in {ElapsedMilliseconds} ms.", sw.ElapsedMilliseconds);
+                if (this.logger.IsEnabled(LogLevel.Information))
+                {
+                    this.logger.LogInformation("Migration done in {ElapsedMilliseconds} ms.", sw.ElapsedMilliseconds);
+                }
 
                 return true;
             }

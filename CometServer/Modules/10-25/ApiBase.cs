@@ -528,7 +528,10 @@ namespace CometServer.Modules
             {
                 var sw = Stopwatch.StartNew();
 
-                this.logger.LogInformation("JSON serialization to response started for {Token}", requestToken);
+                if (this.logger.IsEnabled(LogLevel.Information))
+                {
+                    this.logger.LogInformation("JSON serialization to response started for {Token}", requestToken);
+                }
 
                 headerInfoProvider.RegisterResponseHeaders(httpResponse, ContentTypeKind.JSON, "");
 
@@ -539,11 +542,17 @@ namespace CometServer.Modules
                 resultStream.Seek(0, SeekOrigin.Begin);
                 await resultStream.CopyToAsync(httpResponse.Body);
 
-                this.logger.LogInformation("JSON serialization to response for {Token} completed in {ElapsedMilliseconds} [ms]", requestToken, sw.ElapsedMilliseconds);
+                if (this.logger.IsEnabled(LogLevel.Information))
+                {
+                    this.logger.LogInformation("JSON serialization to response for {Token} completed in {ElapsedMilliseconds} [ms]", requestToken, sw.ElapsedMilliseconds);
+                }
             }
             catch (ObjectDisposedException ex)
             {
-                this.logger.LogTrace(ex, "The HttpResponse has been disposed of for {RequestToken}", requestToken);
+                if (this.logger.IsEnabled(LogLevel.Trace))
+                {
+                    this.logger.LogTrace(ex, "The HttpResponse has been disposed of for {RequestToken}", requestToken);
+                }
             }
         }
 
@@ -583,7 +592,10 @@ namespace CometServer.Modules
             {
                 var sw = Stopwatch.StartNew();
 
-                this.logger.LogInformation("MessagePack serialization to response started for {Token}", requestToken);
+                if (this.logger.IsEnabled(LogLevel.Information))
+                {
+                    this.logger.LogInformation("MessagePack serialization to response started for {Token}", requestToken);
+                }
 
                 headerInfoProvider.RegisterResponseHeaders(httpResponse, ContentTypeKind.MESSAGEPACK, "");
 
@@ -594,11 +606,17 @@ namespace CometServer.Modules
                 resultStream.Seek(0, SeekOrigin.Begin);
                 await resultStream.CopyToAsync(httpResponse.Body);
 
-                this.logger.LogInformation("MessagePack serialization to response for {Token} completed in {ElapsedMilliseconds} [ms]", requestToken, sw.ElapsedMilliseconds);
+                if (this.logger.IsEnabled(LogLevel.Information))
+                {
+                    this.logger.LogInformation("MessagePack serialization to response for {Token} completed in {ElapsedMilliseconds} [ms]", requestToken, sw.ElapsedMilliseconds);
+                }
             }
             catch (ObjectDisposedException ex)
             {
-                this.logger.LogTrace(ex, "The HttpResponse has been disposed of for {RequestToken}", requestToken);
+                if (this.logger.IsEnabled(LogLevel.Trace))
+                {
+                    this.logger.LogTrace(ex, "The HttpResponse has been disposed of for {RequestToken}", requestToken);
+                }
             }
         }
 
@@ -781,12 +799,20 @@ namespace CometServer.Modules
 
             var sw = new Stopwatch();
             sw.Start();
-            this.logger.LogDebug("{RequestToken} start serializing dtos as JSON", requestToken);
+
+            if (this.logger.IsEnabled(LogLevel.Debug))
+            {
+                this.logger.LogDebug("{RequestToken} start serializing dtos as JSON", requestToken);
+            }
+
             jsonSerializer.Initialize(metaInfoProvider, requestDataModelVersion);
             jsonSerializer.SerializeToStream(filteredDtos, stream);
             sw.Stop();
 
-            this.logger.LogDebug("serializing dtos as JSON - {RequestToken} in {ElapsedMilliseconds} [ms]", requestToken, sw.ElapsedMilliseconds);
+            if (this.logger.IsEnabled(LogLevel.Debug))
+            {
+                this.logger.LogDebug("serializing dtos as JSON - {RequestToken} in {ElapsedMilliseconds} [ms]", requestToken, sw.ElapsedMilliseconds);
+            }
         }
 
         /// <summary>
@@ -820,11 +846,19 @@ namespace CometServer.Modules
 
             var sw = new Stopwatch();
             sw.Start();
-            this.logger.LogDebug("{RequestToken} start serializing dtos as MessagePack", requestToken);
+
+            if (this.logger.IsEnabled(LogLevel.Debug))
+            {
+                this.logger.LogDebug("{RequestToken} start serializing dtos as MessagePack", requestToken);
+            }
+
             messagePackSerializer.SerializeToStream(filteredDtos, stream);
             sw.Stop();
 
-            this.logger.LogDebug("serializing dtos as MessagePack - {RequestToken} in {ElapsedMilliseconds} [ms]", requestToken, sw.ElapsedMilliseconds);
+            if (this.logger.IsEnabled(LogLevel.Debug))
+            {
+                this.logger.LogDebug("serializing dtos as MessagePack - {RequestToken} in {ElapsedMilliseconds} [ms]", requestToken, sw.ElapsedMilliseconds);
+            }
         }
 
         /// <summary>

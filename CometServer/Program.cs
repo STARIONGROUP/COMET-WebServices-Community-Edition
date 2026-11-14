@@ -116,13 +116,22 @@ namespace CometServer
         /// </param>
         internal static void LogVersion(ILogger logger, IResourceLoader resourceLoader)
         {
-            logger.LogInformation(resourceLoader.QueryLogo());
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                logger.LogInformation(resourceLoader.QueryLogo());
+            }
 
             logger.LogInformation("################################################################");
 
-            logger.LogInformation("Starting CDP4-COMET Services v{Version}", resourceLoader.QueryVersion());
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                logger.LogInformation("Starting CDP4-COMET Services v{Version}", resourceLoader.QueryVersion());
+            }
 
-            logger.LogInformation("Runtime: {FrameworkDescription} on {OSDescription} ({RuntimeIdentifier})", RuntimeInformation.FrameworkDescription, RuntimeInformation.OSDescription, RuntimeInformation.RuntimeIdentifier);
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                logger.LogInformation("Runtime: {FrameworkDescription} on {OSDescription} ({RuntimeIdentifier})", RuntimeInformation.FrameworkDescription, RuntimeInformation.OSDescription, RuntimeInformation.RuntimeIdentifier);
+            }
         }
 
         /// <summary>
@@ -139,36 +148,135 @@ namespace CometServer
             logger.LogInformation("Configuration Loaded:");
 
             var midtier = appConfig.Midtier;
-            logger.LogInformation("Midtier-UploadDirectory: {UploadDirectory}", midtier.UploadDirectory);
-            logger.LogInformation("Midtier-FileStorageDirectory: {FileStorageDirectory}", midtier.FileStorageDirectory);
-            logger.LogInformation("Midtier-TemporaryFileStorageDirectory: {TemporaryFileStorageDirectory}", midtier.TemporaryFileStorageDirectory);
-            logger.LogInformation("Midtier-IsExportEnabled: {IsExportEnabled}", midtier.IsExportEnabled);
-            logger.LogInformation("Midtier-ExportDirectory: {ExportDirectory}", midtier.ExportDirectory);
-            logger.LogInformation("Midtier-BacktierWaitTime: {BacktierWaitTime}", midtier.BacktierWaitTime);
 
-            logger.LogInformation("Changelog-CollectChanges: {CollectChanges}", appConfig.Changelog.CollectChanges);
-            logger.LogInformation("Changelog-AllowEmailNotification: {AllowEmailNotification}", appConfig.Changelog.AllowEmailNotification);
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                logger.LogInformation("Midtier-UploadDirectory: {UploadDirectory}", midtier.UploadDirectory);
+            }
+
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                logger.LogInformation("Midtier-FileStorageDirectory: {FileStorageDirectory}", midtier.FileStorageDirectory);
+            }
+
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                logger.LogInformation("Midtier-TemporaryFileStorageDirectory: {TemporaryFileStorageDirectory}", midtier.TemporaryFileStorageDirectory);
+            }
+
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                logger.LogInformation("Midtier-IsExportEnabled: {IsExportEnabled}", midtier.IsExportEnabled);
+            }
+
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                logger.LogInformation("Midtier-ExportDirectory: {ExportDirectory}", midtier.ExportDirectory);
+            }
+
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                logger.LogInformation("Midtier-BacktierWaitTime: {BacktierWaitTime}", midtier.BacktierWaitTime);
+            }
+
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                logger.LogInformation("Changelog-CollectChanges: {CollectChanges}", appConfig.Changelog.CollectChanges);
+            }
+
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                logger.LogInformation("Changelog-AllowEmailNotification: {AllowEmailNotification}", appConfig.Changelog.AllowEmailNotification);
+            }
 
             var backtier = appConfig.Backtier;
-            logger.LogInformation("Backtier-HostName: {HostName}", backtier.HostName);
-            logger.LogInformation("Backtier-Port: {Port}", backtier.Port);
-            logger.LogInformation("Backtier-Database: {Database}", backtier.Database);
-            logger.LogInformation("Backtier-DatabaseRestore: {DatabaseRestore}", backtier.DatabaseRestore);
-            logger.LogInformation("Backtier-DatabaseManage: {DatabaseManage}", backtier.DatabaseManage);
-            logger.LogInformation("Backtier-StatementTimeout: {StatementTimeout}", backtier.StatementTimeout);
-            logger.LogInformation("Backtier-ConnectionTimeout: {ConnectionTimeout}", backtier.ConnectionTimeout);
-            logger.LogInformation("Backtier-Keepalive: {Keepalive}", backtier.Keepalive);
-            logger.LogInformation("Backtier-MaximumPoolSize: {MaximumPoolSize}", backtier.MaximumPoolSize);
-            logger.LogInformation("Backtier-IsDbSeedEnabled: {IsDbSeedEnabled}", backtier.IsDbSeedEnabled);
-            logger.LogInformation("Backtier-IsDbImportEnabled: {IsDbImportEnabled}", backtier.IsDbImportEnabled);
-            logger.LogInformation("Backtier-IsDbRestoreEnabled: {IsDbRestoreEnabled}", backtier.IsDbRestoreEnabled);
-            logger.LogInformation("Backtier-SslMode: {SslMode}", backtier.SslMode);
-            var rootCertificate = backtier.GetEffectiveRootCertificate();
-            logger.LogInformation("Backtier-RootCertificate: {RootCertificate} ({RootCertificateSource})", rootCertificate.Path ?? "none", rootCertificate.Source);
-            logger.LogInformation("Backtier-ClientCertificate: {ClientCertificate}", string.IsNullOrWhiteSpace(backtier.ClientCertificate) ? "none" : backtier.ClientCertificate);
-            logger.LogInformation("Backtier-CheckCertificateRevocation: {CheckCertificateRevocation}", backtier.CheckCertificateRevocation);
 
-            logger.LogInformation("ThingsMessageProducer-IsEnabled: {IsEnabled}", appConfig.ServiceMessagingConfig.IsEnabled);
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                logger.LogInformation("Backtier-HostName: {HostName}", backtier.HostName);
+            }
+
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                logger.LogInformation("Backtier-Port: {Port}", backtier.Port);
+            }
+
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                logger.LogInformation("Backtier-Database: {Database}", backtier.Database);
+            }
+
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                logger.LogInformation("Backtier-DatabaseRestore: {DatabaseRestore}", backtier.DatabaseRestore);
+            }
+
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                logger.LogInformation("Backtier-DatabaseManage: {DatabaseManage}", backtier.DatabaseManage);
+            }
+
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                logger.LogInformation("Backtier-StatementTimeout: {StatementTimeout}", backtier.StatementTimeout);
+            }
+
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                logger.LogInformation("Backtier-ConnectionTimeout: {ConnectionTimeout}", backtier.ConnectionTimeout);
+            }
+
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                logger.LogInformation("Backtier-Keepalive: {Keepalive}", backtier.Keepalive);
+            }
+
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                logger.LogInformation("Backtier-MaximumPoolSize: {MaximumPoolSize}", backtier.MaximumPoolSize);
+            }
+
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                logger.LogInformation("Backtier-IsDbSeedEnabled: {IsDbSeedEnabled}", backtier.IsDbSeedEnabled);
+            }
+
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                logger.LogInformation("Backtier-IsDbImportEnabled: {IsDbImportEnabled}", backtier.IsDbImportEnabled);
+            }
+
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                logger.LogInformation("Backtier-IsDbRestoreEnabled: {IsDbRestoreEnabled}", backtier.IsDbRestoreEnabled);
+            }
+
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                logger.LogInformation("Backtier-SslMode: {SslMode}", backtier.SslMode);
+            }
+
+            var rootCertificate = backtier.GetEffectiveRootCertificate();
+
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                logger.LogInformation("Backtier-RootCertificate: {RootCertificate} ({RootCertificateSource})", rootCertificate.Path ?? "none", rootCertificate.Source);
+            }
+
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                logger.LogInformation("Backtier-ClientCertificate: {ClientCertificate}", string.IsNullOrWhiteSpace(backtier.ClientCertificate) ? "none" : backtier.ClientCertificate);
+            }
+
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                logger.LogInformation("Backtier-CheckCertificateRevocation: {CheckCertificateRevocation}", backtier.CheckCertificateRevocation);
+            }
+
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                logger.LogInformation("ThingsMessageProducer-IsEnabled: {IsEnabled}", appConfig.ServiceMessagingConfig.IsEnabled);
+            }
 
             logger.LogInformation("################################################################");
 
@@ -191,7 +299,11 @@ namespace CometServer
         {
             if (exitCode != 0)
             {
-                logger.LogCritical("Terminated CDP4-COMET WebServices because the startup failed, see the errors above (exit code {ExitCode})", exitCode);
+                if (logger.IsEnabled(LogLevel.Critical))
+                {
+                    logger.LogCritical("Terminated CDP4-COMET WebServices because the startup failed, see the errors above (exit code {ExitCode})", exitCode);
+                }
+
                 return exitCode;
             }
 
@@ -218,8 +330,17 @@ namespace CometServer
             if (configurationError != null)
             {
                 // an invalid setting: the message says what to change, the stack trace only helps when debugging
-                logger.LogCritical("Terminated CDP4-COMET WebServices because of an invalid configuration: {ConfigurationError}", configurationError.Message);
-                logger.LogDebug(exception, "The configuration could not be loaded");
+
+                if (logger.IsEnabled(LogLevel.Critical))
+                {
+                    logger.LogCritical("Terminated CDP4-COMET WebServices because of an invalid configuration: {ConfigurationError}", configurationError.Message);
+                }
+
+                if (logger.IsEnabled(LogLevel.Debug))
+                {
+                    logger.LogDebug(exception, "The configuration could not be loaded");
+                }
+
                 return -1;
             }
 

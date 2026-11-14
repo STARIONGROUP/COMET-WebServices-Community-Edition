@@ -146,7 +146,10 @@ namespace CometServer.Tasks
 
             this.tasks.AddOrUpdate(key, task, (_, _) => task);
 
-            this.logger.LogInformation("The long running task {Id} for actor {Actor} has been added or updated", key, task.Actor);
+            if (this.logger.IsEnabled(LogLevel.Information))
+            {
+                this.logger.LogInformation("The long running task {Id} for actor {Actor} has been added or updated", key, task.Actor);
+            }
         }
 
         /// <summary>
@@ -217,11 +220,17 @@ namespace CometServer.Tasks
 
                 if (this.tasks.TryRemove(s, out _))
                 {
-                    this.logger.LogInformation("The long running task {Id} for actor {Actor} has been evicted because of {Reason}", key, cometTask.Actor, reason);
+                    if (this.logger.IsEnabled(LogLevel.Information))
+                    {
+                        this.logger.LogInformation("The long running task {Id} for actor {Actor} has been evicted because of {Reason}", key, cometTask.Actor, reason);
+                    }
                 }
                 else
                 {
-                    this.logger.LogDebug("The long running task {Id} for actor {Actor} could not be evicted from the tasks since it does not exist", key, cometTask.Actor);
+                    if (this.logger.IsEnabled(LogLevel.Debug))
+                    {
+                        this.logger.LogDebug("The long running task {Id} for actor {Actor} could not be evicted from the tasks since it does not exist", key, cometTask.Actor);
+                    }
                 }
 
                 if (reason == EvictionReason.Replaced && this.memoryCache.TryGetValue(s, out CometTask updatedCometTask))

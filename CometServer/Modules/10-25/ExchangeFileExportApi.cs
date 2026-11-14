@@ -173,7 +173,10 @@ namespace CometServer.Modules
             var reqsw = Stopwatch.StartNew();
             var requestToken = this.TokenGeneratorService.GenerateRandomToken();
             
-            this.logger.LogInformation("{Request}:{RequestToken} - START HTTP REQUEST PROCESSING", httpRequest.QueryNameMethodPath(), requestToken);
+            if (this.logger.IsEnabled(LogLevel.Information))
+            {
+                this.logger.LogInformation("{Request}:{RequestToken} - START HTTP REQUEST PROCESSING", httpRequest.QueryNameMethodPath(), requestToken);
+            }
 
             if (!this.AppConfigService.AppConfig.Midtier.IsExportEnabled)
             {
@@ -184,7 +187,10 @@ namespace CometServer.Modules
 
             NpgsqlTransaction transaction = null;
 
-            this.logger.LogDebug("{Request}:{RequestToken} - Database operations started", httpRequest.QueryNameMethodPath(), requestToken);
+            if (this.logger.IsEnabled(LogLevel.Debug))
+            {
+                this.logger.LogDebug("{Request}:{RequestToken} - Database operations started", httpRequest.QueryNameMethodPath(), requestToken);
+            }
 
             transactionManager.SetCachedDtoReadEnabled(true);
 
@@ -245,7 +251,10 @@ namespace CometServer.Modules
                     System.IO.File.Delete(zipFilePath);
                 }
 
-                this.logger.LogInformation("{Request}:{RequestToken} - Response returned in {ElapsedMilliseconds} [ms]", httpRequest.QueryNameMethodPath(), requestToken, reqsw.ElapsedMilliseconds);
+                if (this.logger.IsEnabled(LogLevel.Information))
+                {
+                    this.logger.LogInformation("{Request}:{RequestToken} - Response returned in {ElapsedMilliseconds} [ms]", httpRequest.QueryNameMethodPath(), requestToken, reqsw.ElapsedMilliseconds);
+                }
             }
         }
 

@@ -146,7 +146,10 @@ namespace CometServer.Modules.Tasks
             {
                 await this.Authorize(credentialsService, req.HttpContext.User.Identity.Name);
 
-                this.logger.LogInformation("retrieving CometTasks for user: {PersonId}", credentialsService.Credentials.Person.Iid);
+                if (this.logger.IsEnabled(LogLevel.Information))
+                {
+                    this.logger.LogInformation("retrieving CometTasks for user: {PersonId}", credentialsService.Credentials.Person.Iid);
+                }
 
                 var cometTasks = this.cometTaskService.QueryTasks(credentialsService.Credentials.Person.Iid);
 
@@ -193,7 +196,10 @@ namespace CometServer.Modules.Tasks
             {
                 await this.Authorize(credentialsService, req.HttpContext.User.Identity.Name);
 
-                this.logger.LogInformation("retrieving CometTask {TaskID} for user: {PersonId}", taskId, credentialsService.Credentials.Person.Iid);
+                if (this.logger.IsEnabled(LogLevel.Information))
+                {
+                    this.logger.LogInformation("retrieving CometTask {TaskID} for user: {PersonId}", taskId, credentialsService.Credentials.Person.Iid);
+                }
 
                 var cometTask = this.cometTaskService.QueryTask(taskId);
 

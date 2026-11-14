@@ -85,7 +85,10 @@ namespace CometServer.Authorization
         /// </returns>
         public async Task<bool> ResolveApplicableOrganizationalParticipationsAsync(NpgsqlTransaction transaction, string partition, Iteration iteration, Thing thing, Guid organizationalParticipantIid)
         {
-            this.Logger.LogTrace("Resolve OrganizationalParticipation {Iteration}.{Thing} for Participant {OrganizationalParticipantIid}", iteration, thing, organizationalParticipantIid);
+            if (this.Logger.IsEnabled(LogLevel.Trace))
+            {
+                this.Logger.LogTrace("Resolve OrganizationalParticipation {Iteration}.{Thing} for Participant {OrganizationalParticipantIid}", iteration, thing, organizationalParticipantIid);
+            }
 
             var securityContext = new RequestSecurityContext { ContainerReadAllowed = true };
 
@@ -138,7 +141,10 @@ namespace CometServer.Authorization
         /// </remarks>
         public async Task ValidateCreateOrganizationalParticipationAsync(Thing thing, Thing container, ISecurityContext securityContext, NpgsqlTransaction transaction, string partition)
         {
-            this.Logger.LogTrace("Validate Create OrganizationalParticipation {Container}.{Thing}", container, thing);
+            if (this.Logger.IsEnabled(LogLevel.Trace))
+            {
+                this.Logger.LogTrace("Validate Create OrganizationalParticipation {Container}.{Thing}", container, thing);
+            }
 
             if (partition == "SiteDirectory")
             {

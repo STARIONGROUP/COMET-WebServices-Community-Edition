@@ -168,7 +168,11 @@ namespace CDP4Orm.Dao
             }
 
             stopwatch.Stop();
-            this.Logger.LogDebug("EngineeringModelDefinition.sql scripts took {ElapsedMilliseconds}[ms]", stopwatch.ElapsedMilliseconds);
+
+            if (this.Logger.IsEnabled(LogLevel.Debug))
+            {
+                this.Logger.LogDebug("EngineeringModelDefinition.sql scripts took {ElapsedMilliseconds}[ms]", stopwatch.ElapsedMilliseconds);
+            }
 
             stopwatch.Reset();
             stopwatch.Start();
@@ -176,7 +180,12 @@ namespace CDP4Orm.Dao
             await this.MigrationService.ApplyMigrationsAsync(transaction, iterationPartition, false);
 
             stopwatch.Stop();
-            this.Logger.LogDebug("Migration applied in {ElapsedMilliseconds}[ms]", stopwatch.ElapsedMilliseconds);
+
+            if (this.Logger.IsEnabled(LogLevel.Debug))
+            {
+                this.Logger.LogDebug("Migration applied in {ElapsedMilliseconds}[ms]", stopwatch.ElapsedMilliseconds);
+            }
+
             return result;
         }
 

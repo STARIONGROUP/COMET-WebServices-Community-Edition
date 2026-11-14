@@ -1,0 +1,12 @@
+# Analyzer configuration for the CDP4-COMET Web Services.
+# Code style is configured in COMET-WebServices.sln.DotSettings; this file only sets analyzer severities.
+
+root = true
+
+[{CometServer,CDP4Orm}/**.cs]
+
+# CA1873: Avoid potentially expensive logging.
+# Wrap a log call whose arguments do work in an IsEnabled check for the level of the call.
+# The rule reports Trace, Debug, Information and Critical calls, but not Warning and Error calls,
+# which is why Critical calls are guarded while Warning and Error calls are not.
+dotnet_diagnostic.CA1873.severity = warning

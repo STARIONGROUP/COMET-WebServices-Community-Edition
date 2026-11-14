@@ -172,7 +172,11 @@ namespace CometServer.Services.Operations.SideEffects
 
                 await this.ModelCreatorManager.CreateEngineeringModelSetupFromSourceAsync(thing.SourceEngineeringModelSetupIid.Value, thing, transaction, securityContext);
                 stopwatch.Stop();
-                this.Logger.LogDebug("Creation of EngineeringSetup from source took {ElapsedMilliseconds}[ms]", stopwatch.ElapsedMilliseconds);
+
+                if (this.Logger.IsEnabled(LogLevel.Debug))
+                {
+                    this.Logger.LogDebug("Creation of EngineeringSetup from source took {ElapsedMilliseconds}[ms]", stopwatch.ElapsedMilliseconds);
+                }
             }
 
             if (thing.EngineeringModelIid == Guid.Empty)
@@ -226,7 +230,11 @@ namespace CometServer.Services.Operations.SideEffects
                 await this.RevisionService.SaveRevisionsAsync(transaction, this.RequestUtils.GetEngineeringModelPartitionString(thing.EngineeringModelIid), actor, FirstRevision);
 
                 stopwatch.Stop();
-                this.Logger.LogDebug("Revisions written in {ElapsedMilliseconds}[ms]", stopwatch.ElapsedMilliseconds);
+
+                if (this.Logger.IsEnabled(LogLevel.Debug))
+                {
+                    this.Logger.LogDebug("Revisions written in {ElapsedMilliseconds}[ms]", stopwatch.ElapsedMilliseconds);
+                }
 
                 return;
             }
@@ -278,7 +286,10 @@ namespace CometServer.Services.Operations.SideEffects
             await this.ModelCreatorManager.CopyEngineeringModelData(thing, transaction, securityContext);
             stopWatch.Stop();
 
-            this.Logger.LogDebug("Copied of the EngineeringModel took {ElapsedMilliseconds}[ms]", stopWatch.ElapsedMilliseconds);
+            if (this.Logger.IsEnabled(LogLevel.Debug))
+            {
+                this.Logger.LogDebug("Copied of the EngineeringModel took {ElapsedMilliseconds}[ms]", stopWatch.ElapsedMilliseconds);
+            }
         }
 
         /// <summary>

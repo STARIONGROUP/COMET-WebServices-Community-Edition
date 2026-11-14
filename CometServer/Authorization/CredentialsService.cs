@@ -173,7 +173,11 @@ namespace CometServer.Authorization
 
             if (person == null)
             {
-                this.Logger.LogTrace("The user {Username} does not exist and cannot be resolved", username);
+                if (this.Logger.IsEnabled(LogLevel.Trace))
+                {
+                    this.Logger.LogTrace("The user {Username} does not exist and cannot be resolved", username);
+                }
+
                 throw new AuthorizationException($"The user {username} could not be authorized");
             }
 
@@ -181,13 +185,21 @@ namespace CometServer.Authorization
 
             if (!person.IsActive)
             {
-                this.Logger.LogTrace("The user {Username} is not Active and cannot be authorized", username);
+                if (this.Logger.IsEnabled(LogLevel.Trace))
+                {
+                    this.Logger.LogTrace("The user {Username} is not Active and cannot be authorized", username);
+                }
+
                 throw new AuthorizationException($"The user {username} could not be authorized");
             }
 
             if (person.IsDeprecated)
             {
-                this.Logger.LogTrace("The user {Username} is Deprecated and cannot be authorized", username);
+                if (this.Logger.IsEnabled(LogLevel.Trace))
+                {
+                    this.Logger.LogTrace("The user {Username} is Deprecated and cannot be authorized", username);
+                }
+
                 throw new AuthorizationException($"The user {username} could not be authorized");
             }
 

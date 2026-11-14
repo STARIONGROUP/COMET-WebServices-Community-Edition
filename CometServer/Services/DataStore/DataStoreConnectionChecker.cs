@@ -112,13 +112,19 @@ namespace CometServer.Services.DataStore
                         return DataStoreConnectionStatus.ConfigurationError;
                     }
 
-                    this.Logger.LogInformation("Waiting for the data store at {HostName}:{Port} to become available, {RemainingSeconds} [s] remaining. Reason: {Reason}",
-                        backtierConfig.HostName,
-                        backtierConfig.Port,
-                        remainingSeconds,
-                        GetWaitingReason(ex, backtierConfig));
+                    if (this.Logger.IsEnabled(LogLevel.Information))
+                    {
+                        this.Logger.LogInformation("Waiting for the data store at {HostName}:{Port} to become available, {RemainingSeconds} [s] remaining. Reason: {Reason}",
+                            backtierConfig.HostName,
+                            backtierConfig.Port,
+                            remainingSeconds,
+                            GetWaitingReason(ex, backtierConfig));
+                    }
 
-                    this.Logger.LogDebug(ex, "The connection to the data store at {HostName}:{Port} failed", backtierConfig.HostName, backtierConfig.Port);
+                    if (this.Logger.IsEnabled(LogLevel.Debug))
+                    {
+                        this.Logger.LogDebug(ex, "The connection to the data store at {HostName}:{Port} failed", backtierConfig.HostName, backtierConfig.Port);
+                    }
 
                     await Task.Delay(this.RetryDelay, cancellationToken);
                     remainingSeconds -= (int)this.RetryDelay.TotalSeconds;
@@ -287,13 +293,19 @@ namespace CometServer.Services.DataStore
         {
             var backtierConfig = this.AppConfigService.AppConfig.Backtier;
 
-            this.Logger.LogCritical("The connection to the data store at {HostName}:{Port} failed: {ConfigurationError}. Reason: {Reason}",
-                backtierConfig.HostName,
-                backtierConfig.Port,
-                configurationError,
-                GetReason(exception));
+            if (this.Logger.IsEnabled(LogLevel.Critical))
+            {
+                this.Logger.LogCritical("The connection to the data store at {HostName}:{Port} failed: {ConfigurationError}. Reason: {Reason}",
+                    backtierConfig.HostName,
+                    backtierConfig.Port,
+                    configurationError,
+                    GetReason(exception));
+            }
 
-            this.Logger.LogDebug(exception, "The connection to the data store at {HostName}:{Port} failed", backtierConfig.HostName, backtierConfig.Port);
+            if (this.Logger.IsEnabled(LogLevel.Debug))
+            {
+                this.Logger.LogDebug(exception, "The connection to the data store at {HostName}:{Port} failed", backtierConfig.HostName, backtierConfig.Port);
+            }
 
             var isHandshakeFailure = false;
 
@@ -313,11 +325,17 @@ namespace CometServer.Services.DataStore
             {
                 if (finding.StartsWith("PROBLEM:", StringComparison.Ordinal))
                 {
-                    this.Logger.LogCritical("TLS diagnostics: {Finding}", finding);
+                    if (this.Logger.IsEnabled(LogLevel.Critical))
+                    {
+                        this.Logger.LogCritical("TLS diagnostics: {Finding}", finding);
+                    }
                 }
                 else
                 {
-                    this.Logger.LogInformation("TLS diagnostics: {Finding}", finding);
+                    if (this.Logger.IsEnabled(LogLevel.Information))
+                    {
+                        this.Logger.LogInformation("TLS diagnostics: {Finding}", finding);
+                    }
                 }
             }
         }
@@ -373,7 +391,10 @@ namespace CometServer.Services.DataStore
             }
             catch (Exception ex) when (ex is NpgsqlException or InvalidOperationException)
             {
-                this.Logger.LogDebug(ex, "The TLS state of the data store connection could not be read from pg_stat_ssl");
+                if (this.Logger.IsEnabled(LogLevel.Debug))
+                {
+                    this.Logger.LogDebug(ex, "The TLS state of the data store connection could not be read from pg_stat_ssl");
+                }
             }
 
             if (isSecure is null)
@@ -396,12 +417,15 @@ namespace CometServer.Services.DataStore
                 return;
             }
 
-            this.Logger.LogInformation("The connection to the data store at {HostName}:{Port} is encrypted using {TlsVersion} {Cipher} (Backtier:SslMode {SslMode})",
-                backtierConfig.HostName,
-                backtierConfig.Port,
-                tlsVersion,
-                cipher,
-                backtierConfig.SslMode);
+            if (this.Logger.IsEnabled(LogLevel.Information))
+            {
+                this.Logger.LogInformation("The connection to the data store at {HostName}:{Port} is encrypted using {TlsVersion} {Cipher} (Backtier:SslMode {SslMode})",
+                    backtierConfig.HostName,
+                    backtierConfig.Port,
+                    tlsVersion,
+                    cipher,
+                    backtierConfig.SslMode);
+            }
 
             if (IsConnectionSecurityWarningRequired(backtierConfig.SslMode, true))
             {
