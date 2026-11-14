@@ -34,6 +34,8 @@ namespace CometServer.Services.Email
 
     using CometServer.Configuration;
 
+    using MailKit;
+
     using MimeKit;
 
     using Microsoft.Extensions.Logging;
