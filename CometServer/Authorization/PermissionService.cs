@@ -127,7 +127,10 @@ namespace CometServer.Authorization
         /// </returns>
         public bool CanRead(string typeName, ISecurityContext securityContext, string partition)
         {
-            this.Logger.LogDebug("Type CanRead: {TypeName}:{Partition}", typeName, partition);
+            if (this.Logger.IsEnabled(LogLevel.Debug))
+            {
+                this.Logger.LogDebug("Type CanRead: {TypeName}:{Partition}", typeName, partition);
+            }
 
             if (partition == SiteDirectory)
             {
@@ -209,7 +212,10 @@ namespace CometServer.Authorization
         /// <returns>True if the given <see cref="Thing"/> can be read.</returns>
         public async Task<bool> CanReadAsync(NpgsqlTransaction transaction, Thing thing, string partition)
         {
-            this.Logger.LogDebug("Database CanRead: {ClassKind}:{IId}:{Partition}", thing.ClassKind, thing.Iid, partition);
+            if (this.Logger.IsEnabled(LogLevel.Debug))
+            {
+                this.Logger.LogDebug("Database CanRead: {ClassKind}:{IId}:{Partition}", thing.ClassKind, thing.Iid, partition);
+            }
 
             // Check for excluded Persons
             if (thing.ExcludedPerson.Contains(this.CredentialsService.Credentials.Person.Iid))
@@ -314,7 +320,10 @@ namespace CometServer.Authorization
         /// <returns>True if the given <see cref="Thing"/> can be written.</returns>
         public async Task<bool> CanWriteAsync(NpgsqlTransaction transaction, Thing thing, string typeName, string partition, string modifyOperation, ISecurityContext securityContext)
         {
-            this.Logger.LogDebug("Database CanWrite: {ClassKind}:{IId}:{Partition}", thing.ClassKind, thing.Iid, partition);
+            if (this.Logger.IsEnabled(LogLevel.Debug))
+            {
+                this.Logger.LogDebug("Database CanWrite: {ClassKind}:{IId}:{Partition}", thing.ClassKind, thing.Iid, partition);
+            }
 
             // Check for excluded Persons
             if (thing.ExcludedPerson.Contains(this.CredentialsService.Credentials.Person.Iid))

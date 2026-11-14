@@ -70,7 +70,10 @@ namespace CometServer.Authentication
 
             foreach (var authenticatorConnector in this.Plugins.SelectMany(authenticatorPlugin => authenticatorPlugin.Connectors))
             {
-                logger.LogInformation(authenticatorConnector.IsUp ? "The {Name} is loaded and is Up" : "The {Name} is loaded and is Down", authenticatorConnector.Name);
+                if (logger.IsEnabled(LogLevel.Information))
+                {
+                    logger.LogInformation(authenticatorConnector.IsUp ? "The {Name} is loaded and is Up" : "The {Name} is loaded and is Down", authenticatorConnector.Name);
+                }
             }
         }
 
@@ -154,7 +157,10 @@ namespace CometServer.Authentication
                 result.Add(authenticatorPlugin);
             }
 
-            this.logger.LogInformation("Authentication plugins loaded in {ElapsedMilliseconds} [ms]", sw.ElapsedMilliseconds);
+            if (this.logger.IsEnabled(LogLevel.Information))
+            {
+                this.logger.LogInformation("Authentication plugins loaded in {ElapsedMilliseconds} [ms]", sw.ElapsedMilliseconds);
+            }
 
             return result.AsReadOnly();
         }

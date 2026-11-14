@@ -68,6 +68,7 @@ namespace CometServer.Tests.Health
             this.appConfigService.Setup(x => x.AppConfig).Returns(appConfig);
 
             this.logger = new Mock<ILogger<CometStartUpService>>();
+            this.logger.Setup(x => x.IsEnabled(It.IsAny<LogLevel>())).Returns(true);
             this.applicationLifetime = new Mock<IHostApplicationLifetime>();
             this.dataStoreConnectionChecker = new Mock<IDataStoreConnectionChecker>();
             this.migrateEngine = new Mock<IMigrationEngine>();

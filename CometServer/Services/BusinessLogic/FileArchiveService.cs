@@ -172,7 +172,10 @@ namespace CometServer.Services
 
             System.IO.File.Delete(zipArchive);
 
-            this.Logger.LogInformation("File structure {FolderPath} and archive {ZipArchive}.zip are deleted.", directoryInfo.FullName, zipArchive);
+            if (this.Logger.IsEnabled(LogLevel.Information))
+            {
+                this.Logger.LogInformation("File structure {FolderPath} and archive {ZipArchive}.zip are deleted.", directoryInfo.FullName, zipArchive);
+            }
         }
 
         /// <summary>
@@ -188,11 +191,17 @@ namespace CometServer.Services
 
             folderPath = Path.Combine(this.AppConfigService.AppConfig.Midtier.TemporaryFileStorageDirectory, folderPath);
 
-            this.Logger.LogDebug("Creating temporary folder {FolderPath}.", folderPath);
+            if (this.Logger.IsEnabled(LogLevel.Debug))
+            {
+                this.Logger.LogDebug("Creating temporary folder {FolderPath}.", folderPath);
+            }
 
             var directoryInfo = Directory.CreateDirectory(folderPath);
 
-            this.Logger.LogInformation("Temporary folder {FolderPath} is created.", folderPath);
+            if (this.Logger.IsEnabled(LogLevel.Information))
+            {
+                this.Logger.LogInformation("Temporary folder {FolderPath} is created.", folderPath);
+            }
 
             return directoryInfo;
         }
@@ -214,7 +223,10 @@ namespace CometServer.Services
         /// </param>
         private async Task CreateFolderAndFileStructureOnDiskAsync(Thing thing, string partition, string folderPath, string[] routeSegments)
         {
-            this.Logger.LogInformation("File structure creation is started into the temporary folder {FolderPath}.", folderPath);
+            if (this.Logger.IsEnabled(LogLevel.Information))
+            {
+                this.Logger.LogInformation("File structure creation is started into the temporary folder {FolderPath}.", folderPath);
+            }
 
             var credentials = this.CredentialsService.Credentials;
 
@@ -374,11 +386,17 @@ namespace CometServer.Services
         {
             var path = Path.Combine(folderPath, rootFolder.Name);
 
-            this.Logger.LogInformation("Starting to create Directory: {Path}", path);
+            if (this.Logger.IsEnabled(LogLevel.Information))
+            {
+                this.Logger.LogInformation("Starting to create Directory: {Path}", path);
+            }
             
             Directory.CreateDirectory(path);
 
-            this.Logger.LogInformation("Directory {Path} is created.", path);
+            if (this.Logger.IsEnabled(LogLevel.Information))
+            {
+                this.Logger.LogInformation("Directory {Path} is created.", path);
+            }
 
             // Recursively create all child folders
             // Get folders that is of the root folder
@@ -458,11 +476,17 @@ namespace CometServer.Services
 
                 var destFile = Path.Combine(folderPath, $"{subFileRevision.Name}{extension}");
 
-                this.Logger.LogDebug("Copying {StorageFilePath} to {DestFile}", storageFilePath, destFile);
+                if (this.Logger.IsEnabled(LogLevel.Debug))
+                {
+                    this.Logger.LogDebug("Copying {StorageFilePath} to {DestFile}", storageFilePath, destFile);
+                }
 
                 System.IO.File.Copy(storageFilePath, destFile, true);
 
-                this.Logger.LogInformation("File {SubFileRevisionContentHash}/{SubFileRevisionName}{Extension} is copied from {StorageFilePath} to {FolderPath}.", subFileRevision.ContentHash, subFileRevision.Name, extension, storageFilePath, folderPath);
+                if (this.Logger.IsEnabled(LogLevel.Information))
+                {
+                    this.Logger.LogInformation("File {SubFileRevisionContentHash}/{SubFileRevisionName}{Extension} is copied from {StorageFilePath} to {FolderPath}.", subFileRevision.ContentHash, subFileRevision.Name, extension, storageFilePath, folderPath);
+                }
             }
         }
     }

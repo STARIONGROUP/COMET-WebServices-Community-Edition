@@ -116,7 +116,10 @@ namespace CometServer.Health
                 {
                     foreach (var tlsSettingError in tlsSettingErrors)
                     {
-                        this.Logger.LogCritical("Invalid TLS setting for the data-store connection: {TlsSettingError}", tlsSettingError);
+                        if (this.Logger.IsEnabled(LogLevel.Critical))
+                        {
+                            this.Logger.LogCritical("Invalid TLS setting for the data-store connection: {TlsSettingError}", tlsSettingError);
+                        }
                     }
 
                     this.Logger.LogCritical("The CDP4-COMET REST API has terminated - The TLS settings for the data-store connection are invalid");
@@ -135,7 +138,11 @@ namespace CometServer.Health
 
                 if (dataStoreConnectionStatus != DataStoreConnectionStatus.Connected)
                 {
-                    this.Logger.LogCritical("The CDP4-COMET REST API has terminated - The data-store was not available within the configured BacktierWaitTime: {BacktierWaitTime}", this.AppConfigService.AppConfig.Midtier.BacktierWaitTime);
+                    if (this.Logger.IsEnabled(LogLevel.Critical))
+                    {
+                        this.Logger.LogCritical("The CDP4-COMET REST API has terminated - The data-store was not available within the configured BacktierWaitTime: {BacktierWaitTime}", this.AppConfigService.AppConfig.Midtier.BacktierWaitTime);
+                    }
+
                     this.StopAfterStartupFailure();
                     return;
                 }
@@ -191,7 +198,10 @@ namespace CometServer.Health
         {
             var addresses = this.Server?.Features.Get<IServerAddressesFeature>()?.Addresses ?? new List<string>();
 
-            this.Logger.LogInformation("CDP4-COMET REST API is ready to accept requests at {Addresses}", addresses.Count > 0 ? string.Join(", ", addresses) : "the configured Kestrel endpoints");
+            if (this.Logger.IsEnabled(LogLevel.Information))
+            {
+                this.Logger.LogInformation("CDP4-COMET REST API is ready to accept requests at {Addresses}", addresses.Count > 0 ? string.Join(", ", addresses) : "the configured Kestrel endpoints");
+            }
         }
     }
 }

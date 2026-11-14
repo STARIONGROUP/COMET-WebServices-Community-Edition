@@ -94,7 +94,10 @@ namespace CometServer.Services
         {
             if (this.cachedModelReferenceDataLibraries == null || this.cachedModelReferenceDataLibraries.Count == 0)
             {
-                this.Logger.LogDebug("Retrieving the ModelReferenceDataLibrary objects from the cached tables in the datastore");
+                if (this.Logger.IsEnabled(LogLevel.Debug))
+                {
+                    this.Logger.LogDebug("Retrieving the ModelReferenceDataLibrary objects from the cached tables in the datastore");
+                }
 
                 var modelReferenceDataLibraries = await this.ModelReferenceDataLibraryDao.ReadAsync(transaction, SiteDirectoryPartition, null, true);
 
@@ -105,7 +108,10 @@ namespace CometServer.Services
 
             if (this.cachedSiteReferenceDataLibraries == null || this.cachedSiteReferenceDataLibraries.Count == 0)
             {
-                this.Logger.LogDebug("Retrieving the SiteReferenceDataLibrary objects from the cached tables in the datastore");
+                if (this.Logger.IsEnabled(LogLevel.Debug))
+                {
+                    this.Logger.LogDebug("Retrieving the SiteReferenceDataLibrary objects from the cached tables in the datastore");
+                }
 
                 var siteReferenceDataLibraries = await this.SiteReferenceDataLibraryDao.ReadAsync(transaction, SiteDirectoryPartition, null, true);
 

@@ -96,7 +96,10 @@ namespace CometServer.Services
         /// </param>
         public async Task LoadAsync(NpgsqlTransaction transaction, ISecurityContext securityContext)
         {
-            this.Logger.LogTrace("Loading reference data");
+            if (this.Logger.IsEnabled(LogLevel.Trace))
+            {
+                this.Logger.LogTrace("Loading reference data");
+            }
 
             var sw = Stopwatch.StartNew();
 
@@ -119,12 +122,15 @@ namespace CometServer.Services
                 this.parameterTypeAssignmentCache.Add(kvp.Key, kvp.Value);
             }
 
-            this.Logger.LogTrace("Cache initialized with {ParameterTypeCache} ParameterTypes, {DependentParameterTypeAssignments} DependentParameterTypeAssignments, {IndependentParameterTypeAssignments} IndependentParameterTypeAssignments and {ParameterTypeComponentCache} ParameterTypeComponents in {ElapsedMilliseconds}",
-                this.parameterTypeCache.Count,
-                dependentParameterTypeAssignments.Count,
-                independentParameterTypeAssignments.Count,
-                this.parameterTypeComponentCache.Count,
-                sw.ElapsedMilliseconds);
+            if (this.Logger.IsEnabled(LogLevel.Trace))
+            {
+                this.Logger.LogTrace("Cache initialized with {ParameterTypeCache} ParameterTypes, {DependentParameterTypeAssignments} DependentParameterTypeAssignments, {IndependentParameterTypeAssignments} IndependentParameterTypeAssignments and {ParameterTypeComponentCache} ParameterTypeComponents in {ElapsedMilliseconds}",
+                    this.parameterTypeCache.Count,
+                    dependentParameterTypeAssignments.Count,
+                    independentParameterTypeAssignments.Count,
+                    this.parameterTypeComponentCache.Count,
+                    sw.ElapsedMilliseconds);
+            }
         }
 
         /// <summary>

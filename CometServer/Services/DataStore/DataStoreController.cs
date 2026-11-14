@@ -71,7 +71,10 @@ namespace CometServer.Services.DataStore
             // Create a clone of the database
             await using (var cmd = new NpgsqlCommand())
             {
-                this.Logger.LogDebug("Clone the data store");
+                if (this.Logger.IsEnabled(LogLevel.Debug))
+                {
+                    this.Logger.LogDebug("Clone the data store");
+                }
 
                 await this.DropDataStoreConnections(backtier.Database, connection);
 
@@ -101,7 +104,10 @@ namespace CometServer.Services.DataStore
             // Drop the existing database
             await using (var cmd = new NpgsqlCommand())
             {
-                this.Logger.LogDebug("Drop the data store");
+                if (this.Logger.IsEnabled(LogLevel.Debug))
+                {
+                    this.Logger.LogDebug("Drop the data store");
+                }
 
                 await this.DropDataStoreConnections(backtier.Database, connection);
 
@@ -115,7 +121,10 @@ namespace CometServer.Services.DataStore
             // Create a new database with a restore template
             await using (var cmd = new NpgsqlCommand())
             {
-                this.Logger.LogDebug("Clone the restore data store");
+                if (this.Logger.IsEnabled(LogLevel.Debug))
+                {
+                    this.Logger.LogDebug("Clone the restore data store");
+                }
 
                 cmd.Connection = connection;
 
@@ -138,7 +147,10 @@ namespace CometServer.Services.DataStore
         {
             await using var cmd = new NpgsqlCommand();
             
-            this.Logger.LogDebug("Drop all idle connections to the data store");
+            if (this.Logger.IsEnabled(LogLevel.Debug))
+            {
+                this.Logger.LogDebug("Drop all idle connections to the data store");
+            }
 
             this.DataSource.ClearConnections();
 

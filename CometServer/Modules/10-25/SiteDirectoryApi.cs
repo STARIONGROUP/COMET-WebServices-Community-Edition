@@ -332,7 +332,10 @@ namespace CometServer.Modules
 
             var contentTypeKind = httpRequest.QueryContentTypeKind();
 
-            this.logger.LogInformation("{Request}:{RequestToken} - START HTTP REQUEST PROCESSING", httpRequest.QueryNameMethodPath(), requestToken);
+            if (this.logger.IsEnabled(LogLevel.Information))
+            {
+                this.logger.LogInformation("{Request}:{RequestToken} - START HTTP REQUEST PROCESSING", httpRequest.QueryNameMethodPath(), requestToken);
+            }
 
             try
             {
@@ -346,7 +349,11 @@ namespace CometServer.Modules
                 IReadOnlyList<Thing> things;
 
                 var dbsw = Stopwatch.StartNew();
-                this.logger.LogDebug("{Request}:{RequestToken} - Database operations started", httpRequest.QueryNameMethodPath(), requestToken);
+
+                if (this.logger.IsEnabled(LogLevel.Debug))
+                {
+                    this.logger.LogDebug("{Request}:{RequestToken} - Database operations started", httpRequest.QueryNameMethodPath(), requestToken);
+                }
 
                 // get prepared data source transaction
                 transaction = await transactionManager.SetupTransactionAsync(credentialsService.Credentials);
@@ -383,10 +390,17 @@ namespace CometServer.Modules
 
                 await transaction.CommitAsync();
 
-                this.logger.LogDebug("{Request}:{RequestToken} - Database operations completed in {ElapsedMilliseconds} [ms]", httpRequest.QueryNameMethodPath(), requestToken, dbsw.ElapsedMilliseconds);
+                if (this.logger.IsEnabled(LogLevel.Debug))
+                {
+                    this.logger.LogDebug("{Request}:{RequestToken} - Database operations completed in {ElapsedMilliseconds} [ms]", httpRequest.QueryNameMethodPath(), requestToken, dbsw.ElapsedMilliseconds);
+                }
+
                 dbsw.Stop();
 
-                this.logger.LogInformation("{Request}:{RequestToken} - Return response started", httpRequest.QueryNameMethodPath(), requestToken);
+                if (this.logger.IsEnabled(LogLevel.Information))
+                {
+                    this.logger.LogInformation("{Request}:{RequestToken} - Return response started", httpRequest.QueryNameMethodPath(), requestToken);
+                }
 
                 var version = httpRequest.QueryDataModelVersion();
 
@@ -442,7 +456,10 @@ namespace CometServer.Modules
             {
                 await transactionManager.TryDisposeTransaction(transaction);
 
-                this.logger.LogInformation("{Request}:{RequestToken} - Response returned in {ElapsedMilliseconds} [ms]", httpRequest.QueryNameMethodPath(), requestToken, reqsw.ElapsedMilliseconds);
+                if (this.logger.IsEnabled(LogLevel.Information))
+                {
+                    this.logger.LogInformation("{Request}:{RequestToken} - Response returned in {ElapsedMilliseconds} [ms]", httpRequest.QueryNameMethodPath(), requestToken, reqsw.ElapsedMilliseconds);
+                }
             }
         }
 
@@ -553,7 +570,12 @@ namespace CometServer.Modules
             var longRunningCometTask = Task.Run(() =>
             {
                 var task = this.PostResponseDataAsync(postRequestData, requestToken, httpResponse, cometTask, requestUtils, transactionManager, credentialsService, headerInfoProvider, metaInfoProvider, operationProcessor, revisionService, jsonSerializer, messagePackSerializer, permissionInstanceFilterService, modelCreatorManager);
-                this.logger.LogTrace(task.IsCompletedSuccessfully.ToString());
+
+                if (this.logger.IsEnabled(LogLevel.Trace))
+                {
+                    this.logger.LogTrace(task.IsCompletedSuccessfully.ToString());
+                }
+
             });
 
             var completedTask = await Task.WhenAny(longRunningCometTask, Task.Delay(TimeSpan.FromSeconds(requestUtils.QueryParameters.WaitTime)));
@@ -561,11 +583,18 @@ namespace CometServer.Modules
             if (completedTask == longRunningCometTask)
             {
                 await longRunningCometTask;
-                this.logger.LogInformation("The task {Id} for actor {Actor} completed within the requested wait time {WaitTime}", cometTask.Id, cometTask.Actor, requestUtils.QueryParameters.WaitTime);
+
+                if (this.logger.IsEnabled(LogLevel.Information))
+                {
+                    this.logger.LogInformation("The task {Id} for actor {Actor} completed within the requested wait time {WaitTime}", cometTask.Id, cometTask.Actor, requestUtils.QueryParameters.WaitTime);
+                }
             }
             else
             {
-                this.logger.LogInformation("The task {Id} for actor {Actor} did not complete within the requested wait time {WaitTime}; the CometTask is returned.", cometTask.Id, cometTask.Actor, requestUtils.QueryParameters.WaitTime);
+                if (this.logger.IsEnabled(LogLevel.Information))
+                {
+                    this.logger.LogInformation("The task {Id} for actor {Actor} did not complete within the requested wait time {WaitTime}; the CometTask is returned.", cometTask.Id, cometTask.Actor, requestUtils.QueryParameters.WaitTime);
+                }
 
                 await httpResponse.AsJson(cometTask);
             }
@@ -630,12 +659,19 @@ namespace CometServer.Modules
 
             var reqsw = Stopwatch.StartNew();
             
-            this.logger.LogInformation("{Request}:{RequestToken} - START HTTP REQUEST PROCESSING", postRequestData.MethodPathName.Sanitize(), requestToken);
+            if (this.logger.IsEnabled(LogLevel.Information))
+            {
+                this.logger.LogInformation("{Request}:{RequestToken} - START HTTP REQUEST PROCESSING", postRequestData.MethodPathName.Sanitize(), requestToken);
+            }
 
             try
             {
                 var dbsw = Stopwatch.StartNew();
-                this.logger.LogDebug("{Request}:{RequestToken} - Database operations started", postRequestData.MethodPathName.Sanitize(), requestToken);
+
+                if (this.logger.IsEnabled(LogLevel.Debug))
+                {
+                    this.logger.LogDebug("{Request}:{RequestToken} - Database operations started", postRequestData.MethodPathName.Sanitize(), requestToken);
+                }
 
                 transaction = await transactionManager.SetupTransactionAsync(credentialsService.Credentials);
 
@@ -659,7 +695,10 @@ namespace CometServer.Modules
 
                 this.CometTaskService.AddOrUpdateSuccessfulTask(cometTask, transactionRevision);
 
-                this.logger.LogDebug("{Request}:{RequestToken} - Database operations completed in {ElapsedMilliseconds} [ms]", postRequestData.MethodPathName.Sanitize(), requestToken, dbsw.ElapsedMilliseconds);
+                if (this.logger.IsEnabled(LogLevel.Debug))
+                {
+                    this.logger.LogDebug("{Request}:{RequestToken} - Database operations completed in {ElapsedMilliseconds} [ms]", postRequestData.MethodPathName.Sanitize(), requestToken, dbsw.ElapsedMilliseconds);
+                }
 
                 // Sends changed things to the AMQP message bus
                 await this.PrepareAndQueueThingsMessageAsync(postRequestData.OperationData, changedThings, actor, jsonSerializer);
@@ -695,7 +734,10 @@ namespace CometServer.Modules
                 var revisionResponse = (await revisionService.GetAsync(transaction, TopContainer, fromRevision, true)).ToArray();
                 await transaction.CommitAsync();
 
-                this.logger.LogDebug("{Request}:{RequestToken} - Database operations completed in {ElapsedMilliseconds} [ms]", postRequestData.MethodPathName.Sanitize(), requestToken, dbsw.ElapsedMilliseconds);
+                if (this.logger.IsEnabled(LogLevel.Debug))
+                {
+                    this.logger.LogDebug("{Request}:{RequestToken} - Database operations completed in {ElapsedMilliseconds} [ms]", postRequestData.MethodPathName.Sanitize(), requestToken, dbsw.ElapsedMilliseconds);
+                }
 
                 switch (postRequestData.ContentType)
                 {
@@ -824,7 +866,10 @@ namespace CometServer.Modules
             {
                 await transactionManager.TryDisposeTransaction(transaction);
 
-                this.logger.LogInformation("{Request}:{RequestToken} - Response returned in {ElapsedMilliseconds} [ms]", postRequestData.MethodPathName.Sanitize(), requestToken, reqsw.ElapsedMilliseconds);
+                if (this.logger.IsEnabled(LogLevel.Information))
+                {
+                    this.logger.LogInformation("{Request}:{RequestToken} - Response returned in {ElapsedMilliseconds} [ms]", postRequestData.MethodPathName.Sanitize(), requestToken, reqsw.ElapsedMilliseconds);
+                }
             }
         }
 

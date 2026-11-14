@@ -139,7 +139,10 @@ namespace CometServer.Modules.Health
         {
             var requestToken = this.tokenGeneratorService.GenerateRandomToken();
 
-            this.logger.LogDebug("{Request}:{RequestToken} - START HTTP REQUEST PROCESSING", req.QueryNameMethodPath(), requestToken);
+            if (this.logger.IsEnabled(LogLevel.Debug))
+            {
+                this.logger.LogDebug("{Request}:{RequestToken} - START HTTP REQUEST PROCESSING", req.QueryNameMethodPath(), requestToken);
+            }
 
             var serverStatus = this.cometHasStartedService.GetHasStartedAndIsReady();
 
@@ -177,7 +180,10 @@ namespace CometServer.Modules.Health
         {
             var requestToken = this.tokenGeneratorService.GenerateRandomToken();
 
-            this.logger.LogDebug("{Request}:{RequestToken} - START HTTP REQUEST PROCESSING", req.QueryNameMethodPath(), requestToken);
+            if (this.logger.IsEnabled(LogLevel.Debug))
+            {
+                this.logger.LogDebug("{Request}:{RequestToken} - START HTTP REQUEST PROCESSING", req.QueryNameMethodPath(), requestToken);
+            }
 
             NpgsqlTransaction transaction = null;
 

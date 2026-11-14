@@ -156,7 +156,10 @@ namespace CometServer.ChangeNotification
             }
             catch (PostgresException postgresException)
             {
-                this.Logger.LogCritical(postgresException, "Could not connect to the database to process Change Notifications. Error message: {PostgresExceptionMessage}", postgresException.Message);
+                if (this.Logger.IsEnabled(LogLevel.Critical))
+                {
+                    this.Logger.LogCritical(postgresException, "Could not connect to the database to process Change Notifications. Error message: {PostgresExceptionMessage}", postgresException.Message);
+                }
             }
             catch (Exception ex)
             {
@@ -164,7 +167,10 @@ namespace CometServer.ChangeNotification
             }
             finally
             {
-                this.Logger.LogInformation("ChangeNotifications processed in {ElapsedMilliseconds} [ms]", sw.ElapsedMilliseconds);
+                if (this.Logger.IsEnabled(LogLevel.Information))
+                {
+                    this.Logger.LogInformation("ChangeNotifications processed in {ElapsedMilliseconds} [ms]", sw.ElapsedMilliseconds);
+                }
             }
         }
 

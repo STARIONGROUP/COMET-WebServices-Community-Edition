@@ -230,7 +230,10 @@ namespace CometServer.Authentication.Basic
                 var principal = new ClaimsPrincipal(identity);
                 var ticket = new AuthenticationTicket(principal, this.Scheme.Name);
 
-                this.Logger.LogDebug("The {Useid}:{Username} successfully authenticated", authenticationPerson.Iid, username);
+                if (this.Logger.IsEnabled(LogLevel.Debug))
+                {
+                    this.Logger.LogDebug("The {Useid}:{Username} successfully authenticated", authenticationPerson.Iid, username);
+                }
 
                 // sign in and add cookie
                 var authProperties = new AuthenticationProperties
@@ -246,7 +249,11 @@ namespace CometServer.Authentication.Basic
             catch (AuthenticatorException aex)
             {
                 this.Logger.LogError("Basic authentication failed - database error - service unavailable");
-                this.Logger.LogDebug(aex, "Basic authentication failed - database error - service unavailable");
+
+                if (this.Logger.IsEnabled(LogLevel.Debug))
+                {
+                    this.Logger.LogDebug(aex, "Basic authentication failed - database error - service unavailable");
+                }
 
                 this.Response.ContentType = "application/json";
                 this.Response.StatusCode = (int)HttpStatusCode.ServiceUnavailable;

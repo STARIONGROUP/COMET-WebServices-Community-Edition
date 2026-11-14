@@ -77,6 +77,7 @@ namespace CometServer.Tests.Services.DataStore
                 .ReturnsAsync(new List<string> { "PROBLEM: the server certificate expired" });
 
             this.logger = new Mock<ILogger<DataStoreConnectionChecker>>();
+            this.logger.Setup(x => x.IsEnabled(It.IsAny<LogLevel>())).Returns(true);
 
             this.dataStoreConnectionChecker = new DataStoreConnectionChecker
             {

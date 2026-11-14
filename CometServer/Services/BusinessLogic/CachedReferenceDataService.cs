@@ -129,7 +129,10 @@ namespace CometServer.Services
             {
                 var sw = new Stopwatch();
 
-                this.Logger.LogDebug("Querying ParameterTypes");
+                if (this.Logger.IsEnabled(LogLevel.Debug))
+                {
+                    this.Logger.LogDebug("Querying ParameterTypes");
+                }
 
                 this.parameterTypeCache = new Dictionary<Guid, ParameterType>();
 
@@ -142,7 +145,10 @@ namespace CometServer.Services
                     this.parameterTypeCache.Add(parameterType.Iid, parameterType);
                 }
 
-                this.Logger.LogDebug("ParameterTypes Queried in {ElapsedMilliseconds} [ms]", sw.ElapsedMilliseconds);
+                if (this.Logger.IsEnabled(LogLevel.Debug))
+                {
+                    this.Logger.LogDebug("ParameterTypes Queried in {ElapsedMilliseconds} [ms]", sw.ElapsedMilliseconds);
+                }
             }
 
             return this.parameterTypeCache;
@@ -160,7 +166,10 @@ namespace CometServer.Services
             {
                 var sw = new Stopwatch();
 
-                this.Logger.LogDebug("Querying ParameterTypeComponents");
+                if (this.Logger.IsEnabled(LogLevel.Debug))
+                {
+                    this.Logger.LogDebug("Querying ParameterTypeComponents");
+                }
 
                 this.parameterTypeComponentCache = new Dictionary<Guid, ParameterTypeComponent>();
 
@@ -173,7 +182,10 @@ namespace CometServer.Services
                     this.parameterTypeComponentCache.Add(parameterTypeComponent.Iid, parameterTypeComponent);
                 }
 
-                this.Logger.LogDebug("ParameterTypeComponents Queried in {ElapsedMilliseconds} [ms]", sw.ElapsedMilliseconds);
+                if (this.Logger.IsEnabled(LogLevel.Debug))
+                {
+                    this.Logger.LogDebug("ParameterTypeComponents Queried in {ElapsedMilliseconds} [ms]", sw.ElapsedMilliseconds);
+                }
             }
 
             return this.parameterTypeComponentCache;
@@ -191,7 +203,10 @@ namespace CometServer.Services
             {
                 var sw = new Stopwatch();
 
-                this.Logger.LogDebug("Querying DependentParameterTypeAssignments");
+                if (this.Logger.IsEnabled(LogLevel.Debug))
+                {
+                    this.Logger.LogDebug("Querying DependentParameterTypeAssignments");
+                }
 
                 this.dependentParameterTypeAssignment = new Dictionary<Guid, DependentParameterTypeAssignment>();
 
@@ -204,7 +219,10 @@ namespace CometServer.Services
                     this.dependentParameterTypeAssignment.Add(parameterTypeAssignment.Iid, parameterTypeAssignment);
                 }
 
-                this.Logger.LogDebug("DependentParameterTypeAssignments Queried in {ElapsedMilliseconds} [ms]", sw.ElapsedMilliseconds);
+                if (this.Logger.IsEnabled(LogLevel.Debug))
+                {
+                    this.Logger.LogDebug("DependentParameterTypeAssignments Queried in {ElapsedMilliseconds} [ms]", sw.ElapsedMilliseconds);
+                }
             }
 
             return this.dependentParameterTypeAssignment;
@@ -222,7 +240,10 @@ namespace CometServer.Services
             {
                 var sw = new Stopwatch();
 
-                this.Logger.LogDebug("Querying DependentParameterTypeAssignments");
+                if (this.Logger.IsEnabled(LogLevel.Debug))
+                {
+                    this.Logger.LogDebug("Querying DependentParameterTypeAssignments");
+                }
 
                 this.independentParameterTypeAssignment = new Dictionary<Guid, IndependentParameterTypeAssignment>();
 
@@ -235,7 +256,10 @@ namespace CometServer.Services
                     this.independentParameterTypeAssignment.Add(parameterTypeAssignment.Iid, parameterTypeAssignment);
                 }
 
-                this.Logger.LogDebug("IndependentParameterTypeAssignment Queried in {ElapsedMilliseconds} [ms]", sw.ElapsedMilliseconds);
+                if (this.Logger.IsEnabled(LogLevel.Debug))
+                {
+                    this.Logger.LogDebug("IndependentParameterTypeAssignment Queried in {ElapsedMilliseconds} [ms]", sw.ElapsedMilliseconds);
+                }
             }
 
             return this.independentParameterTypeAssignment;
@@ -253,7 +277,10 @@ namespace CometServer.Services
             {
                 var sw = new Stopwatch();
 
-                this.Logger.LogDebug("Querying MeasurementScales");
+                if (this.Logger.IsEnabled(LogLevel.Debug))
+                {
+                    this.Logger.LogDebug("Querying MeasurementScales");
+                }
 
                 this.measurementScaleCache = new Dictionary<Guid, MeasurementScale>();
 
@@ -266,7 +293,10 @@ namespace CometServer.Services
                     this.measurementScaleCache.Add(measurementScale.Iid, measurementScale);
                 }
 
-                this.Logger.LogDebug("MeasurementScales Queried in {ElapsedMilliseconds} [ms]", sw.ElapsedMilliseconds);
+                if (this.Logger.IsEnabled(LogLevel.Debug))
+                {
+                    this.Logger.LogDebug("MeasurementScales Queried in {ElapsedMilliseconds} [ms]", sw.ElapsedMilliseconds);
+                }
             }
 
             return this.measurementScaleCache;
@@ -287,7 +317,10 @@ namespace CometServer.Services
 
             var sw = new Stopwatch();
 
-            this.Logger.LogDebug("Querying EnumerationValueDefinitions");
+            if (this.Logger.IsEnabled(LogLevel.Debug))
+            {
+                this.Logger.LogDebug("Querying EnumerationValueDefinitions");
+            }
 
             this.enumerationValueDefinitionCache = [];
 
@@ -300,7 +333,10 @@ namespace CometServer.Services
                 this.enumerationValueDefinitionCache.Add(enumerationValueDefinition.Iid, enumerationValueDefinition);
             }
 
-            this.Logger.LogDebug("EnumerationValueDefinitions Queried in {ElapsedMilliseconds} [ms]", sw.ElapsedMilliseconds);
+            if (this.Logger.IsEnabled(LogLevel.Debug))
+            {
+                this.Logger.LogDebug("EnumerationValueDefinitions Queried in {ElapsedMilliseconds} [ms]", sw.ElapsedMilliseconds);
+            }
 
             return this.enumerationValueDefinitionCache;
         }
@@ -317,7 +353,10 @@ namespace CometServer.Services
             this.measurementScaleCache?.Clear();
             this.enumerationValueDefinitionCache?.Clear();
 
-            this.Logger.LogDebug("Cache Reset");
+            if (this.Logger.IsEnabled(LogLevel.Debug))
+            {
+                this.Logger.LogDebug("Cache Reset");
+            }
         }
     }
 }

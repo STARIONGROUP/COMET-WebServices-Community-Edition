@@ -71,7 +71,10 @@ namespace CDP4Orm.MigrationEngine
         /// </summary>
         public override async Task ApplyMigration(NpgsqlTransaction transaction, IReadOnlyList<string> existingSchemas)
         {
-            this.logger.LogInformation("Start migration script {ResourceName}", this.MigrationMetaData.ResourceName);
+            if (this.logger.IsEnabled(LogLevel.Information))
+            {
+                this.logger.LogInformation("Start migration script {ResourceName}", this.MigrationMetaData.ResourceName);
+            }
 
             var resource = Assembly.GetExecutingAssembly().GetManifestResourceStream(this.MigrationMetaData.ResourceName);
 
@@ -98,7 +101,10 @@ namespace CDP4Orm.MigrationEngine
 
                 await using (var tableListCmd = new NpgsqlCommand())
                 {
-                    this.logger.LogInformation("Getting all {TableNameTemplate} tables for schema {ApplicableSchema}", this.GetTableNameTemplate(), applicableSchema);
+                    if (this.logger.IsEnabled(LogLevel.Information))
+                    {
+                        this.logger.LogInformation("Getting all {TableNameTemplate} tables for schema {ApplicableSchema}", this.GetTableNameTemplate(), applicableSchema);
+                    }
 
                     var cmdTxt = "SELECT table_name FROM information_schema.tables WHERE table_schema = :schemaName AND table_type = 'BASE TABLE';";
 
@@ -120,7 +126,10 @@ namespace CDP4Orm.MigrationEngine
                         }
                     }
 
-                    this.logger.LogInformation("{TableNameTemplate} table fetched: {Count}", this.GetTableNameTemplate(), thingTableList.Count);
+                    if (this.logger.IsEnabled(LogLevel.Information))
+                    {
+                        this.logger.LogInformation("{TableNameTemplate} table fetched: {Count}", this.GetTableNameTemplate(), thingTableList.Count);
+                    }
                 }
 
                 await using (var sqlCommand = new NpgsqlCommand())
@@ -137,7 +146,11 @@ namespace CDP4Orm.MigrationEngine
                     sqlCommand.Connection = transaction.Connection;
                     sqlCommand.Transaction = transaction;
                     await sqlCommand.ExecuteNonQueryAsync();
-                    this.logger.LogInformation("End migration script {ResourceName}", this.MigrationMetaData.ResourceName);
+
+                    if (this.logger.IsEnabled(LogLevel.Information))
+                    {
+                        this.logger.LogInformation("End migration script {ResourceName}", this.MigrationMetaData.ResourceName);
+                    }
                 }
 
                 await base.ApplyMigration(transaction, existingSchemas);

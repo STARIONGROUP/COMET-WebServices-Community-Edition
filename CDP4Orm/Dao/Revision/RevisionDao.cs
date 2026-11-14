@@ -178,7 +178,10 @@ namespace CDP4Orm.Dao.Revision
         /// <param name="actor">The identifier of the person who made this revision</param>
         public async Task WriteRevisionAsync(NpgsqlTransaction transaction, string partition, Thing thing, Guid actor)
         {
-            this.Logger.LogDebug("WriteRevision of {Thing} to {Partition} by {Actor}", thing, partition, actor);
+            if (this.Logger.IsEnabled(LogLevel.Debug))
+            {
+                this.Logger.LogDebug("WriteRevision of {Thing} to {Partition} by {Actor}", thing, partition, actor);
+            }
 
             var table = GetThingRevisionTableName(thing);
 
@@ -205,7 +208,10 @@ namespace CDP4Orm.Dao.Revision
         /// <param name="actor">The identifier of the person who made this revision</param>
         public async Task BulkWriteRevisionAsync(NpgsqlTransaction transaction, string partition, IReadOnlyCollection<Thing> things, Guid actor)
         {
-            this.Logger.LogDebug("WriteRevision for {Thing} Thing(s) to {Partition} by {Actor}", things.Count, partition, actor);
+            if (this.Logger.IsEnabled(LogLevel.Debug))
+            {
+                this.Logger.LogDebug("WriteRevision for {Thing} Thing(s) to {Partition} by {Actor}", things.Count, partition, actor);
+            }
 
              var thingsGroupedByClasskind = things.GroupBy(x => x.ClassKind).ToDictionary(g => g.Key, g => g.ToList());
 
@@ -238,7 +244,11 @@ namespace CDP4Orm.Dao.Revision
                 }
 
                 var sqlQuery = sqlQueryBuilder.ToString();
-                this.Logger.LogDebug("Running insert command for Revision : {SqlQuery}", sqlQuery);
+
+                if (this.Logger.IsEnabled(LogLevel.Debug))
+                {
+                    this.Logger.LogDebug("Running insert command for Revision : {SqlQuery}", sqlQuery);
+                }
 
                 await using var command = new NpgsqlCommand(sqlQuery, transaction.Connection, transaction);
 

@@ -117,7 +117,10 @@ namespace CometServer.Services.Email
                 await smtpClient.DisconnectAsync(true);
             }
 
-            this.Logger.LogDebug("{Subject} - Emails sent", subject);
+            if (this.Logger.IsEnabled(LogLevel.Debug))
+            {
+                this.Logger.LogDebug("{Subject} - Emails sent", subject);
+            }
         }
 
         /// <summary>
@@ -147,7 +150,10 @@ namespace CometServer.Services.Email
                 }
                 else
                 {
-                    this.Logger.LogDebug("The file-path {Filepath} does not exist, the associated attachment could not be created.", filepath);
+                    if (this.Logger.IsEnabled(LogLevel.Debug))
+                    {
+                        this.Logger.LogDebug("The file-path {Filepath} does not exist, the associated attachment could not be created.", filepath);
+                    }
                 }
             }
         }
