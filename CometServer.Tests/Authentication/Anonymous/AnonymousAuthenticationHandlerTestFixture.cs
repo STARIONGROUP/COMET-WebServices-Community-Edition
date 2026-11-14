@@ -47,7 +47,6 @@ namespace CometServer.Tests.Authentication.Anonymous
         public Mock<IOptionsMonitor<AnonymousAuthenticationOptions>> optionsMonitor;
         public Mock<ILoggerFactory> loggerFactory;
         public Mock<UrlEncoder> encoder;
-        public Mock<ISystemClock> systemClock;
         
         [SetUp]
         public void Setup()
@@ -63,8 +62,7 @@ namespace CometServer.Tests.Authentication.Anonymous
             this.loggerFactory.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(logger.Object);
 
             this.encoder = new Mock<UrlEncoder>();
-            this.systemClock = new Mock<ISystemClock>();
-            this.handler = new AnonymousAuthenticationHandler(this.optionsMonitor.Object, this.loggerFactory.Object, this.encoder.Object, this.systemClock.Object);
+            this.handler = new AnonymousAuthenticationHandler(this.optionsMonitor.Object, this.loggerFactory.Object, this.encoder.Object);
         }
 
         [Test]

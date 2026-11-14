@@ -69,37 +69,6 @@ namespace CometServer.Authentication.Basic
         /// Initializes a new instance of the <see cref="BasicAuthenticationHandler"/>
         /// </summary>
         /// <param name="options">
-        /// The <see cref="BasicAuthenticationOptions"/> used to configure the <see cref="BasicAuthenticationHandler"/>
-        /// </param>
-        /// <param name="logger">
-        /// The <see cref="ILoggerFactory"/> used to create the <see cref="Logger{T}"/>
-        /// </param>
-        /// <param name="encoder">
-        /// The <see cref="UrlEncoder"/>
-        /// </param>
-        /// <param name="clock">
-        /// The <see cref="ISystemClock"/> (obsolote)
-        /// </param>
-        /// <param name="authenticationPersonAuthenticator">
-        /// The (injected) <see cref="IAuthenticationPersonAuthenticator"/> used to authenticate against the configured authentication store
-        /// </param>
-        /// <param name="cometHasStartedService">
-        /// The (injected) <see cref="ICometHasStartedService"/> that is used to check whether CDP4-COMET is ready to start
-        /// acceptng requests
-        /// </param>
-        /// <param name="appConfigService">The injected <see cref="IAppConfigService"/> that is used to enable or not this authentication handler</param>
-        public BasicAuthenticationHandler(IOptionsMonitor<BasicAuthenticationOptions> options, ILoggerFactory logger, UrlEncoder encoder, ISystemClock clock, IAuthenticationPersonAuthenticator authenticationPersonAuthenticator, ICometHasStartedService cometHasStartedService, IAppConfigService appConfigService)
-            : base(options, logger, encoder, clock)
-        {
-            this.authenticationPersonAuthenticator = authenticationPersonAuthenticator;
-            this.cometHasStartedService = cometHasStartedService;
-            this.appConfigService = appConfigService;
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="BasicAuthenticationHandler"/>
-        /// </summary>
-        /// <param name="options">
         /// The <see cref="BasicAuthenticationOptions"/> used to configure the authentication handler
         /// </param>
         /// <param name="logger">

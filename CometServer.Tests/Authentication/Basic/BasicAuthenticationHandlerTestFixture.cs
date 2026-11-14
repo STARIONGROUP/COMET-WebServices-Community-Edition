@@ -57,7 +57,6 @@ namespace CometServer.Tests.Authentication.Basic
         private Mock<IOptionsMonitor<BasicAuthenticationOptions>> optionsMonitor;
         private Mock<ILoggerFactory> loggerFactory;
         private Mock<UrlEncoder> encoder;
-        private Mock<ISystemClock> systemClock;
         private Mock<IAuthenticationPersonAuthenticator> authenticatonPersonAuthenticator;
         private Mock<ICometHasStartedService> cometHasStartedService;
         private Mock<IAppConfigService> appConfigService;
@@ -79,7 +78,6 @@ namespace CometServer.Tests.Authentication.Basic
             this.loggerFactory.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(logger.Object);
 
             this.encoder = new Mock<UrlEncoder>();
-            this.systemClock = new Mock<ISystemClock>();
             this.authenticatonPersonAuthenticator = new Mock<IAuthenticationPersonAuthenticator>();
             this.cometHasStartedService = new Mock<ICometHasStartedService>();
             this.appConfigService = new Mock<IAppConfigService>();
@@ -91,7 +89,7 @@ namespace CometServer.Tests.Authentication.Basic
             
             this.requestService.Setup(x => x.GetService(typeof(IAuthenticationService))).Returns(this.authenticationService.Object);
             
-            this.handler = new BasicAuthenticationHandler(this.optionsMonitor.Object, this.loggerFactory.Object, this.encoder.Object, this.systemClock.Object, 
+            this.handler = new BasicAuthenticationHandler(this.optionsMonitor.Object, this.loggerFactory.Object, this.encoder.Object, 
                 this.authenticatonPersonAuthenticator.Object, this.cometHasStartedService.Object,this.appConfigService.Object);
         }
 

@@ -63,7 +63,6 @@ namespace CometServer.Tests.Authentication.Bearer
         private Mock<IOptionsMonitor<JwtBearerOptions>> optionsMonitor;
         private Mock<ILoggerFactory> loggerFactory;
         private Mock<UrlEncoder> encoder;
-        private Mock<ISystemClock> systemClock;
         private Mock<ICometHasStartedService> cometHasStartedService;
         private Mock<IAppConfigService> appConfigService;
         private Mock<IResponseNegotiator> jsonResponseNegotiator;
@@ -99,7 +98,6 @@ namespace CometServer.Tests.Authentication.Bearer
             this.loggerFactory.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(logger.Object);
 
             this.encoder = new Mock<UrlEncoder>();
-            this.systemClock = new Mock<ISystemClock>();
             this.cometHasStartedService = new Mock<ICometHasStartedService>();
             this.appConfigService = new Mock<IAppConfigService>();
             this.jsonResponseNegotiator = new Mock<IResponseNegotiator>();
@@ -107,7 +105,7 @@ namespace CometServer.Tests.Authentication.Bearer
             this.requestService = new Mock<IServiceProvider>();
             this.requestService.Setup(x => x.GetService(typeof(IEnumerable<IResponseNegotiator>))).Returns(new List<IResponseNegotiator>{this.jsonResponseNegotiator.Object});
             
-            this.handler = new JwtBearerAuthenticationHandler(this.optionsMonitor.Object, this.loggerFactory.Object, this.encoder.Object, this.systemClock.Object, 
+            this.handler = new JwtBearerAuthenticationHandler(this.optionsMonitor.Object, this.loggerFactory.Object, this.encoder.Object, 
                  this.cometHasStartedService.Object,this.appConfigService.Object);
 
             this.credentialsService = new Mock<ICredentialsService>();
