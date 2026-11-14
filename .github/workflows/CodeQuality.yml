@@ -1,7 +1,11 @@
 name: Build & Test & SonarQube
 
 on:
+  # Feature branches are built through their pull request; building them on push as well runs everything twice
   push:
+    branches:
+      - development
+      - master
   pull_request:
     types: [opened, synchronize, reopened]
     
@@ -11,19 +15,19 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6.0.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v5.2.0
+        uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
         with:
           distribution: 'temurin'
           java-version: '17'
           overwrite-settings: false
 
       - name: Setup dotnet
-        uses: actions/setup-dotnet@v5.1.0
+        uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
         with:
           dotnet-version: '10.0.x'
 
@@ -51,7 +55,7 @@ jobs:
         run: dotnet test COMET-WebServices.sln --no-restore --no-build --verbosity normal /p:CollectCoverage=true /p:CoverletOutput="../CoverageResults/" /p:MergeWith="../CoverageResults/coverage.json" /p:CoverletOutputFormat=\"cobertura,opencover,json\"
 
       - name: Set up Docker
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
 
       - name: cdp4-test-database-community-edition Image
         run: docker pull stariongroup/cdp4-test-database-community-edition:4.2.0
@@ -135,7 +139,7 @@ jobs:
           exit 1
 
       - name: Checkout Integration Test Suite
-        uses: actions/checkout@v6.0.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: STARIONGROUP/ecss-10-25-annexc-integration-tests
           path: integration-tests
