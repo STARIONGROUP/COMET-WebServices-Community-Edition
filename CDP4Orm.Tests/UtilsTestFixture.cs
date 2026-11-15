@@ -27,6 +27,7 @@ namespace CDP4Orm.Tests
     using System;
     using System.Collections;
     using System.Collections.Generic;
+    using System.Linq;
 
     using CDP4Common.Types;
 
@@ -40,6 +41,53 @@ namespace CDP4Orm.Tests
     [TestFixture]
     public class UtilsTestFixture
     {
+        [TestCase(3, 21845)]
+        [TestCase(4, 16383)]
+        public void VerifyThatChunkByParameterLimitKeepsEachBatchWithinTheLimit(int parametersPerItem, int expectedBatchSize)
+        {
+            var items = Enumerable.Range(0, (expectedBatchSize * 2) + 1).ToList();
+
+            var batches = Utils.ChunkByParameterLimit(items, parametersPerItem).ToList();
+
+            Assert.That(batches, Has.Count.EqualTo(3));
+            Assert.That(batches[0], Has.Length.EqualTo(expectedBatchSize));
+            Assert.That(batches[1], Has.Length.EqualTo(expectedBatchSize));
+            Assert.That(batches[2], Has.Length.EqualTo(1));
+            Assert.That(batches.All(x => x.Length * parametersPerItem <= Utils.MaximumParametersPerStatement), Is.True);
+            Assert.That(batches.SelectMany(x => x), Is.EqualTo(items));
+        }
+
+        [Test]
+        public void VerifyThatChunkByParameterLimitReturnsOneBatchWhenItFits()
+        {
+            var items = Enumerable.Range(0, 16383).ToList();
+
+            var batches = Utils.ChunkByParameterLimit(items, 4).ToList();
+
+            Assert.That(batches, Has.Count.EqualTo(1));
+            Assert.That(batches[0], Is.EqualTo(items));
+        }
+
+        [Test]
+        public void VerifyThatChunkByParameterLimitReturnsNoBatchForNoItems()
+        {
+            Assert.That(Utils.ChunkByParameterLimit(Array.Empty<int>(), 4), Is.Empty);
+        }
+
+        [TestCase(0)]
+        [TestCase(-1)]
+        [TestCase(Utils.MaximumParametersPerStatement + 1)]
+        public void VerifyThatChunkByParameterLimitRejectsAnInvalidParameterCount(int parametersPerItem)
+        {
+            Assert.That(() => Utils.ChunkByParameterLimit(new[] { 1 }, parametersPerItem), Throws.TypeOf<ArgumentOutOfRangeException>());
+        }
+
+        [Test]
+        public void VerifyThatChunkByParameterLimitRejectsNullItems()
+        {
+            Assert.That(() => Utils.ChunkByParameterLimit<int>(null, 4), Throws.ArgumentNullException);
+        }
+
         [Test]
         public void VerifyDeserializationOfHstore()
         {

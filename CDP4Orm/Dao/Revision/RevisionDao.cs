@@ -83,6 +83,11 @@ namespace CDP4Orm.Dao.Revision
         private const string IidKey = "Iid";
 
         /// <summary>
+        /// The number of bind parameters used per <see cref="Thing" /> by <see cref="BulkWriteRevisionAsync" />
+        /// </summary>
+        private const int BulkWriteParametersPerThing = 4;
+
+        /// <summary>
         /// The Instant key.
         /// </summary>
         private const string InstantColumn = "Instant";
@@ -218,43 +223,42 @@ namespace CDP4Orm.Dao.Revision
             foreach (var groupedThings in thingsGroupedByClasskind)
             {
                 var table = GetThingRevisionTableName(groupedThings.Key);
-                var sqlQueryBuilder = new StringBuilder();
 
-                sqlQueryBuilder.Append($"INSERT INTO \"{partition}\".\"{table}\" (\"{IidKey}\", \"{RevisionColumnName}\", \"{InstantColumn}\", \"{ActorColumn}\", \"{JsonColumnName}\") VALUES ");
-
-                var parameters = new List<NpgsqlParameter>();
-
-                var index = 0;
-
-                foreach (var thing in groupedThings.Value)
+                // a single statement cannot hold more than Utils.MaximumParametersPerStatement bind parameters
+                foreach (var batch in Utils.ChunkByParameterLimit(groupedThings.Value, BulkWriteParametersPerThing))
                 {
-                    var iidParam = new NpgsqlParameter($"iid_{index}", NpgsqlDbType.Uuid) { Value = thing.Iid };
-                    var revisionParam = new NpgsqlParameter($"revisionnumber_{index}", NpgsqlDbType.Integer) { Value = thing.RevisionNumber };
-                    var actorParam = new NpgsqlParameter($"actor_{index}", NpgsqlDbType.Uuid) { Value = actor };
-                    var jsonbParam = new NpgsqlParameter($"jsonb_{index}", NpgsqlDbType.Jsonb) { Value = thing.ToJsonString() };
+                    var sqlQueryBuilder = new StringBuilder();
 
-                    parameters.Add(iidParam);
-                    parameters.Add(revisionParam);
-                    parameters.Add(actorParam);
-                    parameters.Add(jsonbParam);
+                    sqlQueryBuilder.Append($"INSERT INTO \"{partition}\".\"{table}\" (\"{IidKey}\", \"{RevisionColumnName}\", \"{InstantColumn}\", \"{ActorColumn}\", \"{JsonColumnName}\") VALUES ");
 
-                    sqlQueryBuilder.Append($"(@iid_{index}, @revisionnumber_{index}, \"SiteDirectory\".get_transaction_time(), @actor_{index}, @jsonb_{index})");
-                    sqlQueryBuilder.Append(thing != groupedThings.Value[^1] ? ',' : ';');
-                    index++;
+                    var parameters = new List<NpgsqlParameter>(batch.Length * BulkWriteParametersPerThing);
+
+                    for (var index = 0; index < batch.Length; index++)
+                    {
+                        var thing = batch[index];
+
+                        parameters.Add(new NpgsqlParameter($"iid_{index}", NpgsqlDbType.Uuid) { Value = thing.Iid });
+                        parameters.Add(new NpgsqlParameter($"revisionnumber_{index}", NpgsqlDbType.Integer) { Value = thing.RevisionNumber });
+                        parameters.Add(new NpgsqlParameter($"actor_{index}", NpgsqlDbType.Uuid) { Value = actor });
+                        parameters.Add(new NpgsqlParameter($"jsonb_{index}", NpgsqlDbType.Jsonb) { Value = thing.ToJsonString() });
+
+                        sqlQueryBuilder.Append($"(@iid_{index}, @revisionnumber_{index}, \"SiteDirectory\".get_transaction_time(), @actor_{index}, @jsonb_{index})");
+                        sqlQueryBuilder.Append(index < batch.Length - 1 ? ',' : ';');
+                    }
+
+                    var sqlQuery = sqlQueryBuilder.ToString();
+
+                    if (this.Logger.IsEnabled(LogLevel.Debug))
+                    {
+                        this.Logger.LogDebug("Running insert command for Revision : {SqlQuery}", sqlQuery);
+                    }
+
+                    await using var command = new NpgsqlCommand(sqlQuery, transaction.Connection, transaction);
+
+                    command.Parameters.AddRange(parameters.ToArray());
+
+                    await command.ExecuteNonQueryAsync();
                 }
-
-                var sqlQuery = sqlQueryBuilder.ToString();
-
-                if (this.Logger.IsEnabled(LogLevel.Debug))
-                {
-                    this.Logger.LogDebug("Running insert command for Revision : {SqlQuery}", sqlQuery);
-                }
-
-                await using var command = new NpgsqlCommand(sqlQuery, transaction.Connection, transaction);
-
-                command.Parameters.AddRange(parameters.ToArray());
-
-                await command.ExecuteNonQueryAsync();
             }
         }
 
