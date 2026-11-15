@@ -1,6 +1,8 @@
-# Dependabot keeps the NuGet packages, the Docker base image and the GitHub Actions up to date.
+# Dependabot keeps the NuGet packages and the GitHub Actions up to date.
 # Pull requests target the development branch. Major version updates (e.g. moving to .NET 11) are
 # planned upgrades and are therefore not proposed.
+# The Docker base image is updated by .github/workflows/docker-base-image-update.yml, which also runs
+# the integration test suite against the new image.
 # https://docs.github.com/code-security/dependabot/working-with-dependabot/dependabot-options-reference
 
 version: 2
@@ -42,20 +44,6 @@ updates:
           - "NUnit*"
           - "Moq"
           - "coverlet*"
-
-  - package-ecosystem: "docker"
-    directory: "/"
-    target-branch: "development"
-    schedule:
-      interval: "weekly"
-      day: "wednesday"
-    commit-message:
-      prefix: "[Bump]"
-    labels:
-      - "devops"
-    ignore:
-      - dependency-name: "*"
-        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: "github-actions"
     directory: "/"

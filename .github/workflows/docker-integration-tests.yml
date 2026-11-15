@@ -1,0 +1,151 @@
+name: Docker Image Integration Tests
+
+# Builds the Docker image from the Dockerfile and runs the ECSS-E-TM-10-25 Annex C integration test suite
+# against a container of that image. This tests the image operators actually run, including the
+# .NET runtime and the Alpine / OpenSSL versions of the base image.
+
+on:
+  # a pull request that changes the Dockerfile, for example a Dependabot base image update
+  pull_request:
+    paths:
+      - "Dockerfile"
+      - ".github/workflows/docker-integration-tests.yml"
+  # called by docker-base-image-update.yml for the pull request it creates
+  workflow_call:
+    inputs:
+      ref:
+        description: "The branch, tag or commit to build the image from"
+        required: true
+        type: string
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  integration-tests:
+    name: Integration tests on Docker image
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - name: Build image
+        run: docker build --pull -t comet-webservices:test .
+
+      - name: Show base image versions
+        run: |
+          grep "^FROM" Dockerfile
+          docker run --rm --entrypoint sh comet-webservices:test -c \
+            'cat /etc/alpine-release; dotnet --list-runtimes; apk info -v 2>/dev/null | grep -E "^(libssl|libcrypto)"'
+
+      - name: Start PostgreSQL container
+        run: |
+          docker network create comet
+          docker run -d \
+            --network comet \
+            --name comet-db \
+            --shm-size 2g \
+            -e POSTGRES_PASSWORD=postgres \
+            --tmpfs /var/lib/postgresql/data:rw \
+            stariongroup/cdp4-test-database-community-edition:4.2.0 \
+            postgres -c max_locks_per_transaction=1024
+          until docker exec comet-db pg_isready -U postgres; do
+            echo "Waiting for PostgreSQL to be ready..."
+            sleep 5
+          done
+
+      - name: Start API container
+        run: |
+          # the image ships the production settings; seed and restore are needed by the integration test suite
+          docker run -d \
+            --network comet \
+            --name comet-api \
+            -p 127.0.0.1:5000:5000 \
+            -e Backtier__HostName=comet-db \
+            -e Backtier__IsDbSeedEnabled=true \
+            -e Backtier__IsDbRestoreEnabled=true \
+            comet-webservices:test
+
+      - name: Wait for API to become ready
+        run: |
+          for i in {1..60}; do
+            if curl -s -o /dev/null -w "%{http_code}" http://localhost:5000/healthz | grep -q "200"; then
+              echo "API is UP"
+              exit 0
+            fi
+            echo "[$i/60] API not ready yet, retrying in 2 seconds..."
+            sleep 2
+          done
+          echo "::error::API did not become ready in time"
+          docker logs comet-api
+          exit 1
+
+      - name: Checkout Integration Test Suite
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: STARIONGROUP/ecss-10-25-annexc-integration-tests
+          path: integration-tests
+
+      - name: Seed the database with the exchange file
+        run: |
+          cd integration-tests/Data
+          zip -r Data.zip .
+          cd -
+          curl --fail --form file=@"integration-tests/Data/Data.zip" http://localhost:5000/Data/Exchange
+
+      - name: Wait for API to accept requests
+        run: |
+          # the seed creates the database; the API then connects to it, runs the startup migrations and reports ready
+          for i in {1..60}; do
+            if docker logs comet-api 2>&1 | grep -q "ready to accept requests"; then
+              echo "API accepts requests"
+              exit 0
+            fi
+            echo "[$i/60] API not ready yet, retrying in 2 seconds..."
+            sleep 2
+          done
+          echo "::error::API did not report ready after seeding"
+          docker logs comet-api
+          exit 1
+
+      - name: Setup dotnet
+        uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore Dependencies for Integration Tests
+        run: dotnet restore integration-tests/IntegrationTestSuite/WebservicesIntegrationTests.sln
+
+      - name: Run Integration Tests
+        run: |
+          set +e
+          dotnet test integration-tests/IntegrationTestSuite/MessagePackIntegrationTests/MessagePackIntegrationTests.csproj \
+            --settings integration-tests/IntegrationTestSuite/.runsettings \
+            --logger "trx;LogFileName=msgpack_results.trx"
+          MESSAGEPACK_EXIT=$?
+          dotnet test integration-tests/IntegrationTestSuite/WebservicesIntegrationTests/WebservicesIntegrationTests.csproj \
+            --settings integration-tests/IntegrationTestSuite/.runsettings \
+            --logger "trx;LogFileName=test_results.trx"
+          WEBSERVICES_EXIT=$?
+          echo "MessagePackIntegrationTests exit code: $MESSAGEPACK_EXIT"
+          echo "WebservicesIntegrationTests exit code: $WEBSERVICES_EXIT"
+          [ $MESSAGEPACK_EXIT -eq 0 ] && [ $WEBSERVICES_EXIT -eq 0 ]
+
+      - name: Show API log
+        if: always()
+        run: docker logs comet-api > api.log 2>&1 || true
+
+      - name: Upload API log and test results
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: docker-integration-test-results
+          path: |
+            api.log
+            integration-tests/IntegrationTestSuite/**/TestResults/*.trx
