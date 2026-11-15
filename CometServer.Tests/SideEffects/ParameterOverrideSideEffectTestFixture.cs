@@ -30,8 +30,10 @@ namespace CometServer.Tests.SideEffects
     using System.Threading.Tasks;
 
     using CDP4Common.DTO;
+    using CDP4Common.Exceptions;
     using CDP4Common.Types;
 
+    using CometServer.Authorization;
     using CometServer.Services;
     using CometServer.Services.Authorization;
     using CometServer.Services.Operations.SideEffects;
@@ -123,6 +125,43 @@ namespace CometServer.Tests.SideEffects
                 .ReturnsAsync(new List<Thing> { this.parameter });
 
             this.valueSetService.Setup(x => x.GetShallowAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.Is<IEnumerable<Guid>>(y => y.Contains(this.valueset.Iid)), this.securityContext.Object)).ReturnsAsync([this.valueset]);
+        }
+
+        [Test]
+        public void VerifyThatCreateWithoutOwnerIsRejected()
+        {
+            var organizationalParticipationResolverService = new Mock<IOrganizationalParticipationResolverService>();
+            this.sideEffect.OrganizationalParticipationResolverService = organizationalParticipationResolverService.Object;
+
+            Assert.That(
+                async () => await this.sideEffect.BeforeCreateAsync(this.parameterOverride, this.elementUsage, this.npgsqlTransaction, "partition", this.securityContext.Object),
+                Throws.TypeOf<Cdp4ModelValidationException>().With.Message.Contains("'Owner'").And.Message.Contains(this.parameterOverride.Iid.ToString()));
+            organizationalParticipationResolverService.Verify(x => x.ValidateCreateOrganizationalParticipationAsync(It.IsAny<Thing>(), It.IsAny<Thing>(), It.IsAny<ISecurityContext>(), It.IsAny<NpgsqlTransaction>(), It.IsAny<string>()), Times.Never);
+        }
+
+        [Test]
+        public void VerifyThatCreateWithoutParameterIsRejected()
+        {
+            this.sideEffect.OrganizationalParticipationResolverService = new Mock<IOrganizationalParticipationResolverService>().Object;
+            this.parameterOverride.Owner = this.parameter.Owner;
+            this.parameterOverride.Parameter = Guid.Empty;
+
+            Assert.That(
+                async () => await this.sideEffect.BeforeCreateAsync(this.parameterOverride, this.elementUsage, this.npgsqlTransaction, "partition", this.securityContext.Object),
+                Throws.TypeOf<Cdp4ModelValidationException>().With.Message.Contains("'Parameter'").And.Message.Contains(this.parameterOverride.Iid.ToString()));
+        }
+
+        [Test]
+        public async Task VerifyThatCreateWithOwnerAndParameterIsAccepted()
+        {
+            var organizationalParticipationResolverService = new Mock<IOrganizationalParticipationResolverService>();
+            this.sideEffect.OrganizationalParticipationResolverService = organizationalParticipationResolverService.Object;
+            this.parameterOverride.Owner = this.parameter.Owner;
+
+            var result = await this.sideEffect.BeforeCreateAsync(this.parameterOverride, this.elementUsage, this.npgsqlTransaction, "partition", this.securityContext.Object);
+
+            Assert.That(result, Is.True);
+            organizationalParticipationResolverService.Verify(x => x.ValidateCreateOrganizationalParticipationAsync(this.parameterOverride, this.elementUsage, this.securityContext.Object, this.npgsqlTransaction, "partition"), Times.Once);
         }
 
         [Test]

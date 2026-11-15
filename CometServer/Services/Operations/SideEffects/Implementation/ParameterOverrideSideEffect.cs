@@ -32,6 +32,7 @@ namespace CometServer.Services.Operations.SideEffects
     using Authorization;
 
     using CDP4Common.DTO;
+    using CDP4Common.Exceptions;
 
     using Npgsql;
 
@@ -103,8 +104,23 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
+        /// <exception cref="Cdp4ModelValidationException">
+        /// If the mandatory <see cref="ParameterOverride.Owner"/> or <see cref="ParameterOverride.Parameter"/> is not set.
+        /// </exception>
         public override async Task<bool> BeforeCreateAsync(ParameterOverride thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
+            // the validation rules of the SDK do not check mandatory references, which are then only
+            // rejected by a foreign key violation of the database
+            if (thing.Owner == Guid.Empty)
+            {
+                throw new Cdp4ModelValidationException($"The 'Owner' property of 'ParameterOverride' with iid '{thing.Iid}' is mandatory and cannot be empty.");
+            }
+
+            if (thing.Parameter == Guid.Empty)
+            {
+                throw new Cdp4ModelValidationException($"The 'Parameter' property of 'ParameterOverride' with iid '{thing.Iid}' is mandatory and cannot be empty.");
+            }
+
             await this.OrganizationalParticipationResolverService.ValidateCreateOrganizationalParticipationAsync(thing, container, securityContext, transaction, partition);
 
             return true;
