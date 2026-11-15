@@ -62,7 +62,8 @@ jobs:
 
       - name: Start API container
         run: |
-          # the image ships the production settings; seed and restore are needed by the integration test suite
+          # the image ships the production settings; the integration test suite needs seed and restore,
+          # and expects the ModelLogEntry items that are only created when changes are collected
           docker run -d \
             --network comet \
             --name comet-api \
@@ -70,6 +71,7 @@ jobs:
             -e Backtier__HostName=comet-db \
             -e Backtier__IsDbSeedEnabled=true \
             -e Backtier__IsDbRestoreEnabled=true \
+            -e Changelog__CollectChanges=true \
             comet-webservices:test
 
       - name: Wait for API to become ready

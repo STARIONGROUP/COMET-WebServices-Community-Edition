@@ -50,7 +50,7 @@ jobs:
           channel="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}"
 
           # all tags of the form <channel>.<patch>-alpine3.<minor>; newest patch first, then newest Alpine
-          latest=$(curl -fsSL https://mcr.microsoft.com/v2/dotnet/aspnet/tags/list \
+          latest=$(curl -fsSL --proto '=https' --tlsv1.2 https://mcr.microsoft.com/v2/dotnet/aspnet/tags/list \
             | jq -r '.tags[]' \
             | grep -E "^${channel//./\\.}\.[0-9]+-alpine3\.[0-9]+$" \
             | sed -E 's/^[0-9]+\.[0-9]+\.([0-9]+)-alpine3\.([0-9]+)$/\1 \2 &/' \
@@ -83,7 +83,7 @@ jobs:
           fi
 
           runtime="${LATEST%%-*}"
-          security=$(curl -fsSL "https://builds.dotnet.microsoft.com/dotnet/release-metadata/$CHANNEL/releases.json" \
+          security=$(curl -fsSL --proto '=https' --tlsv1.2 "https://builds.dotnet.microsoft.com/dotnet/release-metadata/$CHANNEL/releases.json" \
             | jq -r --arg v "$runtime" '.releases[] | select(."release-version" == $v) | .security' || true)
           # the release metadata can be published later than the image
           security=${security:-unknown}
