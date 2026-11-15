@@ -1,0 +1,184 @@
+name: Docker Base Image Update
+
+# Checks whether Microsoft has published a newer servicing tag of the ASP.NET Core runtime image the
+# Dockerfile is based on (same .NET major.minor, newest patch and newest Alpine release). If so, it
+# opens a pull request against development that updates the FROM line, and runs the integration test
+# suite against an image built from that pull request. The result is reported on the pull request.
+#
+# .NET security releases ship on Patch Tuesday (the second Tuesday of the month); the weekly run on
+# Wednesday picks them up the next day, and also catches out-of-band releases.
+
+on:
+  schedule:
+    - cron: '0 6 * * 3'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docker-base-image-update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    name: Check for a newer base image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      statuses: write
+    outputs:
+      branch: ${{ steps.pr.outputs.branch }}
+      sha: ${{ steps.pr.outputs.sha }}
+      pr: ${{ steps.pr.outputs.pr }}
+    steps:
+      - name: Checkout development
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: development
+
+      - name: Find the newest base image tag
+        id: tag
+        run: |
+          set -euo pipefail
+          current=$(sed -nE 's#^FROM mcr\.microsoft\.com/dotnet/aspnet:([^ ]+).*#\1#p' Dockerfile)
+          if ! [[ "$current" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)-alpine3\.([0-9]+)$ ]]; then
+            echo "::error::unexpected base image tag '$current' in the Dockerfile"
+            exit 1
+          fi
+          channel="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}"
+
+          # all tags of the form <channel>.<patch>-alpine3.<minor>; newest patch first, then newest Alpine
+          latest=$(curl -fsSL --proto '=https' --tlsv1.2 https://mcr.microsoft.com/v2/dotnet/aspnet/tags/list \
+            | jq -r '.tags[]' \
+            | grep -E "^${channel//./\\.}\.[0-9]+-alpine3\.[0-9]+$" \
+            | sed -E 's/^[0-9]+\.[0-9]+\.([0-9]+)-alpine3\.([0-9]+)$/\1 \2 &/' \
+            | sort -k1,1n -k2,2n \
+            | tail -n 1 \
+            | cut -d' ' -f3)
+
+          echo "current=$current" >> "$GITHUB_OUTPUT"
+          echo "latest=$latest" >> "$GITHUB_OUTPUT"
+          echo "channel=$channel" >> "$GITHUB_OUTPUT"
+          echo "Dockerfile: aspnet:$current, newest available: aspnet:$latest"
+
+      - name: Create pull request
+        id: pr
+        if: steps.tag.outputs.latest != '' && steps.tag.outputs.latest != steps.tag.outputs.current
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CURRENT: ${{ steps.tag.outputs.current }}
+          LATEST: ${{ steps.tag.outputs.latest }}
+          CHANNEL: ${{ steps.tag.outputs.channel }}
+        run: |
+          set -euo pipefail
+          branch="docker-base-image/aspnet-$LATEST"
+
+          # a pull request for this tag, open or closed, means it has been proposed before
+          existing=$(gh pr list --head "$branch" --state all --json number --jq length)
+          if [ "$existing" != "0" ]; then
+            echo "A pull request for aspnet:$LATEST has already been opened"
+            exit 0
+          fi
+
+          runtime="${LATEST%%-*}"
+          security=$(curl -fsSL --proto '=https' --tlsv1.2 "https://builds.dotnet.microsoft.com/dotnet/release-metadata/$CHANNEL/releases.json" \
+            | jq -r --arg v "$runtime" '.releases[] | select(."release-version" == $v) | .security' || true)
+          # the release metadata can be published later than the image
+          security=${security:-unknown}
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898333+github-actions[bot]@users.noreply.github.com"
+
+          # a branch without a pull request is left over from an earlier run that failed after the push;
+          # its pull request is opened now
+          if git ls-remote --exit-code --heads origin "$branch" > /dev/null; then
+            echo "Branch $branch exists without a pull request, opening one for it"
+            git fetch origin "$branch"
+            git checkout -b "$branch" FETCH_HEAD
+          else
+            sed -i -E "s#^FROM mcr\.microsoft\.com/dotnet/aspnet:[^ ]+#FROM mcr.microsoft.com/dotnet/aspnet:$LATEST#" Dockerfile
+            git checkout -b "$branch"
+            git commit -am "[Bump]: Bump dotnet/aspnet from $CURRENT to $LATEST"
+            git push origin "$branch"
+          fi
+
+          body=$(cat <<EOF
+          Updates the Docker runtime base image from \`mcr.microsoft.com/dotnet/aspnet:$CURRENT\` to \`mcr.microsoft.com/dotnet/aspnet:$LATEST\`.
+
+          - .NET runtime: $runtime ([release notes](https://github.com/dotnet/core/blob/main/release-notes/$CHANNEL/$runtime/$runtime.md))
+          - Security release: $security
+
+          The integration test suite runs against an image built from this branch; the result is reported as the \`Docker image integration tests\` status and in a comment below.
+
+          After merging, publish a new image so operators get the updated runtime.
+
+          Opened by the [Docker Base Image Update](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) workflow.
+          EOF
+          )
+
+          url=$(gh pr create \
+            --base development \
+            --head "$branch" \
+            --title "[Bump]: Bump dotnet/aspnet from $CURRENT to $LATEST" \
+            --body "$body" \
+            --label devops)
+
+          echo "branch=$branch" >> "$GITHUB_OUTPUT"
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          echo "pr=${url##*/}" >> "$GITHUB_OUTPUT"
+
+      - name: Mark the integration tests as pending on the pull request
+        if: steps.pr.outputs.sha != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api "repos/${{ github.repository }}/statuses/${{ steps.pr.outputs.sha }}" \
+            -f state=pending \
+            -f context="Docker image integration tests" \
+            -f description="Running the integration test suite against the Docker image" \
+            -f target_url="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+  # A pull request opened with the GITHUB_TOKEN does not start pull_request workflows,
+  # so the integration tests are run from here and reported on the pull request below.
+  integration-tests:
+    name: Integration tests
+    needs: update
+    if: needs.update.outputs.sha != ''
+    uses: ./.github/workflows/docker-integration-tests.yml
+    with:
+      ref: ${{ needs.update.outputs.sha }}
+
+  report:
+    name: Report on the pull request
+    needs: [update, integration-tests]
+    if: always() && needs.update.outputs.sha != ''
+    runs-on: ubuntu-latest
+    permissions:
+      statuses: write
+      pull-requests: write
+    steps:
+      - name: Set status and comment
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RESULT: ${{ needs.integration-tests.result }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [ "$RESULT" = "success" ]; then
+            state=success
+            message="The integration test suite passed against the Docker image built from this branch."
+          else
+            state=failure
+            message="The integration test suite did not pass against the Docker image built from this branch (result: $RESULT)."
+          fi
+
+          gh api "repos/${{ github.repository }}/statuses/${{ needs.update.outputs.sha }}" \
+            -f state="$state" \
+            -f context="Docker image integration tests" \
+            -f description="Integration test suite: $RESULT" \
+            -f target_url="$RUN_URL"
+
+          gh pr comment "${{ needs.update.outputs.pr }}" \
+            --repo "${{ github.repository }}" \
+            --body "$message See the [workflow run]($RUN_URL) for the API log and test results."
