@@ -25,6 +25,7 @@
 
 namespace CDP4Orm.Dao.Cache
 {
+    using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Text;
@@ -70,6 +71,11 @@ namespace CDP4Orm.Dao.Cache
         private const string IidKey = "Iid";
 
         /// <summary>
+        /// The number of bind parameters used per <see cref="Thing" /> by <see cref="BulkWriteAsync" />
+        /// </summary>
+        private const int BulkWriteParametersPerThing = 3;
+
+        /// <summary>
         /// Gets or sets the file dao.
         /// </summary>
         public IFileDao FileDao { get; set; }
@@ -109,63 +115,70 @@ namespace CDP4Orm.Dao.Cache
         /// <param name="transaction">The current transaction</param>
         /// <param name="partition">The database partition (schema) where the requested resource is stored.</param>
         /// <param name="things">The collection of revised <see cref="Thing" />s</param>
+        /// <exception cref="ArgumentException">When <paramref name="things" /> contains more than one <see cref="Thing" /> with the same iid</exception>
         public async Task BulkWriteAsync(NpgsqlTransaction transaction, string partition, IReadOnlyCollection<Thing> things)
         {
+            // an INSERT ... ON CONFLICT DO UPDATE cannot affect the same row twice; reject duplicates up front so that
+            // the outcome does not depend on whether they end up in the same batch or in different batches
+            var duplicateIids = things.GroupBy(x => x.Iid).Where(g => g.Count() > 1).Select(g => g.Key).ToList();
+
+            if (duplicateIids.Count > 0)
+            {
+                throw new ArgumentException($"The things to write to the cache contain duplicate iids: {string.Join(", ", duplicateIids)}", nameof(things));
+            }
+
             var thingsGroupedByClasskind = things.GroupBy(x => x.ClassKind).ToDictionary(g => g.Key, g => g.ToList());
 
             foreach (var groupedThings in thingsGroupedByClasskind)
             {
                 var table = GetThingCacheTableName(groupedThings.Key);
-                var sqlQueryBuilder = new StringBuilder();
 
-                sqlQueryBuilder.Append($"INSERT INTO \"{partition}\".\"{table}\" (\"{IidKey}\", \"{RevisionColumnName}\", \"{JsonColumnName}\") VALUES ");
-
-                var parameters = new List<NpgsqlParameter>();
-
-                var index = 0;
-
-                foreach (var thing in groupedThings.Value)
+                // a single statement cannot hold more than Utils.MaximumParametersPerStatement bind parameters
+                foreach (var batch in Utils.ChunkByParameterLimit(groupedThings.Value, BulkWriteParametersPerThing))
                 {
-                    var iidParam = new NpgsqlParameter($"iid_{index}", NpgsqlDbType.Uuid) { Value = thing.Iid };
-                    var revisionParam = new NpgsqlParameter($"revision_{index}", NpgsqlDbType.Integer) { Value = thing.RevisionNumber };
-                    var jsonbParam = new NpgsqlParameter($"jsonb_{index}", NpgsqlDbType.Jsonb);
+                    var sqlQueryBuilder = new StringBuilder();
 
-                    var serializedJson = thing.ToJsonString();
+                    sqlQueryBuilder.Append($"INSERT INTO \"{partition}\".\"{table}\" (\"{IidKey}\", \"{RevisionColumnName}\", \"{JsonColumnName}\") VALUES ");
 
-                    if (string.IsNullOrWhiteSpace(serializedJson))
+                    var parameters = new List<NpgsqlParameter>(batch.Length * BulkWriteParametersPerThing);
+
+                    for (var index = 0; index < batch.Length; index++)
                     {
-                        serializedJson = "{}";
+                        var thing = batch[index];
+
+                        var serializedJson = thing.ToJsonString();
+
+                        if (string.IsNullOrWhiteSpace(serializedJson))
+                        {
+                            serializedJson = "{}";
+                        }
+
+                        parameters.Add(new NpgsqlParameter($"iid_{index}", NpgsqlDbType.Uuid) { Value = thing.Iid });
+                        parameters.Add(new NpgsqlParameter($"revision_{index}", NpgsqlDbType.Integer) { Value = thing.RevisionNumber });
+                        parameters.Add(new NpgsqlParameter($"jsonb_{index}", NpgsqlDbType.Jsonb) { Value = serializedJson });
+
+                        sqlQueryBuilder.Append($"(@iid_{index}, @revision_{index}, @jsonb_{index})");
+
+                        if (index < batch.Length - 1)
+                        {
+                            sqlQueryBuilder.Append(',');
+                        }
                     }
 
-                    jsonbParam.Value = serializedJson;
+                    sqlQueryBuilder.Append($" ON CONFLICT (\"{IidKey}\") DO UPDATE SET \"{RevisionColumnName}\"=EXCLUDED.\"{RevisionColumnName}\", \"{JsonColumnName}\"=EXCLUDED.\"{JsonColumnName}\";");
 
-                    parameters.Add(iidParam);
-                    parameters.Add(revisionParam);
-                    parameters.Add(jsonbParam);
+                    var sqlQuery = sqlQueryBuilder.ToString();
 
-                    sqlQueryBuilder.Append($"(@iid_{index}, @revision_{index}, @jsonb_{index})");
-
-                    if (thing != groupedThings.Value[^1])
+                    if (this.Logger.IsEnabled(LogLevel.Debug))
                     {
-                        sqlQueryBuilder.Append(',');
+                        this.Logger.LogDebug("Running insert command for Cache : {SqlQuery}", sqlQuery);
                     }
 
-                    index++;
+                    await using var command = new NpgsqlCommand(sqlQuery, transaction.Connection, transaction);
+
+                    command.Parameters.AddRange(parameters.ToArray());
+                    await command.ExecuteNonQueryAsync();
                 }
-
-                sqlQueryBuilder.Append($" ON CONFLICT (\"{IidKey}\") DO UPDATE SET \"{RevisionColumnName}\"=EXCLUDED.\"{RevisionColumnName}\", \"{JsonColumnName}\"=EXCLUDED.\"{JsonColumnName}\";");
-
-                var sqlQuery = sqlQueryBuilder.ToString();
-
-                if (this.Logger.IsEnabled(LogLevel.Debug))
-                {
-                    this.Logger.LogDebug("Running insert command for Cache : {SqlQuery}", sqlQuery);
-                }
-
-                await using var command = new NpgsqlCommand(sqlQuery, transaction.Connection, transaction);
-
-                command.Parameters.AddRange(parameters.ToArray());
-                await command.ExecuteNonQueryAsync();
             }
         }
 

@@ -524,10 +524,12 @@ namespace CometServer.Modules
             }
             catch (Exception ex)
             {
-                this.logger.LogError(ex, "{Request}:{RequestToken} - DataStore restored failed", request.QueryNameMethodPath(), requestToken);
+                // the data store is left without revision history and without a restore snapshot of this seed,
+                // so report the seed as failed instead of answering 200 with unusable data
+                this.logger.LogError(ex, "{Request}:{RequestToken} - Data store SEED failed", request.QueryNameMethodPath(), requestToken);
 
                 response.StatusCode = (int)HttpStatusCode.InternalServerError;
-                await response.AsJson("DataStore restored failed");
+                await response.AsJson($"Data store seed failed: {ex.Message}");
             }
         }
 
@@ -1518,7 +1520,10 @@ namespace CometServer.Modules
         /// <param name="engineeringModelSetupService">
         /// The <see cref="IEngineeringModelSetupService"/> used to manage engineering model setups
         /// </param>
-        private async Task CreateRevisionHistoryForEachEntryAsync(IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, IRevisionService revisionService, IPersonService personService, ISiteDirectoryService siteDirectoryService, IEngineeringModelSetupService engineeringModelSetupService)
+        /// <exception cref="Exception">
+        /// Any exception raised while the revision history is created, after the current transaction is rolled back
+        /// </exception>
+        internal async Task CreateRevisionHistoryForEachEntryAsync(IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, IRevisionService revisionService, IPersonService personService, ISiteDirectoryService siteDirectoryService, IEngineeringModelSetupService engineeringModelSetupService)
         {
             NpgsqlTransaction transaction = null;
 
@@ -1569,15 +1574,6 @@ namespace CometServer.Modules
                     await transaction.CommitAsync();
                 }
             }
-            catch (NpgsqlException ex)
-            {
-                if (transaction != null)
-                {
-                    await transactionManager.TryRollbackTransaction(transaction);
-                }
-
-                this.logger.LogError(ex, "Error occured during revision history creation");
-            }
             catch (Exception ex)
             {
                 if (transaction != null)
@@ -1586,6 +1582,9 @@ namespace CometServer.Modules
                 }
 
                 this.logger.LogError(ex, "Error occured during revision history creation");
+
+                // without revision history the seeded data cannot be read; the seed has to fail
+                throw;
             }
             finally
             {

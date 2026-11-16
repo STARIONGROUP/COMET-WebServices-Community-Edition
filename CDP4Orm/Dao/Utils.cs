@@ -68,6 +68,11 @@ namespace CDP4Orm.Dao
         public const string DateTimeUtcSerializationFormat = "yyyy'-'MM'-'dd'T'HH':'mm':'ss'.'fff'Z'";
 
         /// <summary>
+        /// The maximum number of bind parameters that a single PostgreSQL statement supports
+        /// </summary>
+        public const int MaximumParametersPerStatement = 65535;
+
+        /// <summary>
         /// The class kind key.
         /// </summary>
         private const string ClassKindKey = "ClassKind";
@@ -380,6 +385,27 @@ namespace CDP4Orm.Dao
         public static DtoInfo GetInfoPlaceholder(this ClasslessDTO classlessDto)
         {
             return new DtoInfo(classlessDto[ClassKindKey].ToString(), (Guid)classlessDto[IidKey]);
+        }
+
+        /// <summary>
+        /// Splits a collection of items, each of which is written with a fixed number of bind parameters,
+        /// into batches that each fit in one statement without exceeding <see cref="MaximumParametersPerStatement"/>
+        /// </summary>
+        /// <typeparam name="T">The type of the items</typeparam>
+        /// <param name="items">The items to split</param>
+        /// <param name="parametersPerItem">The number of bind parameters used to write one item</param>
+        /// <returns>The batches, in the order of <paramref name="items"/></returns>
+        /// <exception cref="ArgumentNullException">When <paramref name="items"/> is null</exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// When <paramref name="parametersPerItem"/> is smaller than 1 or larger than <see cref="MaximumParametersPerStatement"/>
+        /// </exception>
+        public static IEnumerable<T[]> ChunkByParameterLimit<T>(IEnumerable<T> items, int parametersPerItem)
+        {
+            ArgumentNullException.ThrowIfNull(items);
+            ArgumentOutOfRangeException.ThrowIfLessThan(parametersPerItem, 1);
+            ArgumentOutOfRangeException.ThrowIfGreaterThan(parametersPerItem, MaximumParametersPerStatement);
+
+            return items.Chunk(MaximumParametersPerStatement / parametersPerItem);
         }
     }
 }
