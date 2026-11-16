@@ -567,23 +567,12 @@ namespace CometServer.Modules
         /// </returns>
         protected async Task EnqueueCometTaskForPostRequestAsync(PostRequestData postRequestData, string requestToken, HttpResponse httpResponse, CometTask cometTask, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, IMetaInfoProvider metaInfoProvider, IOperationProcessor operationProcessor, IRevisionService revisionService, ICdp4JsonSerializer jsonSerializer, IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService, IModelCreatorManager modelCreatorManager)
         {
-            var longRunningCometTask = Task.Run(() =>
+            var completedWithinWaitTime = await WaitForCompletionAsync(
+                () => this.PostResponseDataAsync(postRequestData, requestToken, httpResponse, cometTask, requestUtils, transactionManager, credentialsService, headerInfoProvider, metaInfoProvider, operationProcessor, revisionService, jsonSerializer, messagePackSerializer, permissionInstanceFilterService, modelCreatorManager),
+                TimeSpan.FromSeconds(requestUtils.QueryParameters.WaitTime));
+
+            if (completedWithinWaitTime)
             {
-                var task = this.PostResponseDataAsync(postRequestData, requestToken, httpResponse, cometTask, requestUtils, transactionManager, credentialsService, headerInfoProvider, metaInfoProvider, operationProcessor, revisionService, jsonSerializer, messagePackSerializer, permissionInstanceFilterService, modelCreatorManager);
-
-                if (this.logger.IsEnabled(LogLevel.Trace))
-                {
-                    this.logger.LogTrace(task.IsCompletedSuccessfully.ToString());
-                }
-
-            });
-
-            var completedTask = await Task.WhenAny(longRunningCometTask, Task.Delay(TimeSpan.FromSeconds(requestUtils.QueryParameters.WaitTime)));
-
-            if (completedTask == longRunningCometTask)
-            {
-                await longRunningCometTask;
-
                 if (this.logger.IsEnabled(LogLevel.Information))
                 {
                     this.logger.LogInformation("The task {Id} for actor {Actor} completed within the requested wait time {WaitTime}", cometTask.Id, cometTask.Actor, requestUtils.QueryParameters.WaitTime);

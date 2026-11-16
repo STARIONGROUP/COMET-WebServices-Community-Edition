@@ -221,6 +221,7 @@ namespace CometServer.Modules
 
                     res.StatusCode = (int)HttpStatusCode.BadRequest;
                     await res.AsJson($"exception:{ex.Message}");
+                    return;
                 }
                 catch (Exception ex)
                 {
@@ -233,6 +234,7 @@ namespace CometServer.Modules
 
                     res.StatusCode = (int)HttpStatusCode.InternalServerError;
                     await res.AsJson($"exception:{ex.Message}");
+                    return;
                 }
 
                 if (postRequestData.IsMultiPart && requestUtils.QueryParameters.WaitTime > 0)
@@ -241,8 +243,10 @@ namespace CometServer.Modules
 
                     this.CometTaskService.AddOrUpdateTask(cometTask, finishedAt: DateTime.Now, statusKind: StatusKind.FAILED, error: "BAD REQUEST - a POST request may not have a wait time when it is multipart");
 
+                    // the request has been answered: it must not be processed as well
                     res.StatusCode = (int)HttpStatusCode.BadRequest;
                     await res.AsJson("a POST request may not have a wait time when it is multipart");
+                    return;
                 }
 
                 if (requestUtils.QueryParameters.WaitTime > 0)
@@ -924,33 +928,22 @@ namespace CometServer.Modules
         /// </returns>
         protected async Task EnqueueCometTaskForPostRequestAsync(PostRequestData postRequestData, string requestToken, HttpResponse httpResponse, CometTask cometTask, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, Services.IServiceProvider serviceProvider, IMetaInfoProvider metaInfoProvider, IOperationProcessor operationProcessor, IRevisionService revisionService, ICdp4JsonSerializer jsonSerializer, IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService, IChangeLogService changeLogService)
         {
-            var longRunningCometTask = Task.Run(() =>
+            var completedWithinWaitTime = await WaitForCompletionAsync(
+                () => this.PostResponseDataAsync(postRequestData, requestToken, httpResponse, cometTask, requestUtils, transactionManager, credentialsService, headerInfoProvider, serviceProvider, metaInfoProvider, operationProcessor, revisionService, jsonSerializer, messagePackSerializer, permissionInstanceFilterService, changeLogService),
+                TimeSpan.FromSeconds(requestUtils.QueryParameters.WaitTime));
+
+            if (completedWithinWaitTime)
             {
-                var task = this.PostResponseDataAsync(postRequestData, requestToken, httpResponse, cometTask, requestUtils, transactionManager, credentialsService, headerInfoProvider, serviceProvider, metaInfoProvider, operationProcessor, revisionService, jsonSerializer, messagePackSerializer, permissionInstanceFilterService, changeLogService);
-
-                if (this.logger.IsEnabled(LogLevel.Trace))
-                {
-                    this.logger.LogTrace(task.IsCompletedSuccessfully.ToString());
-                }
-
-            });
-
-            var completedTask = await Task.WhenAny(longRunningCometTask, Task.Delay(TimeSpan.FromSeconds(requestUtils.QueryParameters.WaitTime)));
-
-            if (completedTask == longRunningCometTask)
-            {
-                await longRunningCometTask;
-
                 if (this.logger.IsEnabled(LogLevel.Information))
                 {
-                    this.logger.LogInformation("The task {Id} for actor {Actor} completed within the requsted wait time {WaitTime}", cometTask.Id, cometTask.Actor, requestUtils.QueryParameters.WaitTime);
+                    this.logger.LogInformation("The task {Id} for actor {Actor} completed within the requested wait time {WaitTime}", cometTask.Id, cometTask.Actor, requestUtils.QueryParameters.WaitTime);
                 }
             }
             else
             {
                 if (this.logger.IsEnabled(LogLevel.Information))
                 {
-                    this.logger.LogInformation("The task {Id} for actor {Actor} did not complete within the requsted wait time {WaitTime}; the CometTask is returned.", cometTask.Id, cometTask.Actor, requestUtils.QueryParameters.WaitTime);
+                    this.logger.LogInformation("The task {Id} for actor {Actor} did not complete within the requested wait time {WaitTime}; the CometTask is returned.", cometTask.Id, cometTask.Actor, requestUtils.QueryParameters.WaitTime);
                 }
 
                 await httpResponse.AsJson(cometTask);

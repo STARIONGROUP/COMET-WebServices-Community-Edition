@@ -33,6 +33,7 @@ namespace CometServer.Modules
     using System.Net;
     using System.Net.Http;
     using System.Text;
+    using System.Threading;
     using System.Threading.Tasks;
 
     using Carter;
@@ -1177,6 +1178,68 @@ namespace CometServer.Modules
             this.CometTaskService.AddOrUpdateTask(cometTask);
 
             return cometTask;
+        }
+
+        /// <summary>
+        /// The longest time <see cref="WaitForCompletionAsync"/> waits. <see cref="Task.Delay(TimeSpan)"/> does not support
+        /// a delay of more than about 49 days and throws for it; this value is well within that limit.
+        /// </summary>
+        internal static readonly TimeSpan MaximumWaitTime = TimeSpan.FromMilliseconds(int.MaxValue);
+
+        /// <summary>
+        /// Starts the <paramref name="work"/> and waits until it has completed, but no longer than the <paramref name="waitTime"/>
+        /// </summary>
+        /// <param name="work">
+        /// The work to start. The <see cref="Task"/> it returns has to represent all of the work: this method waits for that
+        /// <see cref="Task"/>, not for the delegate to return
+        /// </param>
+        /// <param name="waitTime">
+        /// The maximum time to wait for the <paramref name="work"/> to complete
+        /// </param>
+        /// <returns>
+        /// true when the <paramref name="work"/> completed within the <paramref name="waitTime"/>, false when it is still running
+        /// </returns>
+        /// <remarks>
+        /// An exception of <paramref name="work"/> that completes within the <paramref name="waitTime"/> is rethrown.
+        /// A <paramref name="waitTime"/> longer than <see cref="MaximumWaitTime"/> is treated as <see cref="MaximumWaitTime"/>.
+        /// </remarks>
+        /// <exception cref="ArgumentNullException">
+        /// When <paramref name="work"/> is null
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// When <paramref name="waitTime"/> is negative. The <paramref name="work"/> is not started in that case.
+        /// </exception>
+        internal static async Task<bool> WaitForCompletionAsync(Func<Task> work, TimeSpan waitTime)
+        {
+            ArgumentNullException.ThrowIfNull(work);
+
+            // validate before the work is started: work that is running while this method throws is observed by nobody
+            ArgumentOutOfRangeException.ThrowIfLessThan(waitTime, TimeSpan.Zero);
+
+            if (waitTime > MaximumWaitTime)
+            {
+                waitTime = MaximumWaitTime;
+            }
+
+            // Task.Run(Func<Task>) returns a proxy for the task that the delegate returns, so it only completes when
+            // the work itself has completed. With an Action it would complete as soon as the work reaches its first await.
+            var workTask = Task.Run(work);
+
+            using var delayCancellation = new CancellationTokenSource();
+
+            var completedTask = await Task.WhenAny(workTask, Task.Delay(waitTime, delayCancellation.Token));
+
+            if (completedTask != workTask)
+            {
+                return false;
+            }
+
+            await delayCancellation.CancelAsync();
+
+            // observe the outcome of the work, an exception included
+            await workTask;
+
+            return true;
         }
 
         /// <summary>
