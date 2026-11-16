@@ -368,12 +368,14 @@ namespace CometServer.Services
 
                 zipFile.Password = password;
 
+                var engineeringModelFilePath = $"EngineeringModels/{engineeringModelSetup.EngineeringModelIid}/{engineeringModelSetup.EngineeringModelIid}.json";
+
                 if (this.Logger.IsEnabled(LogLevel.Debug))
                 {
-                    this.Logger.LogDebug("extracting Things from: EngineeringModels/{EngineeringModelIid}/{EngineeringModelIid}.json", engineeringModelSetup.EngineeringModelIid, engineeringModelSetup.EngineeringModelIid);
+                    this.Logger.LogDebug("extracting Things from: {EngineeringModelFilePath}", engineeringModelFilePath);
                 }
 
-                var engineeringModelZipEntry = zipFile.GetEntry($"EngineeringModels/{engineeringModelSetup.EngineeringModelIid}/{engineeringModelSetup.EngineeringModelIid}.json");
+                var engineeringModelZipEntry = zipFile.GetEntry(engineeringModelFilePath);
                 var engineeringModelItems = this.ReadInfoFromArchiveEntry(version, zipFile, engineeringModelZipEntry);
 
                 if (this.Logger.IsEnabled(LogLevel.Information))
