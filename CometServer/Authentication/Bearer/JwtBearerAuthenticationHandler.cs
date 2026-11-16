@@ -64,25 +64,6 @@ namespace CometServer.Authentication.Bearer
         /// <param name="options">The monitor for the options instance.</param>
         /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILoggerFactory" />.</param>
         /// <param name="encoder">The <see cref="T:System.Text.Encodings.Web.UrlEncoder" />.</param>
-        /// <param name="clock">The <see cref="T:Microsoft.AspNetCore.Authentication.ISystemClock" />.</param>
-        /// <param name="cometHasStartedService">
-        /// The (injected) <see cref="ICometHasStartedService" /> that is used to check whether CDP4-COMET is ready to start
-        /// accepting requests
-        /// </param>
-        /// <param name="appConfigService">The injected <see cref="IAppConfigService" /></param>
-        public JwtBearerAuthenticationHandler(IOptionsMonitor<JwtBearerOptions> options, ILoggerFactory logger, UrlEncoder encoder, ISystemClock clock,
-            ICometHasStartedService cometHasStartedService, IAppConfigService appConfigService) : base(options, logger, encoder, clock)
-        {
-            this.cometHasStartedService = cometHasStartedService;
-            this.appConfigService = appConfigService;
-        }
-
-        /// <summary>
-        /// Initializes a new instance of <see cref="JwtBearerAuthenticationHandler" />.
-        /// </summary>
-        /// <param name="options">The monitor for the options instance.</param>
-        /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILoggerFactory" />.</param>
-        /// <param name="encoder">The <see cref="T:System.Text.Encodings.Web.UrlEncoder" />.</param>
         /// <param name="cometHasStartedService">
         /// The (injected) <see cref="ICometHasStartedService" /> that is used to check whether CDP4-COMET is ready to start
         /// accepting requests
