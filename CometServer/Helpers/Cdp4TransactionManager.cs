@@ -27,6 +27,7 @@ namespace CometServer.Helpers
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Runtime.CompilerServices;
     using System.Text;
     using System.Threading.Tasks;
 
@@ -101,6 +102,13 @@ namespace CometServer.Helpers
         /// The list of connections to the PostgreSQL database.
         /// </summary>
         private readonly List<NpgsqlConnection> connections = [];
+
+        /// <summary>
+        /// The session instant that has been read from the database, per <see cref="NpgsqlTransaction"/>. The session
+        /// instant only changes when the temporal context of the transaction is set, at which point the remembered
+        /// value is removed, see <see cref="SetDefaultContextAsync"/> and <see cref="ApplyIterationContextAsync"/>.
+        /// </summary>
+        private readonly ConditionalWeakTable<NpgsqlTransaction, object> sessionInstants = new();
 
         /// <summary>
         /// The value indicating whether to use cache tables for retrieving the data.
@@ -248,7 +256,9 @@ namespace CometServer.Helpers
         }
 
         /// <summary>
-        /// Get the raw current session time instant value from the database.
+        /// Get the raw current session time instant value. The value is read from the database the first time
+        /// it is requested for a transaction and after the temporal context of that transaction has been set;
+        /// otherwise the remembered value is returned.
         /// </summary>
         /// <param name="transaction">
         /// The current transaction to the database.
@@ -257,6 +267,32 @@ namespace CometServer.Helpers
         /// The <see cref="object"/>.
         /// </returns>
         public async Task<object> GetRawSessionInstantAsync(NpgsqlTransaction transaction)
+        {
+            if (this.sessionInstants.TryGetValue(transaction, out var sessionInstant))
+            {
+                return sessionInstant;
+            }
+
+            sessionInstant = await this.ReadSessionInstantAsync(transaction);
+
+            if (sessionInstant != null)
+            {
+                this.sessionInstants.AddOrUpdate(transaction, sessionInstant);
+            }
+
+            return sessionInstant;
+        }
+
+        /// <summary>
+        /// Reads the raw current session time instant value from the database.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        /// <returns>
+        /// The <see cref="object"/>.
+        /// </returns>
+        internal virtual async Task<object> ReadSessionInstantAsync(NpgsqlTransaction transaction)
         {
             await using var command = new NpgsqlCommand(
                 "SELECT * FROM \"SiteDirectory\".\"get_session_instant\"();",
@@ -346,6 +382,25 @@ namespace CometServer.Helpers
         /// </param>
         public async Task SetDefaultContextAsync(NpgsqlTransaction transaction)
         {
+            try
+            {
+                await this.WriteDefaultContextAsync(transaction);
+            }
+            finally
+            {
+                this.sessionInstants.Remove(transaction);
+            }
+        }
+
+        /// <summary>
+        /// Writes the default temporal context to the transaction info table.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        /// <returns>An awaitable <see cref="Task"/></returns>
+        internal virtual async Task WriteDefaultContextAsync(NpgsqlTransaction transaction)
+        {
             var sql = $"UPDATE {TransactionInfoTable} SET ({PeriodStartColumn}, {PeriodEndColumn}) = ('-infinity', 'infinity');";
 
             await using var command = new NpgsqlCommand(sql, transaction.Connection, transaction);
@@ -384,7 +439,7 @@ namespace CometServer.Helpers
         /// </param>
         public Task SetIterationContextAsync(NpgsqlTransaction transaction, string partition)
         {
-            return ApplyIterationContextAsync(transaction, partition, this.IterationSetup);
+            return this.ApplyIterationContextAsync(transaction, partition, this.IterationSetup);
         }
 
         /// <summary>
@@ -419,6 +474,25 @@ namespace CometServer.Helpers
         /// </returns>
         private async Task<NpgsqlTransaction> GetTransactionAsync(Credentials credentials)
         {
+            var transaction = await this.CreateTransactionAsync(credentials);
+
+            // Npgsql can hand out the same NpgsqlTransaction object again for a later transaction
+            this.sessionInstants.Remove(transaction);
+
+            return transaction;
+        }
+
+        /// <summary>
+        /// Opens a new connection, begins a transaction on it and creates the transaction info table and its entry.
+        /// </summary>
+        /// <param name="credentials">
+        /// The <see cref="Credentials"/> used to perform authentication and authorization
+        /// </param>
+        /// <returns>
+        /// The new <see cref="NpgsqlTransaction"/>.
+        /// </returns>
+        internal virtual async Task<NpgsqlTransaction> CreateTransactionAsync(Credentials credentials)
+        {
             var transaction = await this.SetupNewTransactionAsync();
             await CreateTransactionInfoTable(transaction);
             await CreateDefaultTransactionInfoEntry(transaction, credentials);
@@ -438,14 +512,40 @@ namespace CometServer.Helpers
         /// <param name="iterationSetup">
         /// The iteration Setup.
         /// </param>
-        private static async Task ApplyIterationContextAsync(NpgsqlTransaction transaction, string partition, IterationSetup iterationSetup)
+        private async Task ApplyIterationContextAsync(NpgsqlTransaction transaction, string partition, IterationSetup iterationSetup)
         {
             if (iterationSetup == null)
             {
                 // skip function as the iteration was not set
                 return;
             }
-            
+
+            try
+            {
+                await this.WriteIterationContextAsync(transaction, partition, iterationSetup);
+            }
+            finally
+            {
+                // the new period end is computed in SQL, the session instant has to be read again
+                this.sessionInstants.Remove(transaction);
+            }
+        }
+
+        /// <summary>
+        /// Writes the temporal context of the iteration to the transaction info table.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource is stored.
+        /// </param>
+        /// <param name="iterationSetup">
+        /// The iteration Setup.
+        /// </param>
+        /// <returns>An awaitable <see cref="Task"/></returns>
+        internal virtual async Task WriteIterationContextAsync(NpgsqlTransaction transaction, string partition, IterationSetup iterationSetup)
+        {
             var sqlBuilder = new StringBuilder();
             sqlBuilder.AppendFormat("UPDATE {0} SET ({1}, {2}) =", TransactionInfoTable, PeriodStartColumn, PeriodEndColumn);
             sqlBuilder.Append(" (SELECT \"ValidFrom\", \"ValidTo\"");
