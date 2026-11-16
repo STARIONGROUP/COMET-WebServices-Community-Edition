@@ -1283,7 +1283,7 @@ namespace CometServer.Services.Operations
                                             if (this.Logger.IsEnabled(LogLevel.Information))
                                             {
                                                 this.Logger.LogInformation(
-                                                    "The containment change of item '{PropInfoTypeName}' with iid: '{ContainedIid}' to container '{resolvedInfo.InstanceInfo.TypeName}' with '{resolvedInfo.InstanceInfo.Iid}' could not be performed.",
+                                                    "The containment change of item '{PropInfoTypeName}' with iid: '{ContainedIid}' to container '{ContainerTypeName}' with '{ContainerIid}' could not be performed.",
                                                     propInfo.TypeName,
                                                     containedIid,
                                                     resolvedInfo.InstanceInfo.TypeName,
