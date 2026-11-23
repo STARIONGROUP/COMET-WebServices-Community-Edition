@@ -83,8 +83,14 @@ namespace CDP4Orm.Dao
         }
 
         /// <summary>
-        /// Deletes all things of the "current" tables
+        /// Deletes all things of the "current" tables and ends the validity of their open insert audit records
         /// </summary>
+        /// <remarks>
+        /// The delete runs with the user triggers disabled, so no delete audit record is written and the insert audit record
+        /// of every deleted row stays open (ValidTo = infinity). When the rows are inserted again from the audit data, a second
+        /// open insert audit record is written, and the actor join of the DAO read queries then returns a Thing once per actor.
+        /// Insert audit records are not used for time-travel reads, so ending them only affects the Actor resolution.
+        /// </remarks>
         /// <param name="transaction">The current transaction</param>
         /// <param name="partition">The iteration partition</param>
         public async Task DeleteAllIterationThingsAsync(NpgsqlTransaction transaction, string partition)
@@ -99,6 +105,11 @@ namespace CDP4Orm.Dao
             var sqlBuilder = new StringBuilder();
 
             sqlBuilder.AppendFormat("DELETE FROM \"{0}\".\"Thing\";", partition);
+
+            sqlBuilder.Append("DO $$ DECLARE audit_table record; BEGIN");
+            sqlBuilder.AppendFormat(" FOR audit_table IN SELECT table_name FROM information_schema.tables WHERE table_schema = '{0}' AND table_name LIKE '%\\_Audit' LOOP", partition);
+            sqlBuilder.AppendFormat(" EXECUTE format('UPDATE %I.%I SET \"ValidTo\" = \"SiteDirectory\".get_transaction_time() WHERE \"Action\" = ''I'' AND \"ValidTo\" = ''infinity''', '{0}', audit_table.table_name);", partition);
+            sqlBuilder.Append(" END LOOP; END $$;");
 
             command.CommandText = sqlBuilder.ToString();
             command.Connection = transaction.Connection;

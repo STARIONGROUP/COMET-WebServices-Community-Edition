@@ -66,7 +66,7 @@ namespace CDP4Orm.Dao
         Task ModifyUserTriggerAsync(NpgsqlTransaction transaction, string sourcePartition, bool enable);
 
         /// <summary>
-        /// Deletes all things of the "current" tables
+        /// Deletes all things of the "current" tables and ends the validity of their open insert audit records
         /// </summary>
         /// <param name="transaction">The current transaction</param>
         /// <param name="partition">The iteration partition</param>
