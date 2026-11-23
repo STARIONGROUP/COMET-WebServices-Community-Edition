@@ -244,14 +244,17 @@ namespace CometServer.IntegrationTests.EngineeringModel
                 AssertEquivalent(thirdIteration, firstIteration);
                 await AssertSingleOpenInsertAuditEntryAsync(EngineeringModelIid);
 
-                // jane stays the creator of her things, that are not replayed; the replayed thing she renamed keeps its
-                // original insert entry and gets one of the person that created the iteration
+                // jane stays the creator of her things, that are not replayed, and their insert entry stays open; the
+                // replayed thing she renamed keeps its original insert entry and gets an open one of the person that
+                // created the iteration
                 var adminPersonIid = await GetPersonIidAsync(CometServerTestEnvironment.AdminUserName);
 
                 await Assert.MultipleAsync(async () =>
                 {
                     Assert.That(await GetCreatorsAsync(EngineeringModelIid, "ElementDefinition", janeElementDefinitionIid), Is.EqualTo(new Guid?[] { janePersonIid }));
                     Assert.That(await GetCreatorsAsync(EngineeringModelIid, "ElementUsage", janeElementUsageIid), Is.EqualTo(new Guid?[] { janePersonIid }));
+                    Assert.That(await GetCreatorsAsync(EngineeringModelIid, "ElementDefinition", janeElementDefinitionIid, true), Is.EqualTo(new Guid?[] { janePersonIid }), "the Actor of a thing that is not replayed changed");
+                    Assert.That(await GetCreatorsAsync(EngineeringModelIid, "ElementUsage", janeElementUsageIid, true), Is.EqualTo(new Guid?[] { janePersonIid }), "the Actor of a thing that is not replayed changed");
                     Assert.That(await GetCreatorsAsync(EngineeringModelIid, "ElementDefinition", TestTwoElementDefinitionIid), Is.EqualTo(renamedCreatorsBefore.Append(adminPersonIid)));
                     Assert.That(await GetCreatorsAsync(EngineeringModelIid, "ElementDefinition", TestTwoElementDefinitionIid, true), Is.EqualTo(new Guid?[] { adminPersonIid }));
                     Assert.That(definedThingAuditBefore.Any(x => x.StartsWith($"{TestTwoElementDefinitionIid}|U|") && x.EndsWith($"|{janePersonIid}")), Is.True, "the rename by jane is not in the audit trail");

@@ -58,17 +58,19 @@ namespace CometServer.IntegrationTests.EngineeringModel
 
             this.Iids = things.Select(x => x["iid"].Value<string>()).ToList();
             this.Things = things.Where(x => x["classKind"].Value<string>() != "Iteration").ToList();
-            this.Iteration = things.Single(x => x["classKind"].Value<string>() == "Iteration");
+            // duplicate things are tolerated here (the first one is used), so that a test reports them through Iids
+            this.Iteration = things.First(x => x["classKind"].Value<string>() == "Iteration");
 
             var excluded = GetThingsNotCarriedOver(things);
 
             this.Normalized = things
                 .Where(x => !excluded.Contains(x["iid"].Value<string>()))
+                .GroupBy(x => x["classKind"].Value<string>() == "Iteration" ? "Iteration" : x["iid"].Value<string>())
                 .ToDictionary(
-                    x => x["classKind"].Value<string>() == "Iteration" ? "Iteration" : x["iid"].Value<string>(),
-                    x => x["classKind"].Value<string>() == "Iteration"
-                        ? Normalize(x, IgnoredThingProperties.Concat(IgnoredIterationProperties), excluded)
-                        : Normalize(x, IgnoredThingProperties));
+                    x => x.Key,
+                    x => x.Key == "Iteration"
+                        ? Normalize(x.First(), IgnoredThingProperties.Concat(IgnoredIterationProperties), excluded)
+                        : Normalize(x.First(), IgnoredThingProperties));
         }
 
         /// <summary>
@@ -98,7 +100,7 @@ namespace CometServer.IntegrationTests.EngineeringModel
         /// <returns>The thing or null</returns>
         public JObject Get(Guid iid)
         {
-            return this.Things.SingleOrDefault(x => x["iid"].Value<string>() == iid.ToString());
+            return this.Things.FirstOrDefault(x => x["iid"].Value<string>() == iid.ToString());
         }
 
         /// <summary>

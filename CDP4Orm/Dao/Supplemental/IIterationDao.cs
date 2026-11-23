@@ -37,7 +37,8 @@ namespace CDP4Orm.Dao
     public partial interface IIterationDao
     {
         /// <summary>
-        /// Insert data in the "current" tables using the audit table data at a specific <paramref name="instant"/>
+        /// Insert data in the "current" tables using the audit table data at a specific <paramref name="instant"/>, and end
+        /// the validity of the earlier open insert audit records of the inserted rows
         /// </summary>
         /// <param name="transaction">The current transaction</param>
         /// <param name="partition">The current partition</param>
@@ -66,7 +67,7 @@ namespace CDP4Orm.Dao
         Task ModifyUserTriggerAsync(NpgsqlTransaction transaction, string sourcePartition, bool enable);
 
         /// <summary>
-        /// Deletes all things of the "current" tables and ends the validity of their open insert audit records
+        /// Deletes all things of the "current" tables
         /// </summary>
         /// <param name="transaction">The current transaction</param>
         /// <param name="partition">The iteration partition</param>
