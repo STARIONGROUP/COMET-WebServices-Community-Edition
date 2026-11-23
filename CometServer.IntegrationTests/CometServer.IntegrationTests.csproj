@@ -1,0 +1,58 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Company>Starion Group S.A.</Company>
+    <Title>CometServer-CE.IntegrationTests</Title>
+    <Description>Integration tests for the Comet Server that run the REST API in-process against a PostgreSQL database in a Docker container (Testcontainers)</Description>
+    <Copyright>Copyright © Starion Group S.A.</Copyright>
+    <Configurations>Debug;Release</Configurations>
+    <LangVersion>latest</LangVersion>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="10.0.15" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.12.0" />
+    <PackageReference Include="nunit" Version="5.0.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="6.3.1">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Testcontainers.PostgreSql" Version="4.16.0" />
+
+    <PackageReference Include="coverlet.collector" Version="10.1.0">
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="coverlet.msbuild" Version="10.1.0">
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CometServer\CometServer.csproj" />
+    <!-- the authentication plugin is loaded at runtime from the Authentication folder, it must not be referenced as an assembly -->
+    <ProjectReference Include="..\CDP4DatabaseAuthentication\CDP4DatabaseAuthentication.csproj" ReferenceOutputAssembly="false" Private="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="appsettings.IntegrationTests.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <!-- the ECSS-E-TM-10-25 Annex C.3 seed data shared with the unit tests and the external integration test suite -->
+    <None Include="..\CometServer.Tests\Data\Data.zip" Link="Data\Data.zip">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <!-- mirror the CopyAuthenticationPlugins target of CometServer.csproj so that the in-process server can authenticate -->
+  <Target Name="CopyAuthenticationPlugins" AfterTargets="Build">
+    <ItemGroup>
+      <CDP4DatabaseAuthentication Include="$(ProjectDir)..\CDP4DatabaseAuthentication\bin\$(Configuration)\CDP4DatabaseAuthentication.dll;$(ProjectDir)..\CDP4DatabaseAuthentication\bin\$(Configuration)\config.json" />
+    </ItemGroup>
+    <Copy SourceFiles="@(CDP4DatabaseAuthentication)" DestinationFolder="$(TargetDir)\Authentication\CDP4Database" />
+  </Target>
+
+</Project>
