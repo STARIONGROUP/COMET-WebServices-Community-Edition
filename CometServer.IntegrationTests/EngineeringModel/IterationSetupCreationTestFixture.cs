@@ -138,15 +138,13 @@ namespace CometServer.IntegrationTests.EngineeringModel
 
                 await AssertSingleOpenInsertAuditEntryAsync(EngineeringModelIid);
 
-                // the insert entry of jane is kept, the replayed things are resolved with the person that created the iteration
-                var adminPersonIid = await GetPersonIidAsync(CometServerTestEnvironment.AdminUserName);
-
+                // jane stays the creator of the replayed things: her insert entry is the only one and stays open
                 await Assert.MultipleAsync(async () =>
                 {
-                    Assert.That(await GetCreatorsAsync(EngineeringModelIid, "ElementDefinition", elementDefinitionIid), Is.EqualTo(new Guid?[] { janePersonIid, adminPersonIid }));
-                    Assert.That(await GetCreatorsAsync(EngineeringModelIid, "ElementUsage", elementUsageIid), Is.EqualTo(new Guid?[] { janePersonIid, adminPersonIid }));
-                    Assert.That(await GetCreatorsAsync(EngineeringModelIid, "ElementDefinition", elementDefinitionIid, true), Is.EqualTo(new Guid?[] { adminPersonIid }));
-                    Assert.That(await GetCreatorsAsync(EngineeringModelIid, "ElementUsage", elementUsageIid, true), Is.EqualTo(new Guid?[] { adminPersonIid }));
+                    Assert.That(await GetCreatorsAsync(EngineeringModelIid, "ElementDefinition", elementDefinitionIid), Is.EqualTo(new Guid?[] { janePersonIid }));
+                    Assert.That(await GetCreatorsAsync(EngineeringModelIid, "ElementUsage", elementUsageIid), Is.EqualTo(new Guid?[] { janePersonIid }));
+                    Assert.That(await GetCreatorsAsync(EngineeringModelIid, "ElementDefinition", elementDefinitionIid, true), Is.EqualTo(new Guid?[] { janePersonIid }));
+                    Assert.That(await GetCreatorsAsync(EngineeringModelIid, "ElementUsage", elementUsageIid, true), Is.EqualTo(new Guid?[] { janePersonIid }));
                 });
             }
         }
@@ -224,8 +222,7 @@ namespace CometServer.IntegrationTests.EngineeringModel
                     Assert.That(ToSortedJson(firstIterationAfter), Is.EqualTo(ToSortedJson(firstIterationBefore)), "the first iteration changed");
                     Assert.That(ToSortedJson(secondIterationAfter), Is.EqualTo(ToSortedJson(secondIterationBefore)), "the second iteration changed");
 
-                    // the entries written by jane and the admin before are all kept: only the end of validity of an insert
-                    // entry is set when its row is replayed, which GetAuditTrailAsync leaves out
+                    // the entries written by jane and the admin before are all kept unchanged
                     Assert.That(elementDefinitionAuditAfter, Is.SupersetOf(elementDefinitionAuditBefore), "ElementDefinition audit entries were changed or lost");
                     Assert.That(elementUsageAuditAfter, Is.SupersetOf(elementUsageAuditBefore), "ElementUsage audit entries were changed or lost");
                     Assert.That(definedThingAuditAfter, Is.SupersetOf(definedThingAuditBefore), "DefinedThing audit entries were changed or lost");
@@ -244,19 +241,16 @@ namespace CometServer.IntegrationTests.EngineeringModel
                 AssertEquivalent(thirdIteration, firstIteration);
                 await AssertSingleOpenInsertAuditEntryAsync(EngineeringModelIid);
 
-                // jane stays the creator of her things, that are not replayed, and their insert entry stays open; the
-                // replayed thing she renamed keeps its original insert entry and gets an open one of the person that
-                // created the iteration
-                var adminPersonIid = await GetPersonIidAsync(CometServerTestEnvironment.AdminUserName);
-
+                // jane stays the creator of her things, that are not replayed, and the replayed thing she renamed keeps
+                // its original insert entry, which stays open
                 await Assert.MultipleAsync(async () =>
                 {
                     Assert.That(await GetCreatorsAsync(EngineeringModelIid, "ElementDefinition", janeElementDefinitionIid), Is.EqualTo(new Guid?[] { janePersonIid }));
                     Assert.That(await GetCreatorsAsync(EngineeringModelIid, "ElementUsage", janeElementUsageIid), Is.EqualTo(new Guid?[] { janePersonIid }));
                     Assert.That(await GetCreatorsAsync(EngineeringModelIid, "ElementDefinition", janeElementDefinitionIid, true), Is.EqualTo(new Guid?[] { janePersonIid }), "the Actor of a thing that is not replayed changed");
                     Assert.That(await GetCreatorsAsync(EngineeringModelIid, "ElementUsage", janeElementUsageIid, true), Is.EqualTo(new Guid?[] { janePersonIid }), "the Actor of a thing that is not replayed changed");
-                    Assert.That(await GetCreatorsAsync(EngineeringModelIid, "ElementDefinition", TestTwoElementDefinitionIid), Is.EqualTo(renamedCreatorsBefore.Append(adminPersonIid)));
-                    Assert.That(await GetCreatorsAsync(EngineeringModelIid, "ElementDefinition", TestTwoElementDefinitionIid, true), Is.EqualTo(new Guid?[] { adminPersonIid }));
+                    Assert.That(await GetCreatorsAsync(EngineeringModelIid, "ElementDefinition", TestTwoElementDefinitionIid), Is.EqualTo(renamedCreatorsBefore));
+                    Assert.That(await GetCreatorsAsync(EngineeringModelIid, "ElementDefinition", TestTwoElementDefinitionIid, true), Is.EqualTo(renamedCreatorsBefore), "the Actor of a replayed thing changed");
                     Assert.That(definedThingAuditBefore.Any(x => x.StartsWith($"{TestTwoElementDefinitionIid}|U|") && x.EndsWith($"|{janePersonIid}")), Is.True, "the rename by jane is not in the audit trail");
                     Assert.That(elementUsageAuditBefore.Any(x => x.StartsWith($"{TestElementUsageTwoIid}|D|") && x.EndsWith($"|{janePersonIid}")), Is.True, "the deletion by jane is not in the audit trail");
                 });
@@ -584,8 +578,7 @@ namespace CometServer.IntegrationTests.EngineeringModel
         /// Gets the audit trail (all audit entries) of things in the iteration partition
         /// </summary>
         /// <returns>
-        /// The audit entries, formatted as "Iid|Action|ValidFrom|ValidTo|Actor". The ValidTo of an insert entry is left out
-        /// ("*"), as it is set when the row is replayed into an iteration created from an older iteration.
+        /// The audit entries, formatted as "Iid|Action|ValidFrom|ValidTo|Actor"
         /// </returns>
         private static async Task<string[]> GetAuditTrailAsync(Guid engineeringModelIid, string classKind, IEnumerable<Guid> iids)
         {
@@ -608,7 +601,7 @@ namespace CometServer.IntegrationTests.EngineeringModel
                 var action = reader.GetString(1);
                 var validTo = reader.GetFieldValue<DateTime>(3);
                 var actor = reader.IsDBNull(4) ? "null" : reader.GetGuid(4).ToString();
-                var formattedValidTo = action == "I" ? "*" : validTo == DateTime.MaxValue ? "infinity" : validTo.ToString("o");
+                var formattedValidTo = validTo == DateTime.MaxValue ? "infinity" : validTo.ToString("o");
 
                 entries.Add($"{reader.GetGuid(0)}|{action}|{reader.GetFieldValue<DateTime>(2):o}|{formattedValidTo}|{actor}");
             }

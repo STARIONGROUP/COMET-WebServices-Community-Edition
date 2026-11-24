@@ -37,8 +37,8 @@ namespace CDP4Orm.Dao
     public partial interface IIterationDao
     {
         /// <summary>
-        /// Insert data in the "current" tables using the audit table data at a specific <paramref name="instant"/>, and end
-        /// the validity of the earlier open insert audit records of the inserted rows
+        /// Insert data in the "current" tables using the audit table data at a specific <paramref name="instant"/>, keeping
+        /// the original open insert audit record (and so the Actor) of the inserted rows
         /// </summary>
         /// <param name="transaction">The current transaction</param>
         /// <param name="partition">The current partition</param>
