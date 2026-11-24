@@ -185,7 +185,7 @@ namespace CometServer.Services.Operations.SideEffects
                 }
                 else
                 {
-                        await this.IterationService.PopulateDataFromLastIterationAsync(transaction, iterationPartition, thing, sourceIterationSetup, engineeringModel, securityContext);
+                    await this.IterationService.PopulateDataFromLastIterationAsync(transaction, iterationPartition, thing, sourceIterationSetup, engineeringModel, securityContext);
                 }
             }
             else if (sourceIterationSetups.Count > 0)
