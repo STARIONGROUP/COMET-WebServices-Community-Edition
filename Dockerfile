@@ -1,5 +1,6 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build-env
 WORKDIR /app
+COPY Directory.Build.props Directory.Packages.props ./
 COPY CDP4Authentication CDP4Authentication
 COPY CDP4DatabaseAuthentication CDP4DatabaseAuthentication
 COPY CDP4WspDatabaseAuthentication CDP4WspDatabaseAuthentication
