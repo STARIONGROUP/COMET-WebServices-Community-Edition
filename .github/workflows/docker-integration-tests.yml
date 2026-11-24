@@ -121,18 +121,22 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
+      # The suite is checked out inside this repository: keep MSBuild from applying this repository's
+      # Directory.Build.props and Directory.Packages.props (central package management) to its projects
       - name: Restore Dependencies for Integration Tests
-        run: dotnet restore integration-tests/IntegrationTestSuite/WebservicesIntegrationTests.sln
+        run: dotnet restore integration-tests/IntegrationTestSuite/WebservicesIntegrationTests.sln -p:ImportDirectoryBuildProps=false -p:ImportDirectoryPackagesProps=false
 
       - name: Run Integration Tests
         run: |
           set +e
           dotnet test integration-tests/IntegrationTestSuite/MessagePackIntegrationTests/MessagePackIntegrationTests.csproj \
             --settings integration-tests/IntegrationTestSuite/.runsettings \
+            -p:ImportDirectoryBuildProps=false -p:ImportDirectoryPackagesProps=false \
             --logger "trx;LogFileName=msgpack_results.trx"
           MESSAGEPACK_EXIT=$?
           dotnet test integration-tests/IntegrationTestSuite/WebservicesIntegrationTests/WebservicesIntegrationTests.csproj \
             --settings integration-tests/IntegrationTestSuite/.runsettings \
+            -p:ImportDirectoryBuildProps=false -p:ImportDirectoryPackagesProps=false \
             --logger "trx;LogFileName=test_results.trx"
           WEBSERVICES_EXIT=$?
           echo "MessagePackIntegrationTests exit code: $MESSAGEPACK_EXIT"

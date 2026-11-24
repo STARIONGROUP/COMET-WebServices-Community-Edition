@@ -1,0 +1,45 @@
+<Project>
+
+  <!--
+    Build properties shared by every project in the solution. A project only sets a property in its own
+    .csproj when it differs from the value here (e.g. the Version of VersionFileCreator).
+    NuGet package versions are managed centrally in Directory.Packages.props.
+  -->
+
+  <PropertyGroup>
+    <IsCometTestProject>$(MSBuildProjectName.EndsWith('.Tests'))</IsCometTestProject>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Configurations>Debug;Release</Configurations>
+    <Company>Starion Group S.A.</Company>
+    <Copyright>Copyright © Starion Group S.A.</Copyright>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(IsCometTestProject)' != 'true'">
+    <Version>11.0.0-RC3</Version>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(IsCometTestProject)' == 'true'">
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="Moq" />
+    <PackageReference Include="NUnit" />
+    <PackageReference Include="NUnit.Console" />
+    <PackageReference Include="NUnit3TestAdapter">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="coverlet.collector">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="coverlet.msbuild">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+</Project>

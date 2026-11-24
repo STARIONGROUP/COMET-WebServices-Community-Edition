@@ -1,48 +1,41 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <Company>Starion Group S.A.</Company>
     <Title>CometServer-CE</Title>
-    <Version>11.0.0-RC3</Version>
     <Description>CDP4-COMET Services API</Description>
-    <Copyright>Copyright © Starion Group S.A.</Copyright>
     <PackageLicenseExpression>AGPL-3.0-only</PackageLicenseExpression>
-    <Configurations>Debug;Release</Configurations>
     <RepositoryType>Git</RepositoryType>
     <RepositoryUrl>https://github.com/STARIONGROUP/COMET-WebServices-Community-Edition.git</RepositoryUrl>
-    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <LangVersion>latest</LangVersion>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
     <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="11.0.2" />
-    <PackageReference Include="Carter" Version="10.0.0" />
-    <PackageReference Include="CDP4MessagePackSerializer-CE" Version="30.2.0" />
-    <PackageReference Include="CDP4ServicesMessaging-CE" Version="30.2.0" />
-    <PackageReference Include="FluentResults" Version="4.0.0" />
-    <PackageReference Include="FluentValidation" Version="12.2.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.Negotiate" Version="10.0.15" />
-    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.15" />
-    <PackageReference Include="Hangfire.Core" Version="1.8.25" />
-    <PackageReference Include="Hangfire.AspNetCore" Version="1.8.25" />
-    <PackageReference Include="HangFire.Autofac" Version="2.7.0" />
-    <PackageReference Include="Hangfire.MemoryStorage" Version="1.8.1.2" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.15" />
-    <PackageReference Include="prometheus-net.AspNetCore" Version="8.2.1" />
-    <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
-    <PackageReference Include="Serilog.Enrichers.Environment" Version="3.0.1" />
-    <PackageReference Include="Serilog.Enrichers.Process" Version="3.0.0" />
-    <PackageReference Include="Serilog.Enrichers.Thread" Version="4.0.0" />
-    <PackageReference Include="Serilog.Sinks.Async" Version="2.1.0" />
-    <PackageReference Include="Serilog.Sinks.Grafana.Loki" Version="9.0.2" />
-    <PackageReference Include="SharpZipLib" Version="1.4.2" />
-    <PackageReference Include="System.Configuration.ConfigurationManager" Version="10.0.15" />
-    <PackageReference Include="System.Resources.Extensions" Version="10.0.15" />
-    <PackageReference Include="MailKit" Version="5.0.0" />
+    <PackageReference Include="Autofac.Extensions.DependencyInjection" />
+    <PackageReference Include="Carter" />
+    <PackageReference Include="CDP4MessagePackSerializer-CE" />
+    <PackageReference Include="CDP4ServicesMessaging-CE" />
+    <PackageReference Include="FluentResults" />
+    <PackageReference Include="FluentValidation" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Negotiate" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" />
+    <PackageReference Include="Hangfire.Core" />
+    <PackageReference Include="Hangfire.AspNetCore" />
+    <PackageReference Include="HangFire.Autofac" />
+    <PackageReference Include="Hangfire.MemoryStorage" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
+    <PackageReference Include="prometheus-net.AspNetCore" />
+    <PackageReference Include="Serilog.AspNetCore" />
+    <PackageReference Include="Serilog.Enrichers.Environment" />
+    <PackageReference Include="Serilog.Enrichers.Process" />
+    <PackageReference Include="Serilog.Enrichers.Thread" />
+    <PackageReference Include="Serilog.Sinks.Async" />
+    <PackageReference Include="Serilog.Sinks.Grafana.Loki" />
+    <PackageReference Include="SharpZipLib" />
+    <PackageReference Include="System.Configuration.ConfigurationManager" />
+    <PackageReference Include="System.Resources.Extensions" />
+    <PackageReference Include="MailKit" />
   </ItemGroup>
   <ItemGroup Label="Transitive Dependency overrides">
-      <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+      <PackageReference Include="Newtonsoft.Json" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CDP4Authentication\CDP4Authentication.csproj" />
