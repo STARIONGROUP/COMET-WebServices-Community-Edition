@@ -439,6 +439,40 @@ namespace CometServer.IntegrationTests.EngineeringModel
             }
         }
 
+        [Test]
+        public async Task VerifyThatTheMigrationRemovesTheDuplicateOpenInsertAuditEntriesLeftByAnOlderServer()
+        {
+            var schema = IterationSchema(EngineeringModelIid);
+            var creators = await GetCreatorsAsync(EngineeringModelIid, "ElementDefinition", TestElementDefinitionIid, true);
+
+            // an older server left a second, later open insert audit entry of another actor for a replayed thing
+            await ExecuteSqlAsync(
+                $"CREATE TEMP TABLE replayed AS SELECT * FROM \"{schema}\".\"ElementDefinition_Audit\" WHERE \"Action\" = 'I' AND \"ValidTo\" = 'infinity' AND \"Iid\" = @iid;" +
+                " UPDATE replayed SET \"ValidFrom\" = \"ValidFrom\" + interval '1 day', \"Actor\" = 'a1f0e2d3-0000-4000-8000-000000000001';" +
+                $" INSERT INTO \"{schema}\".\"ElementDefinition_Audit\" SELECT * FROM replayed;",
+                TestElementDefinitionIid);
+
+            var iterationBefore = await this.GetIterationAsync(EngineeringModelIid, FirstIterationIid);
+
+            Assert.That(iterationBefore.Iids.Count(x => x == TestElementDefinitionIid.ToString()), Is.EqualTo(2), "the duplicate entry did not make the thing be read twice");
+
+            var migration = new CDP4Orm.MigrationEngine.MigrationService(null).GetMigrations(true).Single(x => x.MigrationMetaData.Version == new Version(11, 0, 0, 0));
+
+            await using (var connection = new NpgsqlConnection(CometServerTestEnvironment.DatabaseConnectionString))
+            {
+                await connection.OpenAsync();
+                await using var transaction = await connection.BeginTransactionAsync();
+                await migration.ApplyMigration(transaction, [schema]);
+                await transaction.CommitAsync();
+            }
+
+            var iterationAfter = await this.GetIterationAsync(EngineeringModelIid, FirstIterationIid);
+
+            Assert.That(iterationAfter.Iids.Count(x => x == TestElementDefinitionIid.ToString()), Is.EqualTo(1));
+            Assert.That(await GetCreatorsAsync(EngineeringModelIid, "ElementDefinition", TestElementDefinitionIid, true), Is.EqualTo(creators), "the original creator was not kept");
+            await AssertSingleOpenInsertAuditEntryAsync(EngineeringModelIid);
+        }
+
         /// <summary>
         /// Gets the name of the iteration partition of a model
         /// </summary>
