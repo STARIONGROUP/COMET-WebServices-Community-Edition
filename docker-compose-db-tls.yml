@@ -39,7 +39,14 @@ services:
                -c hba_file=/etc/postgresql-tls/pg_hba.conf
     volumes:
       - comet-db-tls-data:/var/lib/postgresql/data
-      - ./certs:/certs:ro
+      # create_host_path: false makes compose stop with an error when ./certs is missing, instead of
+      # creating empty folders in its place
+      - type: bind
+        source: ./certs
+        target: /certs
+        read_only: true
+        bind:
+          create_host_path: false
     # the database port is not published: the WebServices reach it over the comet network.
     # For access from the host (e.g. pgAdmin), publish it on the loopback address only:
     # ports:
@@ -63,7 +70,12 @@ services:
     volumes:
       # only the CA certificate goes to the WebServices; it is not secret, but must be readable by the
       # non-root user of the image ($APP_UID)
-      - ./certs/ca.crt:/app/certs/db-ca.crt:ro
+      - type: bind
+        source: ./certs/ca.crt
+        target: /app/certs/db-ca.crt
+        read_only: true
+        bind:
+          create_host_path: false
       - comet-ws-tls-logs:/app/logs
       - comet-ws-tls-storage:/app/storage
       - comet-ws-tls-upload:/app/upload
