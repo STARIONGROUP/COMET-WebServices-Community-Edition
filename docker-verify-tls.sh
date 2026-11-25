@@ -23,10 +23,10 @@ trap 'printf "\033[1;31mFAIL:\033[0m line %s: %s\n" "$LINENO" "$BASH_COMMAND"' E
 
 IMAGE="${1:?usage: $0 <image> [integration-tests-repo]}"
 SUITE=""
-if [ -n "${2:-}" ]; then
+if [[ -n "${2:-}" ]]; then
   # absolute, because the script changes directory below
   SUITE="$(cd "$2" && pwd)" || fail "integration test repository '$2' not found"
-  [ -d "$SUITE/Data" ] || fail "'$2' has no Data folder; is it the ecss-10-25-annexc-integration-tests repository?"
+  [[ -d "$SUITE/Data" ]] || fail "'$2' has no Data folder; is it the ecss-10-25-annexc-integration-tests repository?"
 fi
 DB_IMAGE=stariongroup/cdp4-test-database-community-edition:4.2.0
 API_URL=http://localhost:5000
@@ -74,7 +74,7 @@ docker run -d --network comet --name comet-db --shm-size 2g \
     -c hba_file=/etc/postgresql-tls/pg_hba.conf
 for i in $(seq 60); do
   docker exec comet-db pg_isready -U postgres >/dev/null 2>&1 && break
-  [ "$i" -eq 60 ] && { docker logs comet-db; fail "PostgreSQL did not become ready"; }
+  [[ "$i" -eq 60 ]] && { docker logs comet-db; fail "PostgreSQL did not become ready"; }
   echo "[$i/60] waiting for PostgreSQL..."; sleep 3
 done
 ok "PostgreSQL is ready"
@@ -89,21 +89,21 @@ docker run -d --network comet --name comet-api -p 127.0.0.1:5000:5000 \
   -e Backtier__SslMode=VerifyFull -e Backtier__RootCertificate=/etc/comet-tls/ca.crt \
   "$IMAGE"
 for i in $(seq 60); do
-  [ "$(curl -s -o /dev/null -w '%{http_code}' "$API_URL/healthz" || true)" = 200 ] && break
-  [ "$i" -eq 60 ] && { docker logs comet-api; fail "API did not answer /healthz"; }
+  [[ "$(curl -s -o /dev/null -w '%{http_code}' "$API_URL/healthz" || true)" = 200 ]] && break
+  [[ "$i" -eq 60 ]] && { docker logs comet-api; fail "API did not answer /healthz"; }
   echo "[$i/60] waiting for API /healthz..."; sleep 2
 done
 ok "API answers $API_URL/healthz"
 
-if [ -n "$SUITE" ]; then
+if [[ -n "$SUITE" ]]; then
   step "Seeding the database with $SUITE/Data"
   ( cd "$SUITE/Data" && rm -f Data.zip &&
-    if command -v zip >/dev/null; then zip -qr Data.zip . ; else /c/Windows/System32/tar.exe -a -c -f Data.zip --exclude Data.zip * ; fi &&
+    if command -v zip >/dev/null; then zip -qr Data.zip . ; else /c/Windows/System32/tar.exe -a -c -f Data.zip --exclude Data.zip -- * ; fi &&
     curl -sS --fail --form file=@Data.zip "$API_URL/Data/Exchange" ) || { docker logs comet-api 2>&1 | tail -30; fail "seeding failed"; }
   echo
   for i in $(seq 60); do
     docker logs comet-api 2>&1 | grep -q "ready to accept requests" && break
-    [ "$i" -eq 60 ] && { docker logs comet-api 2>&1 | tail -30; fail "API did not report ready after seeding"; }
+    [[ "$i" -eq 60 ]] && { docker logs comet-api 2>&1 | tail -30; fail "API did not report ready after seeding"; }
     echo "[$i/60] waiting for API to accept requests..."; sleep 2
   done
   ok "API is ready to accept requests"
@@ -124,11 +124,11 @@ check() {
   step "Negative check: expecting exit code 1 and '$expected'"
   set +e
   out=$(MSYS_NO_PATHCONV=1 timeout 180 docker run --rm --name comet-api-check --network comet -v comet-db-tls:/etc/comet-tls:ro "${API_ENV[@]}" \
-          -e Kestrel__Endpoints__Http__Url=http://0.0.0.0:5099 "$@" "$IMAGE" 2>&1)
+          "$@" "$IMAGE" 2>&1)
   code=$?
   set -e
   docker rm -f comet-api-check >/dev/null 2>&1 || true
-  if [ $code -eq 1 ] && grep -q "$expected" <<<"$out"; then
+  if [[ $code -eq 1 ]] && grep -q "$expected" <<<"$out"; then
     grep -m1 "$expected" <<<"$out"
     ok "$expected"
   else
