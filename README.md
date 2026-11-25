@@ -75,6 +75,14 @@ Two scripts are provided to create a docker image:
 
 > both scripts need to be run from a linux command line (like the console in GitExtensions)
 
+Before pushing an image, `docker-verify-tls.sh` verifies it against a PostgreSQL server that only accepts TLS connections, with the same checks as the CI workflow. It creates throw-away certificates, starts the database (in RAM) and the image with `Backtier:SslMode` `VerifyFull`, seeds the database from the integration test repository, checks the log for a verified TLS connection, and checks that a wrong CA and `SslMode` `Disable` stop the API:
+
+```bash
+./docker-verify-tls.sh stariongroup/comet-webservices-community-edition:<version> ../ecss-10-25-annexc-integration-tests
+```
+
+The API is left running on `http://localhost:5000`, so the [integration test suite](https://github.com/STARIONGROUP/ecss-10-25-annexc-integration-tests) can be run against it afterwards. Remove the containers with `docker rm -f comet-api comet-db && docker volume rm comet-db-tls`.
+
 ## Software Bill of Materials (SBOM) and Provenance
 
 As part of our commitment to security, transparency, and traceability, this Docker image includes a Software Bill of Materials (SBOM) and Provenance information. These are automatically generated during the build process, providing detailed insights into the components, their licenses, versions, and the integrity of the image itself.
