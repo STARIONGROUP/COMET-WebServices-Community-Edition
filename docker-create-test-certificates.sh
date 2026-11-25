@@ -20,6 +20,14 @@ HOST_NAME="${1:-comet-db}"
 DAYS="${2:-365}"
 CERTS_DIR="$(cd "$(dirname "$0")" && pwd)/certs"
 
+# Docker Desktop creates empty folders in place of missing bind-mount sources when the compose file is started
+# before the certificates exist
+if [[ -d "$CERTS_DIR/ca.crt" ]]; then
+  echo "$CERTS_DIR/ca.crt is a folder, created by Docker because docker-compose-db-tls.yml was started before the"
+  echo "certificates existed. Stop the containers, remove the folder $CERTS_DIR and run this script again"
+  exit 1
+fi
+
 if [[ -e "$CERTS_DIR/server.key" ]]; then
   echo "$CERTS_DIR already contains certificates; remove the folder first to create new ones"
   exit 1

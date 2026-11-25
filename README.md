@@ -93,6 +93,8 @@ compose.bat dbtls                        # or: DB_POSTGRESPASSWORD=<password> do
 compose.bat dbtlsdown                    # or: docker compose -f docker-compose-db-tls.yml down
 ```
 
+Create the certificates before the first start. When `certs` is missing, `docker compose` on Linux stops with `bind source path does not exist`, but Docker Desktop on Windows and macOS creates empty folders `certs` and `certs/ca.crt` instead and the WebServices stop with `The file '/app/certs/db-ca.crt' configured in Backtier:RootCertificate does not exist`: stop the containers, remove the `certs` folder and run `docker-create-test-certificates.sh` again. `compose.bat dbtls` checks for the certificates before it starts the containers.
+
 For production, put the certificates of your organisation's CA in `certs` with the same file names (`ca.crt`, `server.crt`, `server.key`, `pg_hba.conf`), and change the default passwords. The image version is set with `WEBSERVICES_VERSION` (default `11.0.0`, the first version with TLS support). See the [TLS between WebServices and PostgreSQL](https://github.com/STARIONGROUP/COMET-WebServices-Community-Edition/wiki/TLS-PostgreSQL) wiki page for the settings, the PostgreSQL side and the log messages.
 
 ## Software Bill of Materials (SBOM) and Provenance

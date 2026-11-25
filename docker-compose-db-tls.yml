@@ -39,8 +39,9 @@ services:
                -c hba_file=/etc/postgresql-tls/pg_hba.conf
     volumes:
       - comet-db-tls-data:/var/lib/postgresql/data
-      # create_host_path: false makes compose stop with an error when ./certs is missing, instead of
-      # creating empty folders in its place
+      # create_host_path: false makes compose stop with an error when ./certs is missing, instead of creating
+      # empty folders in its place. Docker Desktop (Windows, macOS) creates them anyway: create the certificates
+      # before the first start (compose.bat dbtls checks this)
       - type: bind
         source: ./certs
         target: /certs
