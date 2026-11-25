@@ -19,7 +19,7 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(IsCometTestProject)' != 'true'">
-    <Version>11.0.0-RC3</Version>
+    <Version>11.0.0-RC4</Version>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
 
