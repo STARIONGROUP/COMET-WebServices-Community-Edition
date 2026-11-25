@@ -83,3 +83,6 @@ switcher.json
 /docker-compose-delivery.yml
 /.claude/settings.local.json
 /.claude/agent-memory-local/
+
+#certificates created by docker-create-test-certificates.sh
+/certs/

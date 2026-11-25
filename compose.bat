@@ -21,6 +21,8 @@ IF %1==devdown GOTO DevDown
 IF %1==devtestdown GOTO DevTestDown
 IF %1==nginx GOTO Serv
 IF %1==nginxdown GOTO ServDown
+IF %1==dbtls GOTO DbTls
+IF %1==dbtlsdown GOTO DbTlsDown
 
 GOTO End
 
@@ -96,5 +98,17 @@ GOTO End
 START /B docker-compose -f docker-compose-dev-test.yml down --remove-orphans
 GOTO End
 
+:DbTls
+rem WebServices with a TLS-only PostgreSQL; create the certificates first with docker-create-test-certificates.sh
+IF NOT EXIST certs\server.key (
+  echo certs\server.key not found: run docker-create-test-certificates.sh first, or put your own certificates in certs
+  GOTO End
+)
+START /B docker-compose -f docker-compose-db-tls.yml up -d
+GOTO End
+
+:DbTlsDown
+START /B docker-compose -f docker-compose-db-tls.yml down --remove-orphans
+GOTO End
 
 :End
