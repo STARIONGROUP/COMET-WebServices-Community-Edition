@@ -21,7 +21,9 @@ dotnet test    CometServer.Tests/CometServer.Tests.csproj --filter "FullyQualifi
 dotnet run --project CometServer/CometServer.csproj                 # start API on http://localhost:5000
 ```
 
-Tests use **NUnit + Moq**. There are five test projects mirroring the production projects: `CDP4Authentication.Tests`, `CDP4Orm.Tests`, `CDP4WspDatabaseAuthentication.Tests`, `CometServer.Tests`, plus the integration suite that lives in a separate repo.
+Tests use **NUnit + Moq**. There are four unit-test projects mirroring the production projects (`CDP4Authentication.Tests`, `CDP4Orm.Tests`, `CDP4WspDatabaseAuthentication.Tests`, `CometServer.Tests`) and one in-repo integration-test project, `CometServer.IntegrationTests`. The protocol-level integration suite still lives in a separate repo.
+
+`CometServer.IntegrationTests` runs the real API in-process (ASP.NET `TestServer`) against a throw-away PostgreSQL started with [Testcontainers](https://dotnet.testcontainers.org/) (`stariongroup/cdp4-test-database-community-edition` image), seeded with `CometServer.Tests/Data/Data.zip` and restored before every test. It requires Docker; without Docker the tests are ignored. Run with `dotnet test CometServer.IntegrationTests/CometServer.IntegrationTests.csproj` (all tests are in `Category=Integration`). See `CometServer.IntegrationTests/README.md` for how to write new integration tests.
 
 The API needs PostgreSQL. Bring up just the DB (and RabbitMQ) for local dev with `compose.bat dev` (Windows) or `docker compose -f docker-compose-dev.yml up`. `compose.bat` is the convenience launcher — `dev`, `devtest`, `up`, `rebuild`, `nginx` etc. are all defined there. CI uses `stariongroup/cdp4-test-database-community-edition:4.2.0` as the DB image (see `.github/workflows/CodeQuality.yml`).
 
@@ -29,11 +31,11 @@ Docker images:
 - `./docker-build-local.sh` — local image (Linux shell; works in Git Bash).
 - `./docker-build-attested.sh` — pushes attested image with SBOM to Docker Hub.
 
-Running the integration tests locally: start the API, then `POST` the `Data.zip` exchange file from the integration-test repo to `http://localhost:5000/Data/Exchange`, then run that repo's test solution. The CI workflow shows the exact sequence.
+Running the external integration suite locally: start the API, then `POST` the `Data.zip` exchange file from the integration-test repo to `http://localhost:5000/Data/Exchange`, then run that repo's test solution. The CI workflow shows the exact sequence.
 
 ## Solution layout
 
-Eight projects make up the solution:
+Eleven projects make up the solution:
 
 | Project | Purpose |
 | --- | --- |
@@ -43,7 +45,8 @@ Eight projects make up the solution:
 | `CDP4DatabaseAuthentication` | First-party plugin: authenticates against the COMET DB. |
 | `CDP4WspDatabaseAuthentication` | First-party plugin: authenticates against legacy WSP-format DB. |
 | `VersionFileCreator` | Build-time tool that emits a `VERSION` file consumed by `ResourceLoader`. Auto-built by `CometServer.csproj`'s `CustomAfterBuild` target. |
-| `*.Tests` | NUnit test projects (one per production project, except `CDP4DatabaseAuthentication`). |
+| `*.Tests` | NUnit unit-test projects (one per production project, except `CDP4DatabaseAuthentication` and `VersionFileCreator`). |
+| `CometServer.IntegrationTests` | NUnit integration tests: in-process API against a Testcontainers PostgreSQL (needs Docker). |
 
 ## Architecture you need to know
 

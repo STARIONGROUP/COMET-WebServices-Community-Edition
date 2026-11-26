@@ -52,13 +52,16 @@ jobs:
         run: dotnet build COMET-WebServices.sln -c Debug --no-restore /p:ContinuousIntegrationBuild=true
 
       - name: Run Unit Tests and Compute Coverage
-        run: dotnet test COMET-WebServices.sln --no-restore --no-build --verbosity normal /p:CollectCoverage=true /p:CoverletOutput="../CoverageResults/" /p:MergeWith="../CoverageResults/coverage.json" /p:CoverletOutputFormat=\"cobertura,opencover,json\"
+        run: dotnet test COMET-WebServices.sln --no-restore --no-build --verbosity normal --filter "Category!=Integration" /p:CollectCoverage=true /p:CoverletOutput="../CoverageResults/" /p:MergeWith="../CoverageResults/coverage.json" /p:CoverletOutputFormat=\"cobertura,opencover,json\"
 
       - name: Set up Docker
         uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
 
       - name: cdp4-test-database-community-edition Image
         run: docker pull stariongroup/cdp4-test-database-community-edition:4.2.0
+
+      - name: Run In-Repository Integration Tests (Testcontainers)
+        run: dotnet test CometServer.IntegrationTests/CometServer.IntegrationTests.csproj --no-restore --no-build --verbosity normal --filter "Category=Integration"
 
       - name: Create TLS certificates for PostgreSQL
         run: |

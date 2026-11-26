@@ -65,6 +65,8 @@ The COMET Webservices are built on top of the [Carter](https://github.com/Carter
 
 The ECSS-E-TM-10-25 Annex C integration tests are used to validate the correctness of the implementation. These integration tests are available on [Github](https://github.com/STARIONGROUP/ecss-10-25-annexc-integration-tests)
 
+In-repository integration tests that run the API against a PostgreSQL Docker container are in `CometServer.IntegrationTests`, see its [README](CometServer.IntegrationTests/README.md).
+
 ## Build and Deploy using Docker
 
 The CDP4-COMET-Webservices solution is built using docker and the result is a Docker container ready to be deployed (or pushed to Docker Hub).

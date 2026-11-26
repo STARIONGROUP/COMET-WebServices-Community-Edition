@@ -37,6 +37,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CDP4Authentication.Tests", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VersionFileCreator", "VersionFileCreator\VersionFileCreator.csproj", "{E941F9C0-139A-4DB7-9C98-32A320378DDB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CometServer.IntegrationTests", "CometServer.IntegrationTests\CometServer.IntegrationTests.csproj", "{B9281680-3135-4B9C-AAF1-76D4354B6830}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -83,6 +85,10 @@ Global
 		{E941F9C0-139A-4DB7-9C98-32A320378DDB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E941F9C0-139A-4DB7-9C98-32A320378DDB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E941F9C0-139A-4DB7-9C98-32A320378DDB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B9281680-3135-4B9C-AAF1-76D4354B6830}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B9281680-3135-4B9C-AAF1-76D4354B6830}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B9281680-3135-4B9C-AAF1-76D4354B6830}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B9281680-3135-4B9C-AAF1-76D4354B6830}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

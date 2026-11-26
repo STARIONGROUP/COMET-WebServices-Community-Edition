@@ -67,19 +67,46 @@ namespace CDP4Orm.Dao
         /// <param name="transaction">The current transaction</param>
         /// <param name="partition">The current partition</param>
         /// <param name="instant">The instant that matches an iteration</param>
+        /// <remarks>
+        /// The current tables were emptied with the user triggers disabled, so no delete audit record was written and the
+        /// insert audit record of every deleted row is still open (ValidTo = infinity). Inserting a row again logs a second
+        /// open insert audit record, and the actor join of the DAO read queries then returns a Thing once per actor. The
+        /// insert audit records logged by this transaction are therefore deleted when the row already has an open insert
+        /// audit record, so every Thing keeps its original Actor. A row without an insert audit record keeps the new one.
+        /// </remarks>
         public async Task InsertDataFromAuditAsync(NpgsqlTransaction transaction, string partition, DateTime instant)
         {
-            await using var command = new NpgsqlCommand();
+            if (!Helper.StringExtensions.IsValidPartitionName(partition))
+            {
+                throw new ArgumentException("partition format is invalid. It must start with alphabetic characters and can be followed by segments of lowercase letters, numbers, and underscores.");
+            }
 
-            const string sql = "SELECT \"SiteDirectory\".insert_data_from_audit(:partitionname, :instant);";
+            await using (var command = new NpgsqlCommand())
+            {
+                const string sql = "SELECT \"SiteDirectory\".insert_data_from_audit(:partitionname, :instant);";
 
-            command.Parameters.Add("partitionname", NpgsqlDbType.Text).Value = partition;
-            command.Parameters.Add("instant", NpgsqlDbType.Timestamp).Value = instant;
+                command.Parameters.Add("partitionname", NpgsqlDbType.Text).Value = partition;
+                command.Parameters.Add("instant", NpgsqlDbType.Timestamp).Value = instant;
 
-            command.CommandText = sql;
-            command.Connection = transaction.Connection;
-            command.Transaction = transaction;
-            await command.ExecuteNonQueryAsync();
+                command.CommandText = sql;
+                command.Connection = transaction.Connection;
+                command.Transaction = transaction;
+                await command.ExecuteNonQueryAsync();
+            }
+
+            // only the audit tables of thing tables (with an Iid, not the association tables) are used to resolve the Actor;
+            // the insert audit records logged by this transaction start at the transaction time
+            var sqlBuilder = new StringBuilder();
+
+            sqlBuilder.Append("DO $$ DECLARE audit_table record; transaction_instant timestamp := \"SiteDirectory\".get_transaction_time(); BEGIN");
+            sqlBuilder.AppendFormat(" FOR audit_table IN SELECT table_name FROM information_schema.columns WHERE table_schema = '{0}' AND table_name LIKE '%\\_Audit' AND column_name = 'Iid' LOOP", partition);
+            sqlBuilder.Append(" EXECUTE format('DELETE FROM %I.%I AS replayed WHERE replayed.\"Action\" = ''I'' AND replayed.\"ValidFrom\" = $1");
+            sqlBuilder.Append(" AND EXISTS (SELECT 1 FROM %I.%I AS original WHERE original.\"Iid\" = replayed.\"Iid\" AND original.\"Action\" = ''I'' AND original.\"ValidTo\" = ''infinity'' AND original.\"ValidFrom\" < $1)',");
+            sqlBuilder.AppendFormat(" '{0}', audit_table.table_name, '{0}', audit_table.table_name) USING transaction_instant;", partition);
+            sqlBuilder.Append(" END LOOP; END $$;");
+
+            await using var deleteCommand = new NpgsqlCommand(sqlBuilder.ToString(), transaction.Connection, transaction);
+            await deleteCommand.ExecuteNonQueryAsync();
         }
 
         /// <summary>
