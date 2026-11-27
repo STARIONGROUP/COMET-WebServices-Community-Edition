@@ -83,6 +83,20 @@ Before pushing an image, `docker-verify-tls.sh` verifies it against a PostgreSQL
 
 The API is left running on `http://localhost:5000`, so the [integration test suite](https://github.com/STARIONGROUP/ecss-10-25-annexc-integration-tests) can be run against it afterwards. Remove the containers with `docker rm -f comet-api comet-db && docker volume rm comet-db-tls`.
 
+### TLS between the WebServices and PostgreSQL
+
+`docker-compose-db-tls.yml` runs the WebServices with a PostgreSQL database that only accepts TLS connections. The WebServices connect with `Backtier:SslMode` `VerifyFull`, which verifies the certificate chain and the host name (`comet-db`) of the database server. The certificates are read from the `certs` folder, which is not committed:
+
+```bash
+./docker-create-test-certificates.sh     # test CA and server certificate for comet-db in ./certs
+compose.bat dbtls                        # or: DB_POSTGRESPASSWORD=<password> docker compose -f docker-compose-db-tls.yml up -d
+compose.bat dbtlsdown                    # or: docker compose -f docker-compose-db-tls.yml down
+```
+
+Create the certificates before the first start. When `certs` is missing, `docker compose` on Linux stops with `bind source path does not exist`, but Docker Desktop on Windows and macOS creates empty folders `certs` and `certs/ca.crt` instead and the WebServices stop with `The file '/app/certs/db-ca.crt' configured in Backtier:RootCertificate does not exist`: stop the containers, remove the `certs` folder and run `docker-create-test-certificates.sh` again. `compose.bat dbtls` checks for the certificates before it starts the containers.
+
+For production, put the certificates of your organisation's CA in `certs` with the same file names (`ca.crt`, `server.crt`, `server.key`, `pg_hba.conf`), and change the default passwords. The image version is set with `WEBSERVICES_VERSION` (default `11.0.0`, the first version with TLS support). See the [TLS between WebServices and PostgreSQL](https://github.com/STARIONGROUP/COMET-WebServices-Community-Edition/wiki/TLS-PostgreSQL) wiki page for the settings, the PostgreSQL side and the log messages.
+
 ## Software Bill of Materials (SBOM) and Provenance
 
 As part of our commitment to security, transparency, and traceability, this Docker image includes a Software Bill of Materials (SBOM) and Provenance information. These are automatically generated during the build process, providing detailed insights into the components, their licenses, versions, and the integrity of the image itself.

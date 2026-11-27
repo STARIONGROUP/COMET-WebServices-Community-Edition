@@ -1,0 +1,95 @@
+# CDP4-COMET WebServices with a PostgreSQL database that only accepts TLS connections.
+# The WebServices connect with Backtier:SslMode VerifyFull: the connection is encrypted and the certificate
+# chain and the host name (comet-db) of the database server are verified.
+#
+# 1. create a test CA and server certificate in ./certs:   ./docker-create-test-certificates.sh
+#    (for production, put the certificates of your organisation's CA in ./certs, with the same file names)
+# 2. start:   compose.bat dbtls     or   docker compose -f docker-compose-db-tls.yml up -d
+# 3. stop:    compose.bat dbtlsdown or   docker compose -f docker-compose-db-tls.yml down
+#
+# See https://github.com/STARIONGROUP/COMET-WebServices-Community-Edition/wiki/TLS-PostgreSQL
+# Change the default passwords before using this in production, see the "Default passwords" section there.
+
+services:
+
+  comet_db:
+    image: stariongroup/cdp4-database-community-edition:4.2.0
+    container_name: comet-db
+    # the server certificate must be valid for this name, the name the WebServices connect to
+    hostname: comet-db
+    shm_size: 2gb
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=${DB_POSTGRESPASSWORD:?set DB_POSTGRESPASSWORD}
+    # PostgreSQL only accepts a private key owned by its own user (uid 70 in this Alpine image) and not readable
+    # by others; a bind mount from a Windows or macOS host cannot provide that, so copy the files at startup
+    entrypoint: >
+      sh -c 'mkdir -p /etc/postgresql-tls &&
+             cp /certs/server.crt /certs/server.key /certs/pg_hba.conf /etc/postgresql-tls/ &&
+             chown -R postgres:postgres /etc/postgresql-tls && chmod 600 /etc/postgresql-tls/server.key &&
+             exec docker-entrypoint.sh "$$@"' --
+    # pg_hba.conf only allows hostssl over the network, so the server refuses unencrypted connections
+    command: >
+      postgres -c max_locks_per_transaction=1024
+               -c ssl=on
+               -c ssl_cert_file=/etc/postgresql-tls/server.crt
+               -c ssl_key_file=/etc/postgresql-tls/server.key
+               -c ssl_min_protocol_version=TLSv1.2
+               -c hba_file=/etc/postgresql-tls/pg_hba.conf
+    volumes:
+      - comet-db-tls-data:/var/lib/postgresql/data
+      # create_host_path: false makes compose stop with an error when ./certs is missing, instead of creating
+      # empty folders in its place. Docker Desktop (Windows, macOS) creates them anyway: create the certificates
+      # before the first start (compose.bat dbtls checks this)
+      - type: bind
+        source: ./certs
+        target: /certs
+        read_only: true
+        bind:
+          create_host_path: false
+    # the database port is not published: the WebServices reach it over the comet network.
+    # For access from the host (e.g. pgAdmin), publish it on the loopback address only:
+    # ports:
+    #   - '127.0.0.1:5432:5432'
+    networks:
+      - comet
+
+  comet_webservices:
+    # TLS to PostgreSQL is supported from version 11.0.0
+    image: stariongroup/comet-webservices-community-edition:${WEBSERVICES_VERSION:-11.0.0}
+    container_name: comet-webservices
+    hostname: comet-webservices
+    shm_size: 512m
+    restart: always
+    depends_on:
+      - comet_db
+    environment:
+      - Backtier__HostName=comet-db
+      - Backtier__SslMode=VerifyFull
+      - Backtier__RootCertificate=/app/certs/db-ca.crt
+    volumes:
+      # only the CA certificate goes to the WebServices; it is not secret, but must be readable by the
+      # non-root user of the image ($APP_UID)
+      - type: bind
+        source: ./certs/ca.crt
+        target: /app/certs/db-ca.crt
+        read_only: true
+        bind:
+          create_host_path: false
+      - comet-ws-tls-logs:/app/logs
+      - comet-ws-tls-storage:/app/storage
+      - comet-ws-tls-upload:/app/upload
+    ports:
+      - "${WEBSERVICES_HOSTPORT:-5000}:5000"
+    networks:
+      - comet
+
+networks:
+  comet:
+
+volumes:
+  comet-db-tls-data:
+  comet-ws-tls-logs:
+  comet-ws-tls-storage:
+  comet-ws-tls-upload:
