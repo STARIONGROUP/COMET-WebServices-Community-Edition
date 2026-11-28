@@ -137,8 +137,14 @@ namespace CometServer.Tasks
         public void AddOrUpdateTask(CometTask task)
         {
             var cacheEntryOptions = new MemoryCacheEntryOptions()
-                .SetAbsoluteExpiration(TimeSpan.FromSeconds(this.appConfigService.AppConfig.LongRunningTasksConfig.RetentionTime))
                 .RegisterPostEvictionCallback(this.EvictionCallback, state: this);
+
+            // the retention time starts when the task has finished: a task that is still running must not be evicted,
+            // otherwise its outcome can no longer be queried when the work takes longer than the retention time
+            if (task.StatusKind != StatusKind.PROCESSING)
+            {
+                cacheEntryOptions.SetAbsoluteExpiration(TimeSpan.FromSeconds(this.appConfigService.AppConfig.LongRunningTasksConfig.RetentionTime));
+            }
 
             var key = $"{KeyPrefix}{task.Id}";
 
@@ -190,6 +196,8 @@ namespace CometServer.Tasks
             task.FinishedAt = DateTime.Now;
             task.StatusKind = StatusKind.SUCCEEDED;
             task.Revision = revision;
+
+            this.AddOrUpdateTask(task);
         }
 
         /// <summary>

@@ -36,6 +36,8 @@ namespace CometServer.Modules
     using System.Threading;
     using System.Threading.Tasks;
 
+    using Autofac;
+
     using Carter;
     using Carter.Response;
 
@@ -65,6 +67,8 @@ namespace CometServer.Modules
     using Microsoft.AspNetCore.Http;
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Logging.Abstractions;
+
+    using Npgsql;
 
     using Services;
     using Services.Authorization;
@@ -121,6 +125,12 @@ namespace CometServer.Modules
         protected IDataSource DataSource { get; set; }
 
         /// <summary>
+        /// Gets the root <see cref="ILifetimeScope"/>. Each POST gets a lifetime scope of its own from it, because a POST
+        /// with a waitTime can continue after its request has ended, when the services of the request have been disposed
+        /// </summary>
+        protected ILifetimeScope LifetimeScope { get; }
+
+        /// <summary>
         /// Provides an array of supported authentication schemes, to be used by routes that requires authentication
         /// </summary>
         internal static string[] AuthenticationSchemes = [BasicAuthenticationDefaults.AuthenticationScheme, JwtBearerDefaults.LocalAuthenticationScheme, JwtBearerDefaults.ExternalAuthenticationScheme];
@@ -150,7 +160,10 @@ namespace CometServer.Modules
         /// <param name="dataSource">
         ///The (injected) <see cref="IDataSource"/> 
         /// </param>
-        protected ApiBase(IAppConfigService appConfigService, ICometHasStartedService cometHasStartedService, ITokenGeneratorService tokenGeneratorService, ILoggerFactory loggerFactory, IBackgroundThingsMessageProducer thingsMessageProducer, ICometTaskService cometTaskService, IDataSource dataSource)
+        /// <param name="lifetimeScope">
+        /// The (injected) root <see cref="ILifetimeScope"/> from which each POST gets a lifetime scope of its own
+        /// </param>
+        protected ApiBase(IAppConfigService appConfigService, ICometHasStartedService cometHasStartedService, ITokenGeneratorService tokenGeneratorService, ILoggerFactory loggerFactory, IBackgroundThingsMessageProducer thingsMessageProducer, ICometTaskService cometTaskService, IDataSource dataSource, ILifetimeScope lifetimeScope)
         {
             this.logger = loggerFactory == null ? NullLogger<ApiBase>.Instance : loggerFactory.CreateLogger<ApiBase>();
             this.CometHasStartedService = cometHasStartedService;
@@ -159,6 +172,7 @@ namespace CometServer.Modules
             this.thingsMessageProducer = thingsMessageProducer;
             this.CometTaskService = cometTaskService;
             this.DataSource = dataSource;
+            this.LifetimeScope = lifetimeScope;
         }
 
         /// <summary>
@@ -206,7 +220,7 @@ namespace CometServer.Modules
         /// <returns>
         /// an awaitable <see cref="Task"/> that contains the value of the identifier uses to check authorization
         /// </returns>
-        protected async Task<string> AuthorizeAsync(ICredentialsService credentialsService, HttpRequest request)
+        protected virtual async Task<string> AuthorizeAsync(ICredentialsService credentialsService, HttpRequest request)
         {
             var userName = request.HttpContext.User.Identity!.Name;
 
@@ -1240,6 +1254,259 @@ namespace CometServer.Modules
             await workTask;
 
             return true;
+        }
+
+        /// <summary>
+        /// Handles a POST request with services of a lifetime scope of its own, not with those of the request: a POST
+        /// with a waitTime can continue after the request has ended, and the services of the request are disposed when
+        /// it ends. The scope is disposed when <paramref name="handlePost"/> has finished, unless it has handed the scope
+        /// over to <see cref="ProcessPostWithWaitTimeAsync"/>
+        /// </summary>
+        /// <param name="httpResponse">
+        /// The <see cref="HttpResponse"/> of the request
+        /// </param>
+        /// <param name="handlePost">
+        /// Handles the POST with the services that it resolves from the <see cref="PostLifetimeScope"/> it is given
+        /// </param>
+        /// <returns>
+        /// an awaitable <see cref="Task"/>
+        /// </returns>
+        protected async Task HandlePostAsync(HttpResponse httpResponse, Func<PostLifetimeScope, Task> handlePost)
+        {
+            if (!await this.IsServerReadyAsync(httpResponse))
+            {
+                return;
+            }
+
+            var postLifetimeScope = new PostLifetimeScope(this.LifetimeScope.BeginLifetimeScope());
+
+            try
+            {
+                await handlePost(postLifetimeScope);
+            }
+            finally
+            {
+                await postLifetimeScope.DisposeUnlessHandedOverAsync();
+            }
+        }
+
+        /// <summary>
+        /// Processes a POST request that has a wait time, with the services of the <paramref name="postLifetimeScope"/>
+        /// that the request handler resolved and passes down in <paramref name="processPost"/>. When the work completes
+        /// within the wait time its <see cref="PostResult"/> is written to the <paramref name="httpResponse"/>, otherwise
+        /// the <see cref="CometTask"/> is, and the work continues and reports its outcome only through the
+        /// <see cref="CometTask"/>
+        /// </summary>
+        /// <param name="postLifetimeScope">
+        /// The <see cref="PostLifetimeScope"/> from which the services in <paramref name="processPost"/> and
+        /// <paramref name="writeResult"/> were resolved. This method takes it over, also when it throws: it is disposed
+        /// when the work has finished and the response has been written, whichever comes last
+        /// </param>
+        /// <param name="waitTime">
+        /// The wait time of the request, in seconds; more than 0
+        /// </param>
+        /// <param name="postRequestData">
+        /// The <see cref="PostRequestData"/> of the request
+        /// </param>
+        /// <param name="requestToken">
+        /// The request token used for log correlation
+        /// </param>
+        /// <param name="cometTask">
+        /// The <see cref="CometTask"/> that is linked to the POST request
+        /// </param>
+        /// <param name="processPost">
+        /// Processes the POST with the services of the <paramref name="postLifetimeScope"/>
+        /// </param>
+        /// <param name="writeResult">
+        /// Writes a <see cref="PostResult"/> to the <paramref name="httpResponse"/>
+        /// </param>
+        /// <param name="httpResponse">
+        /// The <see cref="HttpResponse"/> of the request
+        /// </param>
+        /// <returns>
+        /// an awaitable <see cref="Task"/>
+        /// </returns>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// When <paramref name="waitTime"/> is not more than 0. The work is not started and the scope is disposed
+        /// </exception>
+        protected async Task ProcessPostWithWaitTimeAsync(PostLifetimeScope postLifetimeScope, int waitTime, PostRequestData postRequestData, string requestToken, CometTask cometTask, Func<Task<PostResult>> processPost, Func<PostResult, Task> writeResult, HttpResponse httpResponse)
+        {
+            postLifetimeScope.HandOver();
+
+            if (waitTime <= 0)
+            {
+                // the work is never started, so nobody else would dispose the scope
+                await postLifetimeScope.LifetimeScope.DisposeAsync();
+                throw new ArgumentOutOfRangeException(nameof(waitTime), waitTime, "The wait time must be more than 0 seconds");
+            }
+
+            // the work and the writing of the response both use the services of the scope: the last one to finish disposes it
+            var lifetimeScopeUsers = 2;
+
+            async Task ReleaseLifetimeScopeAsync()
+            {
+                if (Interlocked.Decrement(ref lifetimeScopeUsers) == 0)
+                {
+                    await postLifetimeScope.LifetimeScope.DisposeAsync();
+                }
+            }
+
+            PostResult result = null;
+
+            async Task WorkAsync()
+            {
+                try
+                {
+                    result = await processPost();
+                }
+                catch (Exception ex)
+                {
+                    // nobody may be waiting for the work any more: a failure is reported through the CometTask only
+                    this.logger.LogError(ex, "{Request}:{RequestToken} - The work of the POST failed", postRequestData.MethodPathName.Sanitize(), requestToken);
+
+                    result = this.FailPost(cometTask, HttpStatusCode.InternalServerError, ex.Message);
+                }
+                finally
+                {
+                    await ReleaseLifetimeScopeAsync();
+                }
+            }
+
+            try
+            {
+                var completedWithinWaitTime = await WaitForCompletionAsync(WorkAsync, TimeSpan.FromSeconds(waitTime));
+
+                if (completedWithinWaitTime)
+                {
+                    if (this.logger.IsEnabled(LogLevel.Information))
+                    {
+                        this.logger.LogInformation("The task {Id} for actor {Actor} completed within the requested wait time {WaitTime}", cometTask.Id, cometTask.Actor, waitTime);
+                    }
+
+                    await writeResult(result);
+                }
+                else
+                {
+                    if (this.logger.IsEnabled(LogLevel.Information))
+                    {
+                        this.logger.LogInformation("The task {Id} for actor {Actor} did not complete within the requested wait time {WaitTime}; the CometTask is returned and the work continues in the background", cometTask.Id, cometTask.Actor, waitTime);
+                    }
+
+                    await httpResponse.AsJson(cometTask);
+                }
+            }
+            finally
+            {
+                await ReleaseLifetimeScopeAsync();
+            }
+        }
+
+        /// <summary>
+        /// Rolls back the <paramref name="transaction"/> when there is one
+        /// </summary>
+        /// <param name="transactionManager">
+        /// The <see cref="ICdp4TransactionManager"/> that provides database transaction and connection services
+        /// </param>
+        /// <param name="transaction">
+        /// The <see cref="NpgsqlTransaction"/> to roll back, or null
+        /// </param>
+        /// <returns>
+        /// an awaitable <see cref="Task"/>
+        /// </returns>
+        protected static async Task TryRollbackAsync(ICdp4TransactionManager transactionManager, NpgsqlTransaction transaction)
+        {
+            if (transaction != null)
+            {
+                await transactionManager.TryRollbackTransaction(transaction);
+            }
+        }
+
+        /// <summary>
+        /// Records the failure of a POST in its <see cref="CometTask"/> and creates the <see cref="PostResult"/> for it
+        /// </summary>
+        /// <param name="cometTask">
+        /// The <see cref="CometTask"/> that is linked to the POST request
+        /// </param>
+        /// <param name="statusCode">
+        /// The <see cref="HttpStatusCode"/> of the response
+        /// </param>
+        /// <param name="errorMessage">
+        /// The error message
+        /// </param>
+        /// <param name="errorTag">
+        /// The optional CDP error tag
+        /// </param>
+        /// <returns>
+        /// The <see cref="PostResult"/>
+        /// </returns>
+        protected PostResult FailPost(CometTask cometTask, HttpStatusCode statusCode, string errorMessage, string errorTag = null)
+        {
+            var statusText = statusCode switch
+            {
+                HttpStatusCode.BadRequest => "BAD REQUEST",
+                HttpStatusCode.Forbidden => "FORBIDDEN",
+                HttpStatusCode.Unauthorized => "UNAUTHORIZED",
+                _ => "INTERNAL SERVER ERROR"
+            };
+
+            this.CometTaskService.AddOrUpdateTask(cometTask, finishedAt: DateTime.Now, statusKind: StatusKind.FAILED, error: $"{statusText} - {errorMessage}");
+
+            return PostResult.Failure(statusCode, errorMessage, errorTag);
+        }
+
+        /// <summary>
+        /// Writes the <see cref="PostResult"/> of a POST request to its <see cref="HttpResponse"/>
+        /// </summary>
+        /// <param name="postResult">
+        /// The <see cref="PostResult"/> to write
+        /// </param>
+        /// <param name="postRequestData">
+        /// The <see cref="PostRequestData"/> of the request
+        /// </param>
+        /// <param name="httpResponse">
+        /// The <see cref="HttpResponse"/> to which the result is written
+        /// </param>
+        /// <param name="headerInfoProvider">
+        /// The injected <see cref="IHeaderInfoProvider"/> instance used to process HTTP headers
+        /// </param>
+        /// <param name="metaInfoProvider">
+        /// The <see cref="IMetaInfoProvider"/> used to provide metadata for any kind of <see cref="Thing"/>
+        /// </param>
+        /// <param name="jsonSerializer">
+        /// The <see cref="ICdp4JsonSerializer"/> used to serialize data to JSON
+        /// </param>
+        /// <param name="messagePackSerializer">
+        /// The <see cref="IMessagePackSerializer"/> used to serialize data to MessagePack
+        /// </param>
+        /// <param name="permissionInstanceFilterService">
+        /// The <see cref="IPermissionInstanceFilterService"/> used to filter instances from the response
+        /// </param>
+        /// <returns>
+        /// an awaitable <see cref="Task"/>
+        /// </returns>
+        protected async Task WritePostResultAsync(PostResult postResult, PostRequestData postRequestData, HttpResponse httpResponse, IHeaderInfoProvider headerInfoProvider, IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService)
+        {
+            if (!postResult.IsSuccess)
+            {
+                if (postResult.ErrorTag != null)
+                {
+                    AddErrorTagHeader(httpResponse, postResult.ErrorTag);
+                }
+
+                httpResponse.StatusCode = (int)postResult.StatusCode;
+                await httpResponse.AsJson($"exception:{postResult.ErrorMessage}");
+                return;
+            }
+
+            switch (postRequestData.ContentType)
+            {
+                case ContentTypeKind.JSON:
+                    await this.WriteJsonResponseAsync(headerInfoProvider, metaInfoProvider, jsonSerializer, permissionInstanceFilterService, postResult.Things, postRequestData.Version, httpResponse);
+                    break;
+                case ContentTypeKind.MESSAGEPACK:
+                    await this.WriteMessagePackResponseAsync(headerInfoProvider, messagePackSerializer, permissionInstanceFilterService, postResult.Things, postRequestData.Version, httpResponse);
+                    break;
+            }
         }
 
         /// <summary>

@@ -78,7 +78,7 @@ namespace CometServer.Modules
         /// The (injected) <see cref="IDataSource"/> used to access the database
         /// </param>
         public UsernameModule(IAppConfigService appConfigService, ICometHasStartedService cometHasStartedService, ITokenGeneratorService tokenGeneratorService, ILoggerFactory loggerFactory, IBackgroundThingsMessageProducer thingsMessageProducer, ICometTaskService cometTaskService, IDataSource dataSource) :
-            base(appConfigService, cometHasStartedService, tokenGeneratorService, loggerFactory, thingsMessageProducer, cometTaskService, dataSource)
+            base(appConfigService, cometHasStartedService, tokenGeneratorService, loggerFactory, thingsMessageProducer, cometTaskService, dataSource, null)
         {
             this.logger = loggerFactory == null ? NullLogger<UsernameModule>.Instance : loggerFactory.CreateLogger<UsernameModule>();
         }
