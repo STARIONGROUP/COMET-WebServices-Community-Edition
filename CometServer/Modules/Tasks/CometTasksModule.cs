@@ -106,15 +106,15 @@ namespace CometServer.Modules.Tasks
         {
             app.MapGet("/tasks",
                     async (HttpRequest req, HttpResponse res, ICredentialsService credentialsService)
-                        => await this.QueryTasks(req, res, credentialsService));
+                        => await this.QueryTasks(req, res, credentialsService)).RequireAuthorization(ApiBase.AuthenticationSchemes);
 
             app.MapGet("/tasks/{taskId:guid}",
                 async (HttpRequest req, HttpResponse res, ICredentialsService credentialsService, Guid taskId)
-                    => await this.QueryTask(req, res, credentialsService, taskId));
+                    => await this.QueryTask(req, res, credentialsService, taskId)).RequireAuthorization(ApiBase.AuthenticationSchemes);
 
             app.MapPost("/tasks/{taskId:guid}",
                 async (HttpRequest req, HttpResponse res, ICredentialsService credentialsService, Guid taskId)
-                    => await this.CancelTask(req, res, credentialsService, taskId));
+                    => await this.CancelTask(req, res, credentialsService, taskId)).RequireAuthorization(ApiBase.AuthenticationSchemes);
         }
 
         /// <param name="req">

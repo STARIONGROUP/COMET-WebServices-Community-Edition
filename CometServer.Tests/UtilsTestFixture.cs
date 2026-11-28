@@ -119,7 +119,7 @@ namespace CometServer.Tests
         {
             var mockedProcessor = this.SetupMockProcessor();
 
-            var siteDirectoryApi = new SiteDirectoryApi(this.appConfigService.Object, this.cometHasStartedService.Object, this.tokenGeneratorService.Object, this.loggerFactory.Object, this.thingsMessageProducer.Object, this.cometTaskService.Object, this.dataSource.Object);
+            var siteDirectoryApi = new SiteDirectoryApi(this.appConfigService.Object, this.cometHasStartedService.Object, this.tokenGeneratorService.Object, this.loggerFactory.Object, this.thingsMessageProducer.Object, this.cometTaskService.Object, this.dataSource.Object, null);
 
             var result = await siteDirectoryApi.ProcessRequestPathAsync(this.requestUtils, this.transactionManager.Object, mockedProcessor.Object,  "SiteDirectory", "SiteDirectory", ["SiteDirectory", this.mockedId, "model", this.mockedId]);
 
@@ -134,7 +134,7 @@ namespace CometServer.Tests
             // set query parameter override
             this.requestUtils.OverrideQueryParameters = new QueryParameters { IncludeAllContainers = true };
 
-            var siteDirectoryApi = new SiteDirectoryApi(this.appConfigService.Object, this.cometHasStartedService.Object, this.tokenGeneratorService.Object, this.loggerFactory.Object, this.thingsMessageProducer.Object, this.cometTaskService.Object, this.dataSource.Object);
+            var siteDirectoryApi = new SiteDirectoryApi(this.appConfigService.Object, this.cometHasStartedService.Object, this.tokenGeneratorService.Object, this.loggerFactory.Object, this.thingsMessageProducer.Object, this.cometTaskService.Object, this.dataSource.Object, null);
 
             var result = await siteDirectoryApi.ProcessRequestPathAsync(this.requestUtils, this.transactionManager.Object, mockedProcessor.Object, "SiteDirectory", "SiteDirectory", ["SiteDirectory", this.mockedId, "model", this.mockedId]);
             
